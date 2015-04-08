@@ -1,0 +1,21 @@
+{
+  "name": "FreeswitchESL",
+  "version": "0.0.0",
+  "description": "FreeswitchESL",
+  "main": "app.js",
+  "author": {
+    "name": "Administrator",
+    "email": ""
+  },
+  "dependencies": {
+    "colors": "^0.6.2",
+    "config": "^0.4.37",
+    "couchbase": "^1.2.4",
+    "modesl": "^1.1.2",
+    "nimble": "0.0.2",
+    "redis": "^0.10.3",
+    "regex": "^0.1.1",
+    "request": "^2.51.0",
+    "yaml": "~0.2.3"
+  }
+}
