@@ -69,7 +69,7 @@ redisClient.on('error',function(err){
             switch (event.type) {
 
                 case 'CHANNEL_BRIDGE':
-                    
+
                     redisClient.incr("BRIDGE");
                     redisClient.hset(event.getHeader('Unique-ID'), 'Bridge-State', 'Bridged', redis.print);
                     break;
@@ -336,38 +336,61 @@ redisClient.on('error',function(err){
                             }
                             else if (subClass.indexOf('sofia::') > -1) {
 
-                                redisClient.publish(subClass, event.serialize('json'), redis.print);
+                                //redisClient.publish(subClass, event.serialize('json'), redis.print);
+                                var username = event.getHeader('username');
+                                var realm = event.getHeader('realm');
+                                var profileName = event.getHeader('profile-name');
+                                var regDetails = { name: username, realm: realm, profile: profileName, status: "None" };
 
-                                var results = { name: event.getHeader('username'), realm: event.getHeader('realm'), profile: event.getHeader('profile-name'), status: "none" };
+                                var setName = "SIPREG@" + realm;
+                                var sipuser = "SIPUSER:" + username + "@" + realm;
 
-                                switch (subClass) {
+                                switch (subClass)
+                                {
+
                                     case 'sofia::register':
-                                        results.status = "Registered";
-                                        if (!redisClient.sismember("Register-List", event.getHeader('username') + '@' + event.getHeader('realm')))
-                                            redisClient.sadd("Register-List", event.getHeader('username') + '@' + event.getHeader('realm'), redis.print);
-                                        redisClient.hset(event.getHeader('username') + '@' + event.getHeader('realm'), 'Register-State', 'Registered', redis.print);
-                                        redisClient.hset(event.getHeader('username') + '@' + event.getHeader('realm'), 'Data', event.serialize('json'), redis.print);
 
+                                        regDetails.status = "REGISTERED";
+
+                                        redisClient.sismember(setName, sipuser, function (err, reply)
+                                            {
+                                                if(reply === 0)
+                                                {
+                                                    redisClient.sadd(setName, sipuser, redis.print);
+                                                }
+                                            });
+
+                                        var evtDataJson = event.serialize('json');
+
+                                        redisClient.hset(sipuser, 'SipUsername', username, redis.print);
+                                        redisClient.hset(sipuser, 'Register-State', 'REGISTERED', redis.print);
+                                        redisClient.hset(sipuser, 'Data', evtDataJson, redis.print);
+
+                                        console.log(regDetails.status + " - " + sipuser);
 
                                         //http://localhost:8080/api/fifo_member? add myq user/1000@realm
 
                                         break;
 
                                     case 'sofia::expire':
-                                        results.status = "Offline";
-                                        redisClient.hset(event.getHeader('username') + '@' + event.getHeader('realm'), 'Register-State', 'Expire', redis.print);
+                                        regDetails.status = "OFFLINE";
+                                        redisClient.hset(sipuser, 'Register-State', 'OFFLINE', redis.print);
+
+                                        console.log(regDetails.status + " - " + sipuser);
 
                                         break;
 
                                     case 'sofia::unregister':
-                                        results.status = "UnRegistered";
-                                        redisClient.srem("Register-List", 0, event.getHeader('username') + '@' + event.getHeader('realm'), redis.print);
-                                        redisClient.del(event.getHeader('username') + '@' + event.getHeader('realm'), redis.print);
+
+                                        redisClient.srem(setName, 0, sipuser, redis.print);
+                                        redisClient.del(sipuser, redis.print);
+
+                                        console.log(regDetails.status + " - " + sipuser);
 
                                         break;
 
                                 }
-                                httpPOST('RegistrationStatus', results);
+
                                 console.log(subClass.yellow);
 
                             }
@@ -389,7 +412,8 @@ redisClient.on('error',function(err){
     };
 
 
-var conn = new esl.Connection(config.Freeswitch.ip, config.Freeswitch.port, config.Freeswitch.password,function(){
+var conn = new esl.Connection(config.Freeswitch.ip, config.Freeswitch.port, config.Freeswitch.password, function()
+{
     conn.subscribe(['CHANNEL_CREATE',
             'CHANNEL_CALLSTATE',
             'CHANNEL_STATE',
