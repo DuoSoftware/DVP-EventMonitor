@@ -309,10 +309,10 @@ redisClient.on('error',function(err){
 
                                     switch (action)
                                     {
-
                                         case 'conference-create':
                                             results.event = 'create';
                                             redisClient.lpush("Conference-List", conferenceID, redis.print);
+                                            redisClient.set('ConferenceNameMap_' + conferenceName, conferenceID, redis.print);
                                             redisClient.hset(conferenceID, 'Conference-Unique-ID', conferenceID, redis.print);
                                             redisClient.hset(conferenceID, 'Conference-Name', conferenceName, redis.print);
                                             redisClient.hset(conferenceID, 'Data', event.serialize('json'), redis.print);
@@ -321,7 +321,8 @@ redisClient.on('error',function(err){
                                             results.event = 'destroy';
                                             redisClient.lrem("Conference-List", 0, conferenceID, redis.print);
                                             redisClient.del(conferenceID, redis.print);
-                                            redisClient.del("Conference-Member-List" + conferenceID, redis.print);
+                                            redisClient.del("Conference-Member-List-" + conferenceID, redis.print);
+                                            redisClient.del('ConferenceNameMap_' + conferenceName, redis.print);
                                             break;
                                         case 'add-member':
                                             results.event = 'add';
@@ -329,11 +330,11 @@ redisClient.on('error',function(err){
                                             results.userName = userName;
                                             results.direction = direction;
                                             results.userType = userType;
-                                            redisClient.hset("Conference-User-" + conferenceID + "-" + userName, 'Member-ID', userID, redis.print);
+                                            redisClient.hset("Conference-User-" + conferenceID + "-" + userName, 'Caller-Username', userName, redis.print);
                                             redisClient.hset("Conference-User-" + conferenceID + "-" + userName, 'Member-Type', userType, redis.print);
                                             redisClient.hset("Conference-User-" + conferenceID + "-" + userName, 'Member-State', 'ADDED', redis.print);
                                             //redisClient.hset(conferenceID, userName, 'listen', redis.print);
-                                            redisClient.lpush("Conference-Member-List" + conferenceID, userID, redis.print);
+                                            redisClient.sadd("Conference-Member-List-" + conferenceID, userName, redis.print);
                                             break;
                                         case 'del-member':
                                             results.event = 'delete';
@@ -342,7 +343,7 @@ redisClient.on('error',function(err){
                                             results.direction = direction;
                                             results.userType = userType;
                                             redisClient.hdel("Conference-User-" + conferenceID + "-" + userName, redis.print);
-                                            redisClient.lrem("Conference-Member-List" + conferenceID, 0, userID, redis.print);
+                                            redisClient.srem("Conference-Member-List-" + conferenceID, userName, redis.print);
                                             break;
                                         case 'start-talking':
                                             results.event = 'talking';
