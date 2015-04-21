@@ -11,8 +11,13 @@ var os = require('os');
 
 
 //open a connection
-var redisPort = process.env.Redis_Port;
-var redisIp = process.env.Redis_Ip;
+var redisPort = process.env.redis_port;
+var redisIp = process.env.redis_ip;
+var freeswitchIp = process.env.fs_ip;
+var fsPort = process.env.fs_port;
+var fsPassword = process.env.fs_password;
+var fsHttpPort = process.env.fs_httport;
+
 ////////////////////////////redis/////////////////////////////////////////////////////
 var redisClient = redis.createClient(redisPort,redisIp);
 
@@ -498,7 +503,7 @@ redisClient.on('error',function(err){
     };
 
 
-var conn = new esl.Connection(config.Freeswitch.ip, config.Freeswitch.port, config.Freeswitch.password, function()
+var conn = new esl.Connection(freeswitchIp, fsPort, fsPassword, function()
 {
     conn.subscribe(['CHANNEL_CREATE',
             'CHANNEL_CALLSTATE',
