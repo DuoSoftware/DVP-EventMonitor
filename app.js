@@ -7,12 +7,14 @@ var colors = require('colors');
 var util = require('util');
 var request = require('request');
 var amqp = require('amqp');
+var os = require('os');
 
 
 //open a connection
-
+var redisPort = process.env.Redis_Port;
+var redisIp = process.env.Redis_Ip;
 ////////////////////////////redis/////////////////////////////////////////////////////
-var redisClient = redis.createClient(config.Redis.port,config.Redis.ip);
+var redisClient = redis.createClient(redisPort,redisIp);
 
 redisClient.on('error',function(err){
     console.log('Error '.red, err);

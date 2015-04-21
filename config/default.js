@@ -16,7 +16,7 @@ module.exports = {
     },
 
     Redis: {
-        ip: '192.168.3.200',
+        ip: 'localhost',
         port: 6379
     }
 };
