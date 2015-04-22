@@ -11,12 +11,12 @@ var os = require('os');
 
 
 //open a connection
-var redisPort = process.env.redis_port;
-var redisIp = process.env.redis_ip;
-var freeswitchIp = process.env.fs_ip;
-var fsPort = process.env.fs_port;
-var fsPassword = process.env.fs_password;
-var fsHttpPort = process.env.fs_httport;
+var redisPort = config.Redis.port;
+var redisIp = config.Redis.ip;
+var freeswitchIp = config.Freeswitch.ip;
+var fsPort = config.Freeswitch.port;
+var fsPassword = config.Freeswitch.password;
+var fsHttpPort = config.Freeswitch.httport;
 
 ////////////////////////////redis/////////////////////////////////////////////////////
 var redisClient = redis.createClient(redisPort,redisIp);
