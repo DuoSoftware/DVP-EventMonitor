@@ -13,9 +13,9 @@ module.exports = {
 
     WebAPI: {
 
-        domain: '192.168.1.58',
-        port: 80,
-        path: '/CSReqWebApi/api/'
+        domain: 'WEBAPI_DOMAIN',
+        port: 'WEBAPI_PORT',
+        path: 'WEBAPI_PATH'
     },
 
     Redis: {
