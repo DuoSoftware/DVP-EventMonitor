@@ -33,10 +33,6 @@ redisClient.on('error',function(err){
         var post_port = config.WebAPI.port;
         var post_path = config.WebAPI.path + section;
 
-        //var post_data = querystring.stringify({
-        //  'your' : 'post',
-        //  'data': JSON.stringify( data )
-        //});
 
         var post_data = JSON.stringify(data);
         var post_options = {
@@ -72,21 +68,49 @@ redisClient.on('error',function(err){
         {
         if (header)
         {
-            console.log(event.type + ' ID ->' + event.getHeader('Unique-ID') + ' - ');
-            redisClient.publish(conn.event, event.serialize('json'), redis.print);
-            //var uuid = event.getHeader('Channel-Call-UUID');
+            console.log("EVENT_TYPE : " + event.type + ", CHANNEL_STATE : " + event.getHeader('Channel-State') + ', SESSION_ID : ' + event.getHeader('Unique-ID') + ', CALLER_UUID : ' + event.getHeader('Caller-Unique-ID') + 'SWITCH NAME : ' + event.getHeader('FreeSWITCH-Switchname'));
+
+            var evtType = event.type;
+            var sessionId = event.getHeader('Unique-ID');
+            var variableEvtTime = event.getHeader("variable_Event-Date-Timestamp");
+            var eventTime = new Date();
+            var switchName = event.getHeader('FreeSWITCH-Switchname');
+            var chanCount = switchName + '#DVP_CHANNEL_COUNT';
+            var callCount = switchName + '#DVP_CALL_COUNT';
+
+            if(variableEvtTime)
+            {
+                var varEvtTime = parseInt(variableEvtTime)/1000;
+                eventTime = new Date(varEvtTime);
+            }
+
+            var evtData =
+            {
+                SessionId: sessionId,
+                EventClass: "CALL",
+                EventType : "CHANNEL",
+                EventTime : eventTime,
+                EventName : evtType,
+                EventData : sessionId,
+                EventParams : event
+            };
+
             switch (event.type)
             {
                 case 'CHANNEL_BRIDGE':
 
-                    redisClient.incr("BRIDGE");
+                    redisClient.incr(callCount);
+
+                    evtData.EventCategory = "CHANNEL_BRIDGE";
+
+                    var jsonStr = JSON.stringify(evtData);
+                    redisClient.publish('DVPEVENTS', jsonStr);
+
                     redisClient.hset(event.getHeader('Unique-ID'), 'Bridge-State', 'Bridged', redis.print);
                     break;
 
                 case 'CHANNEL_CALLSTATE':
-                    console.log('call state - ' + event.getHeader('Channel-Call-State'));
                     {
-
                         var otherleg;
                         var calltype;
                         if (event.getHeader('Other-Leg-Unique-ID'))
@@ -117,7 +141,6 @@ redisClient.on('error',function(err){
 
                     var uniqueId = event.getHeader('Unique-ID');
                     var channelState = event.getHeader('Channel-State');
-                    var switchName = event.getHeader('FreeSWITCH-Switchname');
                     var channelName = event.getHeader('Channel-Name');
                     var direction = event.getHeader('Call-Direction');
                     var callerDestNum = event.getHeader('Caller-Destination-Number');
@@ -130,11 +153,17 @@ redisClient.on('error',function(err){
                     var variableLoopbackApp = event.getHeader("variable_loopback_app");
                     var variableSipAuthRealm = event.getHeader("variable_sip_auth_realm");
 
+                    redisClient.incr(chanCount);
+
+                    evtData.EventCategory = "CHANNEL_CREATE";
+
+                    var jsonStr = JSON.stringify(evtData);
+                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+
                     var channelSetName = "CHANNEL@" + variableSipAuthRealm;
 
                     if(!variableLoopbackApp)
                     {
-
                         if(variableSipAuthRealm)
                         {
                             redisClient.sismember(channelSetName, uniqueId, function (err, reply)
@@ -190,79 +219,71 @@ redisClient.on('error',function(err){
                             redisClient.hset(uniqueId, 'Call-Type', calltype, redis.print);
                         }
 
-                        //direction == 'outbound' &&
 
-                        var postData = { channel: channelName, direction: direction, presence: channelPresId, callstate: channelCallState, uuid: uniqueId, otheruuid: otherleg };
-                        //httpPOST('ChannelState', postData);
-                        try
-                        {
-                            if (direction == 'outbound')
-                            {
-
-                                if (sipGatewayName) {
-
-                                    redisClient.incr("TOTAL");
-                                    redisClient.incr("OUTBOUNDCOUNT");
-
-                                    //var post_domain = config.WebAPI.domain;
-                                    //var post_port = config.WebAPI.port;
-                                    //var post_path = config.WebAPI.path;
-
-                                    //var newurl = util.format("http://%s:%s%sTrunkLimit", post_domain, post_port, post_path)
-
-                                    //var data = { gateway: sipGatewayName, caller: event.getHeader("Caller-Caller-ID-Number"), server: event.getHeader("FreeSWITCH-Switchname"), trunkserver: event.getHeader("variable_sip_to_host"), profile: event.getHeader("variable_sofia_profile_name"), callercontext: event.getHeader("Caller-Context") };
-                                    ////var postdatax = JSON.stringify(data);
-                                    //var options = { url: newurl, method: "POST", json: data };
-                                    //request(options, function (error, response, data) {
-                                    //    if (!error && response.statusCode == 200) {
-                                    //        try {
-                                    //            console.log(response.body) // Print the google web page.
-
-                                    //            //var concurrentdata = JSON.parse(response.body);
-                                    //            conn.api("uuid_limit", [uniqueId, "hash", response.body["company"], response.body["ani"], response.body["concurrency"], "!USER_BUSY"]);
-                                    //        }
-                                    //        catch (ex) {
-
-                                    //            console.log(ex);
-
-                                    //        }
-
-                                    //    }
-                                    //});
-
-                                }
-                            }
-                        }
-                        catch (ex)
-                        {
-                            console.log(ex);
-                        }
 
                         redisClient.hset(uniqueId, 'data', event.serialize('json'), redis.print);
-                        if (direction == 'outbound')
-                        {
-                            //redisClient.hset(event.getHeader('Unique-ID'), 'Other-Leg-Unique-ID', event.getHeader('Other-Leg-Unique-ID'), redis.print);
-                        }
-                        else
-                        {
-                            redisClient.lpush("Call-List-" + switchName, uniqueId, redis.print);
-                        }
+
                     }
 
                         break;
                     case 'CHANNEL_STATE':
-                        console.log('state' + event.getHeader('Channel-State'));
-                        if (event.getHeader('Channel-State') != 'CS_DESTROY') {
-                            if (redisClient.exists(event.getHeader('Unique-ID'))) {
+
+                        if (event.getHeader('Channel-State') != 'CS_DESTROY')
+                        {
+                            if (redisClient.exists(event.getHeader('Unique-ID')))
+                            {
                                 redisClient.hset(event.getHeader('Unique-ID'), 'Channel-State', event.getHeader('Channel-State'), redis.print);
                             }
                         }
-                        else {
+                        else
+                        {
                             redisClient.del(event.getHeader('Unique-ID'), redis.print);
                         }
                         break;
+                case 'CHANNEL_ANSWER':
+
+                    evtData.EventCategory = "CHANNEL_ANSWER";
+
+                    var jsonStr = JSON.stringify(evtData);
+                    redisClient.publish('DVPEVENTS', jsonStr);
+
+                    break;
+
+                case 'CHANNEL_UNBRIDGE':
+
+                    redisClient.decr(callCount);
+                    break;
+
+                case 'HEARTBEAT':
+
+                    console.log(event);
+
+                    var hbData =
+                    {
+                        FsHostName: event.getHeader('FreeSWITCH-Hostname'),
+                        FSInstanceId: switchName,
+                        FsIPv4 : event.getHeader('FreeSWITCH-IPv4'),
+                        UpTime : event.getHeader('Up-Time'),
+                        FsVersion : event.getHeader('FreeSWITCH-Version'),
+                        UpTimeMSec : event.getHeader('Uptime-msec'),
+                        SessionCount : event.getHeader('Session-Count'),
+                        MaxSessions : event.getHeader('Max-Sessions'),
+                        SessionsPerSec : event.getHeader('Session-Per-Sec'),
+                        SessionsPerSecMax : event.getHeader('Session-Per-Sec-Max'),
+                        SessionsSinceStartUp : event.getHeader('Session-Since-Startup'),
+                        IdleCpu : event.getHeader('Idle-CPU')
+                    };
+
+                    redisClient.set(FSInstanceId + '#DVP_CS_INSTANCE_INFO', JSON.stringify(hbData));
+
+                    break;
 
                 case 'CHANNEL_DESTROY':
+
+                    redisClient.decr(chanCount);
+
+                    var jsonStr = JSON.stringify(evtData);
+                    redisClient.publish('DVPEVENTS', jsonStr);
 
                     var uniqueId = event.getHeader('Unique-ID');
                     var variableSipAuthRealm = event.getHeader("variable_sip_auth_realm");
@@ -271,23 +292,8 @@ redisClient.on('error',function(err){
 
                     redisClient.del(channelSetName, redis.print);
                     redisClient.del(uniqueId, redis.print);
-                    //redisClient.decr("OUTBOUNDCOUNT");
-                    if (event.getHeader('Call-Direction') == 'inbound')
-                    {
-                        redisClient.lrem("Call-List-" + event.getHeader('FreeSWITCH-Switchname'), 0, event.getHeader('Unique-ID'), redis.print);
 
-                    }
-
-                    else if (event.getHeader('Call-Direction') == 'outbound')
-                    {
-
-                        if (event.getHeader("variable_sip_gateway_name")) {
-
-                            redisClient.decr("OUTBOUNDCOUNT");
-                        }
-                    }
-
-                        break;
+                    break;
 
                     case 'CUSTOM':
                         if (event.getHeader('Event-Subclass'))
@@ -301,8 +307,8 @@ redisClient.on('error',function(err){
 
                                     var action = event.getHeader('Action');
 
-                                    console.log(subClass);
-                                    console.log(action);
+                                    //console.log(subClass);
+                                    //console.log(action);
                                     var conferenceName = event.getHeader('Conference-Name');
                                     var conferenceSize = event.getHeader('Conference-Size');
                                     var conferenceID = event.getHeader('Conference-Unique-ID');
@@ -387,7 +393,7 @@ redisClient.on('error',function(err){
 
                                 redisClient.publish(subClass, event.serialize('json'), redis.print);
 
-                                console.log(event.getHeader("Action"));
+                                //console.log(event.getHeader("Action"));
                                 var key = util.format("Park-%s-%s", event.getHeader('Valet-Lot-Name'), event.getHeader('Valet-Extension'));
 
                                 switch (event.getHeader("Action")) {
@@ -411,13 +417,13 @@ redisClient.on('error',function(err){
                                 switch (subClass) {
                                     case 'spandsp::txfaxresult':
 
-                                        console.log(event.getHeader("fax-result-text"));
+                                        //console.log(event.getHeader("fax-result-text"));
 
                                         break;
 
                                     case 'spandsp::rxfaxresult':
 
-                                        console.log(event.getHeader("fax-result-text"));
+                                        //console.log(event.getHeader("fax-result-text"));
 
                                         break;
 
@@ -456,7 +462,7 @@ redisClient.on('error',function(err){
                                         redisClient.hset(sipuser, 'RegisterState', 'REGISTERED', redis.print);
                                         redisClient.hset(sipuser, 'Data', evtDataJson, redis.print);
 
-                                        console.log(regDetails.status + " - " + sipuser);
+                                        //console.log(regDetails.status + " - " + sipuser);
 
                                         //http://localhost:8080/api/fifo_member? add myq user/1000@realm
 
@@ -466,7 +472,7 @@ redisClient.on('error',function(err){
                                         regDetails.status = "OFFLINE";
                                         redisClient.hset(sipuser, 'RegisterState', 'OFFLINE', redis.print);
 
-                                        console.log(regDetails.status + " - " + sipuser);
+                                        //console.log(regDetails.status + " - " + sipuser);
 
                                         break;
 
@@ -475,13 +481,13 @@ redisClient.on('error',function(err){
                                         redisClient.srem(setName, 0, sipuser, redis.print);
                                         redisClient.del(sipuser, redis.print);
 
-                                        console.log(regDetails.status + " - " + sipuser);
+                                        //console.log(regDetails.status + " - " + sipuser);
 
                                         break;
 
                                 }
 
-                                console.log(subClass.yellow);
+                                //console.log(subClass.yellow);
 
                             }
 
@@ -505,7 +511,7 @@ redisClient.on('error',function(err){
 
 var conn = new esl.Connection(freeswitchIp, fsPort, fsPassword, function()
 {
-    conn.subscribe(['CHANNEL_CREATE',
+    conn.subscribe(/*['CHANNEL_CREATE',
             'CHANNEL_CALLSTATE',
             'CHANNEL_STATE',
             'CHANNEL_EXECUTE',
@@ -524,6 +530,7 @@ var conn = new esl.Connection(freeswitchIp, fsPort, fsPassword, function()
             'RECORD_STOP',
             'CHANNEL_DATA',
             'CUSTOM',
+            'HEARTBEAT',
             'conference::maintenance',
             'sofia::register',
             'sofia::pre_register',
@@ -537,7 +544,7 @@ var conn = new esl.Connection(freeswitchIp, fsPort, fsPassword, function()
             'fifo:info',
             'valet_parking::info',
             'spandsp::txfaxresult',
-            'spandsp::rxfaxresult'], function (){
+            'spandsp::rxfaxresult']*/['all'], function (){
 
                 conn.on('esl::event::**',handler);
                 console.log('Subscribed ...... '.green);
