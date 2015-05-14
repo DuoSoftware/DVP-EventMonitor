@@ -4,6 +4,7 @@
   "description": "DVP-EventMonitor\r ================",
   "main": "app.js",
   "dependencies": {
+    "DVP-Common": "DuoSoftware/DVP-Common",
     "couchbase": "^1.2.4",
     "colors": "^0.6.2",
     "amqp": "^0.2.4",
