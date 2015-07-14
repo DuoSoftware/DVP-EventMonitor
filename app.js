@@ -10,6 +10,8 @@ var amqp = require('amqp');
 var os = require('os');
 var nodeUuid = require('node-uuid');
 var logger = require('DVP-Common/LogHandler/CommonLogHandler.js').logger;
+var extApiAccess = require('./ExternalApiAccess.js');
+var tcpp = require('tcp-ping');
 
 
 //open a connection
@@ -28,41 +30,7 @@ redisClient.on('error',function(err){
     });
 //////////////////////////////////////////////////////////////////////////////////////
 
-    var httpPOST = function (section, data) {
 
-        //http://192.168.0.60/CSRequestWebApi/api/
-        var post_domain = config.WebAPI.domain;
-        var post_port = config.WebAPI.port;
-        var post_path = config.WebAPI.path + section;
-
-
-        var post_data = JSON.stringify(data);
-        var post_options = {
-            host: post_domain,
-            port: post_port,
-            path: post_path,
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Content-Length': post_data.length
-            }
-        };
-
-        var post_req = http.request(post_options, function (res) {
-            res.setEncoding('utf8');
-            res.on('data', function (chunk) {
-                console.log('Response: ' + chunk);
-            });
-        }).on("error", function (e) {
-            console.log("Got error: " + e.message);
-        });
-
-        // write parameters to post body
-        post_req.write(post_data);
-        post_req.end();
-
-
-    };
 
     var redisMessageHandler = function (err, reply)
     {
@@ -90,6 +58,9 @@ redisClient.on('error',function(err){
 
                 var evtType = event.type;
                 var sessionId = event.getHeader('Unique-ID');
+                var customCompanyStr = event.getHeader('variable_CustomCompanyStr')
+                var dvpCustPubId = event.getHeader('variable_DVP_CUSTOM_PUBID');
+                var campaignId = event.getHeader('variable_CampaignId');
                 var variableEvtTime = event.getHeader("variable_Event-Date-Timestamp");
                 var eventTime = new Date();
                 var switchName = event.getHeader('FreeSWITCH-Switchname');
@@ -110,6 +81,9 @@ redisClient.on('error',function(err){
                     EventTime: eventTime,
                     EventName: evtType,
                     EventData: sessionId,
+                    AuthData: customCompanyStr,
+                    SwitchName: switchName,
+                    CampaignId: campaignId,
                     EventParams: event
                 };
 
@@ -122,9 +96,20 @@ redisClient.on('error',function(err){
                         evtData.EventCategory = "CHANNEL_BRIDGE";
 
                         var jsonStr = JSON.stringify(evtData);
-                        redisClient.publish('DVPEVENTS', jsonStr);
 
-                        logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
+                        if(dvpCustPubId)
+                        {
+                            redisClient.publish(dvpCustPubId, jsonStr);
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+                        }
+                        else
+                        {
+                            redisClient.publish('DVPEVENTS', jsonStr);
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
+                        }
+
+
+
 
                         redisClient.hset(event.getHeader('Unique-ID'), 'Bridge-State', 'Bridged', redisMessageHandler);
                         break;
@@ -176,9 +161,16 @@ redisClient.on('error',function(err){
                         evtData.EventCategory = "CHANNEL_CREATE";
 
                         var jsonStr = JSON.stringify(evtData);
-                        redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
-
-                        logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH SYS:MONITORING:DVPEVENTS: %s', reqId, jsonStr);
+                        if(dvpCustPubId)
+                        {
+                            redisClient.publish(dvpCustPubId, jsonStr);
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM : CHANNEL : %s , DATA : %s', reqId, dvpCustPubId, jsonStr);
+                        }
+                        else
+                        {
+                            redisClient.publish('DVPEVENTS', jsonStr);
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
+                        }
 
                         var channelSetName = "CHANNEL@" + variableSipAuthRealm;
 
@@ -287,7 +279,16 @@ redisClient.on('error',function(err){
 
                         var jsonStr = JSON.stringify(evtData);
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH');
-                        redisClient.publish('DVPEVENTS', jsonStr);
+                        if(dvpCustPubId)
+                        {
+                            redisClient.publish(dvpCustPubId, jsonStr);
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+                        }
+                        else
+                        {
+                            redisClient.publish('DVPEVENTS', jsonStr);
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
+                        }
 
                         break;
 
@@ -315,7 +316,12 @@ redisClient.on('error',function(err){
                             IdleCpu: event.getHeader('Idle-CPU')
                         };
 
-                        redisClient.set(FSInstanceId + '#DVP_CS_INSTANCE_INFO', JSON.stringify(hbData), redisMessageHandler);
+                        if(switchName)
+                        {
+                            redisClient.set(switchName + '#DVP_CS_INSTANCE_INFO', JSON.stringify(hbData), redisMessageHandler);
+                        }
+
+
 
                         break;
 
@@ -323,8 +329,19 @@ redisClient.on('error',function(err){
 
                         redisClient.decr(chanCount);
 
+                        evtData.EventCategory = "CHANNEL_DESTROY";
+
                         var jsonStr = JSON.stringify(evtData);
-                        redisClient.publish('DVPEVENTS', jsonStr);
+                        if(dvpCustPubId)
+                        {
+                            redisClient.publish(dvpCustPubId, jsonStr);
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+                        }
+                        else
+                        {
+                            redisClient.publish('DVPEVENTS', jsonStr);
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
+                        }
 
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH');
 
@@ -339,9 +356,12 @@ redisClient.on('error',function(err){
                         break;
 
                     case 'CUSTOM':
-                        if (event.getHeader('Event-Subclass')) {
+
+                        if (event.getHeader('Event-Subclass'))
+                        {
                             var subClass = event.getHeader('Event-Subclass');
-                            if (subClass == 'conference::maintenance') {
+                            if (subClass == 'conference::maintenance')
+                            {
                                 redisClient.publish(subClass, event.serialize('json'), redisMessageHandler);
                                 if (event.getHeader('Action')) {
 
@@ -429,6 +449,52 @@ redisClient.on('error',function(err){
                                     //httpPOST('ConferenceStatus', results);
                                 }
 
+
+                            }
+                            else if(subClass == 'callcenter::info')
+                            {
+                                var action = event.getHeader('CC-Action');
+
+                                if(action)
+                                {
+                                    if(action == 'agent-state-change')
+                                    {
+                                        var agentStatus = event.getHeader('CC-Agent-State');
+                                        var agent = event.getHeader('CC-Agent');
+
+                                        if(agentStatus)
+                                        {
+                                            var agentSplitArr = agent.split('@');
+                                            var campId = '';
+
+                                            if(agentSplitArr.length == 2)
+                                            {
+                                                campId = agentSplitArr[1];
+                                            }
+
+                                            logger.debug('[DVP-EventMonitor.handler] - [%s] - CUSTOM EVENT - EVENT-SUBCLASS : %s, CC-ACTION : %s, CC-AGENT : %s, AGENT-STATE : %s', reqId, subClass, action, agentStatus);
+                                            if(agentStatus == 'Waiting')
+                                            {
+                                                //increment
+                                                logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== INCREMENTING ====================', reqId);
+                                                extApiAccess.IncrementMaxChanLimit(reqId, campId, '',function(err, apiRes)
+                                                {
+
+                                                })
+                                            }
+                                            else if(agentStatus == 'Receiving')
+                                            {
+                                                //decrement
+                                                logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== DECREMENTING ====================', reqId);
+                                                extApiAccess.DecrementMaxChanLimit(reqId, campId, '', function(err, apiRes)
+                                                {
+
+                                                })
+                                            }
+                                        }
+
+                                    }
+                                }
 
                             }
 
@@ -551,52 +617,131 @@ redisClient.on('error',function(err){
         catch (e)
         {
             logger.error('[DVP-EventMonitor.handler] - [%s] - Exception on handler ', reqId, e);
-
         }
 
     };
 
-
-var conn = new esl.Connection(freeswitchIp, fsPort, fsPassword, function()
+var errorHandler = function(err)
 {
-    conn.subscribe(/*['CHANNEL_CREATE',
-            'CHANNEL_CALLSTATE',
-            'CHANNEL_STATE',
-            'CHANNEL_EXECUTE',
-            'CHANNEL_EXECUTE_COMPLETE',
-            'CHANNEL_DESTROY',
-            'CHANNEL_PARK',
-            'CHANNEL_ANSWER',
-            'CHANNEL_UNBRIDGE',
-            'CHANNEL_BRIDGE',
-            'RECV_INFO',
-            'MESSAGE',
-            'DTMF',
-            'CHANNEL_EXECUTE_COMPLETE',
-            'PLAYBACK_STOP',
-            'CHANNEL_HANGUP_COMPLETE',
-            'RECORD_STOP',
-            'CHANNEL_DATA',
-            'CUSTOM',
-            'HEARTBEAT',
-            'conference::maintenance',
-            'sofia::register',
-            'sofia::pre_register',
-            'sofia::register_attempt',
-            'sofia::register_failure',
-            'sofia::unregister',
-            'sofia::expire',
-            'sofia::gateway_add',
-            'sofia::gateway_delete',
-            'sofia::gateway_state',
-            'fifo:info',
-            'valet_parking::info',
-            'spandsp::txfaxresult',
-            'spandsp::rxfaxresult']*/['all'], function (){
+    logger.error('Error occurred', err);
+    CreateESLWithTimeout();
+};
 
-                conn.on('esl::event::**',handler);
-                logger.info('[DVP-EventMonitor.AppStart] - Subscribed to FS Events.....');
-                });
+var connectionHandler = function()
+{
+    logger.debug('CONNECTION END');
+    CreateESLWithTimeout();
+};
+
+var connectionReadyHandler = function()
+{
+    logger.debug('CONNECTION READY');
+};
+
+var CreateESLWithTimeout = function()
+{
+    setTimeout(CreateESLConnection, 5000);
+};
+
+var flag = true;
+
+var CreateESLConnection = function()
+{
+    tcpp.probe('192.168.0.50', 8021, function(err, available)
+    {
+        if(available === true)
+        {
+            if(flag)
+            {
+                //set connection
+                logger.debug('CONNECTION CAN BE ESTABLISHED');
+                //set flag to stop
+                try
+                {
+                    logger.debug('CREATING ESL CONNECTION');
+                    var conn = new esl.Connection(freeswitchIp, fsPort, fsPassword, function()
+                    {
+                        try
+                        {
+                            conn.subscribe(/*['CHANNEL_CREATE',
+                             'CHANNEL_CALLSTATE',
+                             'CHANNEL_STATE',
+                             'CHANNEL_EXECUTE',
+                             'CHANNEL_EXECUTE_COMPLETE',
+                             'CHANNEL_DESTROY',
+                             'CHANNEL_PARK',
+                             'CHANNEL_ANSWER',
+                             'CHANNEL_UNBRIDGE',
+                             'CHANNEL_BRIDGE',
+                             'RECV_INFO',
+                             'MESSAGE',
+                             'DTMF',
+                             'CHANNEL_EXECUTE_COMPLETE',
+                             'PLAYBACK_STOP',
+                             'CHANNEL_HANGUP_COMPLETE',
+                             'RECORD_STOP',
+                             'CHANNEL_DATA',
+                             'CUSTOM',
+                             'HEARTBEAT',
+                             'conference::maintenance',
+                             'sofia::register',
+                             'sofia::pre_register',
+                             'sofia::register_attempt',
+                             'sofia::register_failure',
+                             'sofia::unregister',
+                             'sofia::expire',
+                             'sofia::gateway_add',
+                             'sofia::gateway_delete',
+                             'sofia::gateway_state',
+                             'fifo:info',
+                             'valet_parking::info',
+                             'spandsp::txfaxresult',
+                             'spandsp::rxfaxresult']*/['all'], function () {
+
+                                conn.on('esl::event::**', handler);
+                                conn.on('error', errorHandler);
+                                conn.on('esl::end', connectionHandler);
+                                conn.on('esl::ready', connectionReadyHandler);
+                                logger.info('[DVP-EventMonitor.AppStart] - Subscribed to FS Events.....');
+                                flag = false;
+                                CreateESLWithTimeout();
+                            });
+
+                        }
+                        catch (ex)
+                        {
+                            logger.error('ERROR OCCURRED', ex);
+                        }
+
+                    });
+                }
+                catch(ex)
+                {
+                    logger.error('ERROR OCCURRED', ex);
+                }
+            }
+            else
+            {
+                //retry
+                CreateESLWithTimeout();
+            }
+
+
+        }
+        else
+        {
+            //retry
+            logger.debug('CONNECTION CANNOT BE ESTABLISHED - RETRYING');
+            flag = true;
+            CreateESLWithTimeout();
+        }
     });
+
+
+
+};
+
+CreateESLWithTimeout();
+
 
 process.stdin.resume();

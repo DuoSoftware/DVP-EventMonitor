@@ -9,7 +9,10 @@ module.exports = {
         httport: 'FS_HTTP_PORT'
     },
 
-
+    Dialer: {
+        ip: 'DIALER_IP',
+        port: 'DIALER_PORT'
+    },
 
     WebAPI: {
 
