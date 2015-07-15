@@ -83,8 +83,7 @@ redisClient.on('error',function(err){
                     EventData: sessionId,
                     AuthData: customCompanyStr,
                     SwitchName: switchName,
-                    CampaignId: campaignId,
-                    EventParams: event
+                    CampaignId: campaignId
                 };
 
                 switch (event.type)
@@ -454,15 +453,17 @@ redisClient.on('error',function(err){
                             else if(subClass == 'callcenter::info')
                             {
                                 var action = event.getHeader('CC-Action');
+                                var agentState = event.getHeader('CC-Agent-State');
+                                var agent = event.getHeader('CC-Agent');
+                                var agentStatus = event.getHeader('CC-Agent-State');
+
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - CUSTOM EVENT - EVENT-SUBCLASS : %s, CC-ACTION : %s, CC-AGENT : %s, AGENT-STATE : %s', reqId, subClass, action, agentState);
 
                                 if(action)
                                 {
                                     if(action == 'agent-state-change')
                                     {
-                                        var agentStatus = event.getHeader('CC-Agent-State');
-                                        var agent = event.getHeader('CC-Agent');
-
-                                        if(agentStatus)
+                                        if(agentState)
                                         {
                                             var agentSplitArr = agent.split('@');
                                             var campId = '';
@@ -472,8 +473,7 @@ redisClient.on('error',function(err){
                                                 campId = agentSplitArr[1];
                                             }
 
-                                            logger.debug('[DVP-EventMonitor.handler] - [%s] - CUSTOM EVENT - EVENT-SUBCLASS : %s, CC-ACTION : %s, CC-AGENT : %s, AGENT-STATE : %s', reqId, subClass, action, agentStatus);
-                                            if(agentStatus == 'Waiting')
+                                            if(agentState == 'Waiting')
                                             {
                                                 //increment
                                                 logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== INCREMENTING ====================', reqId);
@@ -482,7 +482,7 @@ redisClient.on('error',function(err){
 
                                                 })
                                             }
-                                            else if(agentStatus == 'Receiving')
+                                            else if(agentState == 'Receiving')
                                             {
                                                 //decrement
                                                 logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== DECREMENTING ====================', reqId);
@@ -493,6 +493,38 @@ redisClient.on('error',function(err){
                                             }
                                         }
 
+                                    }
+                                    else if(action == 'agent-status-change')
+                                    {
+                                        if(agentStatus)
+                                        {
+                                            var agentSplitArr = agent.split('@');
+                                            var campId = '';
+
+                                            if(agentSplitArr.length == 2)
+                                            {
+                                                campId = agentSplitArr[1];
+                                            }
+
+                                            if(agentStatus == 'Available')
+                                            {
+                                                //increment
+                                                logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== INCREMENTING ====================', reqId);
+                                                extApiAccess.IncrementMaxChanLimit(reqId, campId, '',function(err, apiRes)
+                                                {
+
+                                                })
+                                            }
+                                            else if(agentStatus == 'Logged Out')
+                                            {
+                                                //decrement
+                                                logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== DECREMENTING ====================', reqId);
+                                                extApiAccess.DecrementMaxChanLimit(reqId, campId, '', function(err, apiRes)
+                                                {
+
+                                                })
+                                            }
+                                        }
                                     }
                                 }
 
@@ -647,7 +679,7 @@ var flag = true;
 
 var CreateESLConnection = function()
 {
-    tcpp.probe('192.168.0.50', 8021, function(err, available)
+    tcpp.probe(freeswitchIp, fsPort, function(err, available)
     {
         if(available === true)
         {
