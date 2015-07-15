@@ -1,14 +1,14 @@
 module.exports = {
     Freeswitch: {
-        ip: '192.168.0.50',
+        ip: '192.168.3.55',
         port: 8021,
         password: 'devadmin',
         httport: 8080
     },
 
     Dialer: {
-        ip: '192.168.0.15',
-        port: 6565
+        ip: '192.168.3.36',
+        port: 2223
     },
 
     WebAPI: {
@@ -19,7 +19,7 @@ module.exports = {
     },
 
     Redis: {
-        ip: '192.168.3.200',
+        ip: '192.168.3.55',
         port: 6379
     }
 };

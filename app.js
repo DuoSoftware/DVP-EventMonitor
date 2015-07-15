@@ -455,43 +455,43 @@ redisClient.on('error',function(err){
                                 var action = event.getHeader('CC-Action');
                                 var agentState = event.getHeader('CC-Agent-State');
                                 var agent = event.getHeader('CC-Agent');
-                                var agentStatus = event.getHeader('CC-Agent-State');
+                                var agentStatus = event.getHeader('CC-Agent-Status');
 
-                                logger.debug('[DVP-EventMonitor.handler] - [%s] - CUSTOM EVENT - EVENT-SUBCLASS : %s, CC-ACTION : %s, CC-AGENT : %s, AGENT-STATE : %s', reqId, subClass, action, agentState);
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - CUSTOM EVENT - EVENT-SUBCLASS : %s, CC-ACTION : %s, CC-AGENT : %s, AGENT-STATUS : %s, AGENT-STATE : %s', reqId, subClass, action, agent, agentStatus, agentState);
 
                                 if(action)
                                 {
                                     if(action == 'agent-state-change')
                                     {
-                                        if(agentState)
-                                        {
-                                            var agentSplitArr = agent.split('@');
-                                            var campId = '';
+                                        //if(agentState)
+                                        //{
+                                        //    var agentSplitArr = agent.split('@');
+                                        //    var campId = '';
 
-                                            if(agentSplitArr.length == 2)
-                                            {
-                                                campId = agentSplitArr[1];
-                                            }
+                                        //    if(agentSplitArr.length == 2)
+                                        //    {
+                                        //        campId = agentSplitArr[1];
+                                        //    }
 
-                                            if(agentState == 'Waiting')
-                                            {
+                                        //    if(agentState == 'Waiting')
+                                        //    {
                                                 //increment
-                                                logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== INCREMENTING ====================', reqId);
-                                                extApiAccess.IncrementMaxChanLimit(reqId, campId, '',function(err, apiRes)
-                                                {
+                                        //        logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== INCREMENTING ====================', reqId);
+                                        //        extApiAccess.IncrementMaxChanLimit(reqId, campId, '',function(err, apiRes)
+                                        //        {
 
-                                                })
-                                            }
-                                            else if(agentState == 'Receiving')
-                                            {
+                                        //       })
+                                        //    }
+                                        //    else if(agentState == 'Receiving')
+                                        //    {
                                                 //decrement
-                                                logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== DECREMENTING ====================', reqId);
-                                                extApiAccess.DecrementMaxChanLimit(reqId, campId, '', function(err, apiRes)
-                                                {
+                                        //        logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== DECREMENTING ====================', reqId);
+                                        //        extApiAccess.DecrementMaxChanLimit(reqId, campId, '', function(err, apiRes)
+                                        //        {
 
-                                                })
-                                            }
-                                        }
+                                        //        })
+                                        //    }
+                                        //}
 
                                     }
                                     else if(action == 'agent-status-change')
@@ -508,20 +508,34 @@ redisClient.on('error',function(err){
 
                                             if(agentStatus == 'Available')
                                             {
-                                                //increment
-                                                logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== INCREMENTING ====================', reqId);
-                                                extApiAccess.IncrementMaxChanLimit(reqId, campId, '',function(err, apiRes)
+                                                extApiAccess.GetModCallCenterAgentCount(reqId, campId, function(err, fsResp)
                                                 {
+                                                    if(fsResp)
+                                                    {
+                                                        var repStr = fsResp.replace('\n', '');
+                                                        logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== SET LIMIT ====================', reqId);
+                                                        extApiAccess.SetMaxChanLimit(reqId, campId, repStr, '',function(err, apiRes)
+                                                        {
 
+                                                        })
+                                                    }
                                                 })
+
                                             }
                                             else if(agentStatus == 'Logged Out')
                                             {
                                                 //decrement
-                                                logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== DECREMENTING ====================', reqId);
-                                                extApiAccess.DecrementMaxChanLimit(reqId, campId, '', function(err, apiRes)
+                                                extApiAccess.GetModCallCenterAgentCount(reqId, campId, function(err, fsResp)
                                                 {
+                                                    if(fsResp)
+                                                    {
+                                                        var repStr = fsResp.replace('\n', '');
+                                                        logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== SET LIMIT ====================', reqId);
+                                                        extApiAccess.SetMaxChanLimit(reqId, campId, repStr, '',function(err, apiRes)
+                                                        {
 
+                                                        })
+                                                    }
                                                 })
                                             }
                                         }
