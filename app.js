@@ -12,6 +12,7 @@ var nodeUuid = require('node-uuid');
 var logger = require('DVP-Common/LogHandler/CommonLogHandler.js').logger;
 var extApiAccess = require('./ExternalApiAccess.js');
 var tcpp = require('tcp-ping');
+var moment = require('moment');
 
 
 //open a connection
@@ -21,6 +22,13 @@ var freeswitchIp = config.Freeswitch.ip;
 var fsPort = config.Freeswitch.port;
 var fsPassword = config.Freeswitch.password;
 var fsHttpPort = config.Freeswitch.httport;
+
+
+//var timeInGMT = moment(dd).utcOffset('0000');
+
+//var ss = timeInGMT.toISOString();
+
+
 
 ////////////////////////////redis/////////////////////////////////////////////////////
 var redisClient = redis.createClient(redisPort,redisIp);
@@ -62,15 +70,20 @@ redisClient.on('error',function(err){
                 var dvpCustPubId = event.getHeader('variable_DVP_CUSTOM_PUBID');
                 var campaignId = event.getHeader('variable_CampaignId');
                 var variableEvtTime = event.getHeader("variable_Event-Date-Timestamp");
-                var eventTime = new Date();
+                var eventTime = '';
                 var switchName = event.getHeader('FreeSWITCH-Switchname');
                 var chanCount = switchName + '#DVP_CHANNEL_COUNT';
                 var callCount = switchName + '#DVP_CALL_COUNT';
 
                 if (variableEvtTime)
                 {
-                    var varEvtTime = parseInt(variableEvtTime) / 1000;
-                    eventTime = new Date(varEvtTime);
+                    //var varEvtTime = parseInt(variableEvtTime) / 1000;
+                    //eventTime = new Date(varEvtTime);
+
+                    var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+                    d.setUTCSeconds(variableEvtTime);
+
+                    eventTime = d.toISOString();
                 }
 
                 var evtData =
@@ -320,8 +333,6 @@ redisClient.on('error',function(err){
                             redisClient.set(switchName + '#DVP_CS_INSTANCE_INFO', JSON.stringify(hbData), redisMessageHandler);
                         }
 
-
-
                         break;
 
                     case 'CHANNEL_DESTROY':
@@ -329,6 +340,7 @@ redisClient.on('error',function(err){
                         redisClient.decr(chanCount);
 
                         evtData.EventCategory = "CHANNEL_DESTROY";
+                        evtData.DisconnectReason = event.getHeader('Hangup-Cause');
 
                         var jsonStr = JSON.stringify(evtData);
                         if(dvpCustPubId)
