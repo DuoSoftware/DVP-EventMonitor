@@ -1,0 +1,39 @@
+{
+  "name": "DVP-EventMonitor",
+  "version": "1.0.0",
+  "description": "DVP-EventMonitor\r ================",
+  "main": "app.js",
+  "dependencies": {
+    "amqp": "^0.2.4",
+    "colors": "^0.6.2",
+    "config": "^1.13.0",
+    "node-uuid": "^1.4.3",
+    "moment": "^2.10.3",
+    "modesl": "^1.1.3",
+    "querystring": "^0.2.0",
+    "nimble": "^0.0.2",
+    "regex": "^0.1.1",
+    "request": "^2.55.0",
+    "yaml": "^0.2.3",
+    "couchbase": "^1.2.4",
+    "redis": "^0.10.3",
+    "stringify": "^3.1.0",
+    "util": "^0.10.3",
+    "tcp-ping": "^0.1.1",
+    "DVP-Common": "DuoSoftware/DVP-Common"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DuoSoftware/DVP-EventMonitor.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DuoSoftware/DVP-EventMonitor/issues"
+  },
+  "homepage": "https://github.com/DuoSoftware/DVP-EventMonitor"
+}
