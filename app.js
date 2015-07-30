@@ -74,6 +74,7 @@ redisClient.on('error',function(err){
                 var switchName = event.getHeader('FreeSWITCH-Switchname');
                 var chanCount = switchName + '#DVP_CHANNEL_COUNT';
                 var callCount = switchName + '#DVP_CALL_COUNT';
+                var callerDestNum = event.getHeader('Caller-Destination-Number');
 
                 if (variableEvtTime)
                 {
@@ -96,7 +97,8 @@ redisClient.on('error',function(err){
                     EventData: sessionId,
                     AuthData: customCompanyStr,
                     SwitchName: switchName,
-                    CampaignId: campaignId
+                    CampaignId: campaignId,
+                    CallerDestNum: callerDestNum
                 };
 
                 switch (event.type)
@@ -158,7 +160,6 @@ redisClient.on('error',function(err){
                         var channelState = event.getHeader('Channel-State');
                         var channelName = event.getHeader('Channel-Name');
                         var direction = event.getHeader('Call-Direction');
-                        var callerDestNum = event.getHeader('Caller-Destination-Number');
                         var callerUniqueId = event.getHeader('Caller-Unique-ID');
                         var otherLegUuid = event.getHeader('Other-Leg-Unique-ID');
                         var fifoBridgeUuid = event.getHeader('variable_fifo_bridge_uuid');
@@ -350,7 +351,10 @@ redisClient.on('error',function(err){
                         }
                         else
                         {
-                            redisClient.publish('DVPEVENTS', jsonStr);
+                            evtData.DisconnectReason = evtData.DisconnectReason + '_DVPEVENTS';
+
+                            var jsonStr1 = JSON.stringify(evtData);
+                            redisClient.publish('DVPEVENTS', jsonStr1);
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 
