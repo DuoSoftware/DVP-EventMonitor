@@ -22,7 +22,7 @@ module.exports = {
     },
 
     Redis: {
-        ip: 'REDIS_IP',
-        port: 'REDIS_PORT'
+        ip: 'SYS_REDIS_HOST',
+        port: 'SYS_REDIS_PORT'
     }
 };
