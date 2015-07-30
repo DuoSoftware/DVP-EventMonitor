@@ -118,7 +118,7 @@ redisClient.on('error',function(err){
                         }
                         else
                         {
-                            redisClient.publish('DVPEVENTS', jsonStr);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 
@@ -181,7 +181,7 @@ redisClient.on('error',function(err){
                         }
                         else
                         {
-                            redisClient.publish('DVPEVENTS', jsonStr);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 
@@ -299,7 +299,7 @@ redisClient.on('error',function(err){
                         }
                         else
                         {
-                            redisClient.publish('DVPEVENTS', jsonStr);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 
@@ -351,7 +351,7 @@ redisClient.on('error',function(err){
                         }
                         else
                         {
-                            redisClient.publish('DVPEVENTS', jsonStr);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="103bb18b-42dd-416f-8893-27a824568d4b" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/config/custom-environment-variables.js" afterPath="$PROJECT_DIR$/config/custom-environment-variables.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app.js" afterPath="$PROJECT_DIR$/app.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="DVP-EventMonitor.iws" />
@@ -27,13 +27,13 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="app.js" pinned="false" current-in-tab="false">
+      <file leaf-file-name="app.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="7683" max-vertical-offset="13753">
-              <caret line="350" column="24" selection-start-line="350" selection-start-column="24" selection-end-line="350" selection-end-column="24" />
+            <state vertical-scroll-proportion="0.36300173" vertical-offset="2920" max-vertical-offset="13753">
+              <caret line="184" column="55" selection-start-line="184" selection-start-column="55" selection-end-line="184" selection-end-column="55" />
               <folding>
-                <element signature="e#25683#25699#0" expanded="false" />
+                <element signature="e#25743#25759#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -42,7 +42,7 @@
       <file leaf-file-name="default.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/config/default.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="510">
+            <state vertical-scroll-proportion="0.0" vertical-offset="153" max-vertical-offset="510">
               <caret line="9" column="25" selection-start-line="9" selection-start-column="25" selection-end-line="9" selection-end-column="25" />
               <folding />
             </state>
@@ -73,10 +73,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="custom-environment-variables.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="custom-environment-variables.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/config/custom-environment-variables.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.33387887" vertical-offset="0" max-vertical-offset="611">
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="527">
               <caret line="14" column="6" selection-start-line="14" selection-start-column="6" selection-end-line="14" selection-end-column="6" />
               <folding>
                 <element signature="e#0#43#0" expanded="false" />
@@ -98,8 +98,8 @@
         <option value="$PROJECT_DIR$/config/default.js" />
         <option value="$PROJECT_DIR$/node_modules/DVP-Common/LogHandler/CommonLogHandler.js" />
         <option value="$PROJECT_DIR$/package.json" />
-        <option value="$PROJECT_DIR$/app.js" />
         <option value="$PROJECT_DIR$/config/custom-environment-variables.js" />
+        <option value="$PROJECT_DIR$/app.js" />
       </list>
     </option>
   </component>
@@ -135,7 +135,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -170,6 +169,7 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -205,10 +205,14 @@
       <ConfigurationWrapper RunnerId="debuggableProgram" />
       <method />
     </configuration>
+    <configuration default="true" type="DartCommandLineRunConfigurationType" factoryName="Dart Command Line Application">
+      <method />
+    </configuration>
     <configuration default="true" type="DartUnitRunConfigurationType" factoryName="DartUnit">
       <method />
     </configuration>
-    <configuration default="true" type="DartCommandLineRunConfigurationType" factoryName="Dart Command Line Application">
+    <configuration default="true" type="JavaScriptTestRunnerKarma" factoryName="Karma" config-file="">
+      <envs />
       <method />
     </configuration>
     <configuration default="true" type="JSTestDriver:ConfigurationType" factoryName="JsTestDriver">
@@ -216,10 +220,6 @@
       <setting name="settingsFile" value="" />
       <setting name="serverType" value="INTERNAL" />
       <setting name="preferredDebugBrowser" value="Chrome" />
-      <method />
-    </configuration>
-    <configuration default="true" type="JavaScriptTestRunnerKarma" factoryName="Karma" config-file="">
-      <envs />
       <method />
     </configuration>
     <configuration default="true" type="JavascriptDebugType" factoryName="JavaScript Debug">
@@ -398,7 +398,7 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="10047">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#25683#25699#0" expanded="false" />
+            <element signature="e#25743#25759#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -433,7 +433,7 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="10030">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#25683#25699#0" expanded="false" />
+            <element signature="e#25743#25759#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -468,7 +468,7 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="1071" max-vertical-offset="9401">
           <caret line="30" column="37" selection-start-line="30" selection-start-column="37" selection-end-line="30" selection-end-column="37" />
           <folding>
-            <element signature="e#25683#25699#0" expanded="false" />
+            <element signature="e#25743#25759#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -503,7 +503,7 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="9401">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#25683#25699#0" expanded="false" />
+            <element signature="e#25743#25759#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -531,7 +531,7 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="9401">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#25683#25699#0" expanded="false" />
+            <element signature="e#25743#25759#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -559,7 +559,7 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="9401">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#25683#25699#0" expanded="false" />
+            <element signature="e#25743#25759#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -577,7 +577,7 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="9282">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#25683#25699#0" expanded="false" />
+            <element signature="e#25743#25759#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -587,7 +587,7 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="9078">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#25683#25699#0" expanded="false" />
+            <element signature="e#25743#25759#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -597,7 +597,7 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="9078">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#25683#25699#0" expanded="false" />
+            <element signature="e#25743#25759#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -607,7 +607,7 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="8296">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#25683#25699#0" expanded="false" />
+            <element signature="e#25743#25759#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -617,7 +617,7 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="7854">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#25683#25699#0" expanded="false" />
+            <element signature="e#25743#25759#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -634,7 +634,7 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="7854">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#25683#25699#0" expanded="false" />
+            <element signature="e#25743#25759#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -764,16 +764,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="7683" max-vertical-offset="13753">
-          <caret line="350" column="24" selection-start-line="350" selection-start-column="24" selection-end-line="350" selection-end-column="24" />
-          <folding>
-            <element signature="e#25683#25699#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/config/default.js">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="510">
@@ -784,10 +774,20 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/config/custom-environment-variables.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.33387887" vertical-offset="0" max-vertical-offset="611">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="527">
           <caret line="14" column="6" selection-start-line="14" selection-start-column="6" selection-end-line="14" selection-end-column="6" />
           <folding>
             <element signature="e#0#43#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.36300173" vertical-offset="2920" max-vertical-offset="13753">
+          <caret line="184" column="55" selection-start-line="184" selection-start-column="55" selection-end-line="184" selection-end-column="55" />
+          <folding>
+            <element signature="e#25743#25759#0" expanded="false" />
           </folding>
         </state>
       </provider>
