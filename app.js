@@ -351,10 +351,7 @@ redisClient.on('error',function(err){
                         }
                         else
                         {
-                            evtData.DisconnectReason = evtData.DisconnectReason + '_DVPEVENTS';
-
-                            var jsonStr1 = JSON.stringify(evtData);
-                            redisClient.publish('DVPEVENTS', jsonStr1);
+                            redisClient.publish('DVPEVENTS', jsonStr);
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 
