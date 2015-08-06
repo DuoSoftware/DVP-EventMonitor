@@ -680,16 +680,20 @@ redisClient.on('error',function(err){
 
     };
 
+var flag = true;
+
 var errorHandler = function(err)
 {
     logger.error('Error occurred', err);
-    CreateESLWithTimeout();
+    //CreateESLWithTimeout();
+    flag = true;
 };
 
 var connectionHandler = function()
 {
     logger.debug('CONNECTION END');
-    CreateESLWithTimeout();
+    //CreateESLWithTimeout();
+    flag = true;
 };
 
 var connectionReadyHandler = function()
@@ -701,8 +705,6 @@ var CreateESLWithTimeout = function()
 {
     setTimeout(CreateESLConnection, 5000);
 };
-
-var flag = true;
 
 var CreateESLConnection = function()
 {
