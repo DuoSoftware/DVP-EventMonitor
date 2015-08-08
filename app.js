@@ -367,6 +367,10 @@ redisClient.on('error',function(err){
 
                         break;
 
+                    case 'PRESENCE_IN':
+                        logger.debug(event);
+                        break;
+
                     case 'CUSTOM':
 
                         if (event.getHeader('Event-Subclass'))
@@ -519,7 +523,7 @@ redisClient.on('error',function(err){
                                                 campId = agentSplitArr[1];
                                             }
 
-                                            if(agentStatus == 'Available')
+                                            if(agentStatus == 'Available' || agentStatus == 'Logged Out' || agentStatus == 'On Break')
                                             {
                                                 extApiAccess.GetModCallCenterAgentCount(reqId, campId, function(err, fsResp)
                                                 {
@@ -535,22 +539,7 @@ redisClient.on('error',function(err){
                                                 })
 
                                             }
-                                            else if(agentStatus == 'Logged Out')
-                                            {
-                                                //decrement
-                                                extApiAccess.GetModCallCenterAgentCount(reqId, campId, function(err, fsResp)
-                                                {
-                                                    if(fsResp)
-                                                    {
-                                                        var repStr = fsResp.replace('\n', '');
-                                                        logger.debug('[DVP-EventMonitor.handler] - [%s] - ==================== SET LIMIT ====================', reqId);
-                                                        extApiAccess.SetMaxChanLimit(reqId, campId, repStr, '',function(err, apiRes)
-                                                        {
 
-                                                        })
-                                                    }
-                                                })
-                                            }
                                         }
                                     }
                                 }

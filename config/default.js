@@ -1,8 +1,8 @@
 module.exports = {
     Freeswitch: {
-        ip: '192.168.0.53',
+        ip: '45.55.205.92',
         port: 8021,
-        password: 'devadmin',
+        password: 'ClueCon',
         httport: 8080
     },
 
