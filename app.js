@@ -13,6 +13,7 @@ var logger = require('DVP-Common/LogHandler/CommonLogHandler.js').logger;
 var extApiAccess = require('./ExternalApiAccess.js');
 var tcpp = require('tcp-ping');
 var moment = require('moment');
+var dbOp = require('./DbOperationsHandler.js');
 
 
 //open a connection
@@ -368,7 +369,17 @@ redisClient.on('error',function(err){
                         break;
 
                     case 'PRESENCE_IN':
-                        logger.debug(event);
+                        var userUri = event.getHeader('from');
+                        var userStatus = event.getHeader('status');
+                        var uriSplit = userUri.split('@');
+
+                        if(uriSplit && uriSplit.length == 2)
+                        {
+                            if(userStatus === 'Busy' || userStatus === 'Available')
+                            {
+                                dbOp.UpdatePresenceDB(uriSplit[0], userStatus);
+                            }
+                        }
                         break;
 
                     case 'CUSTOM':
@@ -408,6 +419,7 @@ redisClient.on('error',function(err){
                                             redisClient.set('ConferenceNameMap_' + conferenceName, conferenceID, redisMessageHandler);
                                             redisClient.hset(conferenceID, 'Conference-Unique-ID', conferenceID, redisMessageHandler);
                                             redisClient.hset(conferenceID, 'Conference-Name', conferenceName, redisMessageHandler);
+                                            redisClient.hset(conferenceID, 'SwitchName', switchName, redisMessageHandler);
                                             redisClient.hset(conferenceID, 'Data', event.serialize('json'), redisMessageHandler);
                                             break;
                                         case 'conference-destroy':
@@ -590,60 +602,24 @@ redisClient.on('error',function(err){
                                 //redisClient.publish(subClass, event.serialize('json'), redis.print);
                                 var username = event.getHeader('username');
                                 var realm = event.getHeader('realm');
-                                var profileName = event.getHeader('profile-name');
-                                var regDetails = {name: username, realm: realm, profile: profileName, status: "None"};
 
-                                var setName = "SIPREG@" + realm;
-                                var sipuser = "SIPUSER:" + username + "@" + realm;
 
                                 switch (subClass) {
 
                                     case 'sofia::register':
 
-                                        regDetails.status = "REGISTERED";
-
-                                        redisClient.sismember(setName, sipuser, function (err, reply)
-                                        {
-                                            if(err)
-                                            {
-                                                logger.error('[DVP-EventMonitor.handler] - [%s] - REDIS ERROR', err);
-                                            }
-                                            else
-                                            {
-                                                logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS SUCCESS');
-                                            }
-                                            if (reply === 0)
-                                            {
-                                                redisClient.sadd(setName, sipuser, redisMessageHandler);
-                                            }
-                                        });
-
-                                        var evtDataJson = event.serialize('json');
-
-                                        redisClient.hset(sipuser, 'username', username, redisMessageHandler);
-                                        redisClient.hset(sipuser, 'RegisterState', 'REGISTERED', redisMessageHandler);
-                                        redisClient.hset(sipuser, 'Data', evtDataJson, redisMessageHandler);
-
-                                        //console.log(regDetails.status + " - " + sipuser);
-
-                                        //http://localhost:8080/api/fifo_member? add myq user/1000@realm
+                                        dbOp.AddPresenceDB(username, realm, 'REGISTERED');
 
                                         break;
 
                                     case 'sofia::expire':
-                                        regDetails.status = "OFFLINE";
-                                        redisClient.hset(sipuser, 'RegisterState', 'OFFLINE', redisMessageHandler);
-
-                                        //console.log(regDetails.status + " - " + sipuser);
+                                        dbOp.DeletePresenceDB(username);
 
                                         break;
 
                                     case 'sofia::unregister':
 
-                                        redisClient.srem(setName, 0, sipuser, redisMessageHandler);
-                                        redisClient.del(sipuser, redisMessageHandler);
-
-                                        //console.log(regDetails.status + " - " + sipuser);
+                                        dbOp.DeletePresenceDB(username);
 
                                         break;
 

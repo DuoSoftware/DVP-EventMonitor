@@ -20,7 +20,8 @@
     "stringify": "^3.1.0",
     "util": "^0.10.3",
     "tcp-ping": "^0.1.1",
-    "DVP-Common": "DuoSoftware/DVP-Common"
+    "DVP-Common": "DuoSoftware/DVP-Common",
+    "DVP-DBModels": "DuoSoftware/DVP-DBModels"
   },
   "devDependencies": {},
   "scripts": {
