@@ -23,6 +23,12 @@ module.exports = {
         port: 'DIALER_PORT'
     },
 
+    ARDS: {
+        ip: 'ARDS_IP',
+        port: 'ARDS_PORT',
+        version: 'ARDS_VERSION'
+    },
+
     WebAPI: {
 
         domain: 'WEBAPI_DOMAIN',

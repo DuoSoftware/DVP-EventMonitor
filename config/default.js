@@ -20,6 +20,12 @@ module.exports = {
         port: 2223
     },
 
+    ARDS: {
+        ip: '192.168.0.15',
+        port: 2225,
+        version: '1.0.0.0'
+    },
+
     WebAPI: {
 
         domain: '192.168.1.58',

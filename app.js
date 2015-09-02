@@ -14,6 +14,7 @@ var extApiAccess = require('./ExternalApiAccess.js');
 var tcpp = require('tcp-ping');
 var moment = require('moment');
 var dbOp = require('./DbOperationsHandler.js');
+var ardsHandler = require('./ArdsResourceStateHandler.js');
 
 
 //open a connection
@@ -67,7 +68,7 @@ redisClient.on('error',function(err){
 
                 var evtType = event.type;
                 var sessionId = event.getHeader('Unique-ID');
-                var customCompanyStr = event.getHeader('variable_CustomCompanyStr')
+                var customCompanyStr = event.getHeader('variable_CustomCompanyStr');
                 var dvpCustPubId = event.getHeader('variable_DVP_CUSTOM_PUBID');
                 var campaignId = event.getHeader('variable_CampaignId');
                 var variableEvtTime = event.getHeader("variable_Event-Date-Timestamp");
@@ -122,9 +123,6 @@ redisClient.on('error',function(err){
                             redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
-
-
-
 
                         redisClient.hset(event.getHeader('Unique-ID'), 'Bridge-State', 'Bridged', redisMessageHandler);
                         break;
@@ -289,6 +287,8 @@ redisClient.on('error',function(err){
                         break;
                     case 'CHANNEL_ANSWER':
 
+                        ardsHandler.SendResourceStatus(reqId, event, 'Connected');
+
                         evtData.EventCategory = "CHANNEL_ANSWER";
 
                         var jsonStr = JSON.stringify(evtData);
@@ -338,6 +338,8 @@ redisClient.on('error',function(err){
                         break;
 
                     case 'CHANNEL_DESTROY':
+
+                        ardsHandler.SendResourceStatus(reqId, event, 'Completed');
 
                         redisClient.decr(chanCount);
 
