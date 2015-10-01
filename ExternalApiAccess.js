@@ -1,7 +1,7 @@
 var httpReq = require('request');
 var config = require('config');
 var util = require('util');
-var logger = require('DVP-Common/LogHandler/CommonLogHandler.js').logger;
+var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 
 var IncrementMaxChanLimit = function(reqId, campId, securityToken, callback)
 {

@@ -1,7 +1,7 @@
 var config = require('config');
 var httpReq = require('request');
 var util = require('util');
-var logger = require('DVP-Common/LogHandler/CommonLogHandler.js').logger;
+var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 
 var SendResourceStatus = function(reqId, event, state)
 {

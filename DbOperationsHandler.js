@@ -1,5 +1,5 @@
-var dbModel = require('DVP-DBModels');
-var logger = require('DVP-Common/LogHandler/CommonLogHandler.js').logger;
+var dbModel = require('dvp-dbmodels');
+var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 
 var AddPresenceDB = function(username, domain, status)
 {
