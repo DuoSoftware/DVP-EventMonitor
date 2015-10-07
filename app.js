@@ -17,6 +17,7 @@ var dbOp = require('./DbOperationsHandler.js');
 var ardsHandler = require('./ArdsResourceStateHandler.js');
 
 
+
 //open a connection
 var redisPort = config.Redis.port;
 var redisIp = config.Redis.ip;
@@ -72,20 +73,18 @@ redisClient.on('error',function(err){
                 var dvpCustPubId = event.getHeader('variable_DVP_CUSTOM_PUBID');
                 var campaignId = event.getHeader('variable_CampaignId');
                 var variableEvtTime = event.getHeader("variable_Event-Date-Timestamp");
-                var eventTime = '';
                 var switchName = event.getHeader('FreeSWITCH-Switchname');
                 var chanCount = switchName + '#DVP_CHANNEL_COUNT';
                 var callCount = switchName + '#DVP_CALL_COUNT';
                 var callerDestNum = event.getHeader('Caller-Destination-Number');
+                var eventTime = '';
 
                 if (variableEvtTime)
                 {
-                    //var varEvtTime = parseInt(variableEvtTime) / 1000;
-                    //eventTime = new Date(varEvtTime);
 
+                    var utcSeconds = parseInt(variableEvtTime)/1000000;
                     var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
-                    d.setUTCSeconds(variableEvtTime);
-
+                    d.setUTCSeconds(utcSeconds);
                     eventTime = d.toISOString();
                 }
 
