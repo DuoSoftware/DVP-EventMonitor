@@ -43,7 +43,7 @@ var SendResourceStatus = function(reqId, event, state)
                     body: jsonStr
                 };
 
-                logger.debug('[DVP-EventMonitor.SendResourceStatus] - [%s] - Creating Api Url : %s', reqId, httpUrl);
+                logger.debug('[DVP-EventMonitor.SendResourceStatus] - [%s] - Creating Api Url : %s, state : %s', reqId, httpUrl, state);
 
 
                 httpReq.put(options, function (error, response, body)

@@ -72,6 +72,8 @@ redisClient.on('error',function(err){
                 var customCompanyStr = event.getHeader('variable_CustomCompanyStr');
                 var dvpCustPubId = event.getHeader('variable_DVP_CUSTOM_PUBID');
                 var campaignId = event.getHeader('variable_CampaignId');
+                var companyId = event.getHeader('variable_companyid');
+                var tenantId = event.getHeader('variable_tenantid');
                 var variableEvtTime = event.getHeader("variable_Event-Date-Timestamp");
                 var switchName = event.getHeader('FreeSWITCH-Switchname');
                 var chanCount = switchName + '#DVP_CHANNEL_COUNT';
@@ -99,7 +101,10 @@ redisClient.on('error',function(err){
                     AuthData: customCompanyStr,
                     SwitchName: switchName,
                     CampaignId: campaignId,
-                    CallerDestNum: callerDestNum
+                    CallerDestNum: callerDestNum,
+                    EventParams: event,
+                    CompanyId: companyId,
+                    TenantId: tenantId
                 };
 
                 switch (event.type)
