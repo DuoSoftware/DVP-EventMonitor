@@ -11,8 +11,8 @@ var SendResourceStatus = function(reqId, event, state)
 
         if(ardsClientUuid)
         {
-            var ardsCompany = event.getHeader('variable_ards_company');
-            var ardsTenant = event.getHeader('variable_ards_tenant');
+            var ardsCompany = event.getHeader('variable_companyid');
+            var ardsTenant = event.getHeader('variable_tenantid');
             var ardsClass = event.getHeader('variable_ards_class');
             var ardsType = event.getHeader('variable_ards_type');
             var ardsCategory = event.getHeader('variable_ards_category');

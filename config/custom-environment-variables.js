@@ -19,14 +19,14 @@ module.exports = {
     },
 
     Dialer: {
-        ip: 'SYS_DIALER_HOST',
-        port: 'SYS_DIALER_PORT'
+        ip: 'SYS_DIALERAPI_HOST',
+        port: 'SYS_DIALERAPI_PORT'
     },
 
     ARDS: {
-        ip: 'SYS_ARDS_HOST',
-        port: 'SYS_ARDS_PORT',
-        version: 'SYS_ARDS_VERSION'
+        ip: 'SYS_ARDSLITESERVICE_HOST',
+        port: 'SYS_ARDSLITESERVICE_PORT',
+        version: 'SYS_ARDSLITESERVICE_VERSION'
     },
 
     WebAPI: {
