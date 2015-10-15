@@ -1,6 +1,7 @@
 var config = require('config');
 var httpReq = require('request');
 var util = require('util');
+var validator = require('validator');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 
 var SendResourceStatus = function(reqId, event, state)
@@ -27,7 +28,14 @@ var SendResourceStatus = function(reqId, event, state)
             if(ardsIp && ardsPort && ardsVersion)
             {
                 var securityToken = ardsTenant + '#' + ardsCompany;
-                var httpUrl = util.format('http://%s:%d/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s', ardsIp, ardsPort, ardsVersion, ardsResourceId, ardsClientUuid);
+
+                var httpUrl = util.format('http://%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s', ardsIp, ardsVersion, ardsResourceId, ardsClientUuid);
+
+                if(validator.isIP(ardsIp))
+                {
+                    httpUrl = util.format('http://%s:%d/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s', ardsIp, ardsPort, ardsVersion, ardsResourceId, ardsClientUuid);
+                }
+
 
                 var jsonObj = { ReqClass: ardsClass, ReqType: ardsType, ReqCategory: ardsCategory, State: state, OtherInfo: "" };
 

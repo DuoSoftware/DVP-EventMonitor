@@ -1,6 +1,7 @@
 var httpReq = require('request');
 var config = require('config');
 var util = require('util');
+var validator = require('validator');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 
 var IncrementMaxChanLimit = function(reqId, campId, securityToken, callback)
@@ -12,9 +13,14 @@ var IncrementMaxChanLimit = function(reqId, campId, securityToken, callback)
         var dialerIp = config.Dialer.ip;
         var dialerPort = config.Dialer.port;
 
-        if(dialerIp && dialerPort)
+        if(dialerIp)
         {
-            var httpUrl = util.format('http://%s:%d/DialerSelfHost/Campaign/IncrMaxChannelLimit', dialerIp, dialerPort);
+            var httpUrl = util.format('http://%s/DialerSelfHost/Campaign/IncrMaxChannelLimit', dialerIp);
+
+            if(validator.isIP(dialerIp))
+            {
+                httpUrl = util.format('http://%s:%d/DialerSelfHost/Campaign/IncrMaxChannelLimit', dialerIp, dialerPort);
+            }
 
             var jsonStr = campId;
 
@@ -69,9 +75,14 @@ var DecrementMaxChanLimit = function(reqId, campId, securityToken, callback)
         var dialerIp = config.Dialer.ip;
         var dialerPort = config.Dialer.port;
 
-        if(dialerIp && dialerPort)
+        if(dialerIp)
         {
-            var httpUrl = util.format('http://%s:%d/DialerSelfHost/Campaign/DecrMaxChannelLimit', dialerIp, dialerPort);
+            var httpUrl = util.format('http://%s/DialerSelfHost/Campaign/DecrMaxChannelLimit', dialerIp);
+
+            if(validator.isIP(dialerIp))
+            {
+                httpUrl = util.format('http://%s:%d/DialerSelfHost/Campaign/DecrMaxChannelLimit', dialerIp, dialerPort);
+            }
 
             var jsonStr = campId;
 
@@ -126,9 +137,14 @@ var SetMaxChanLimit = function(reqId, campId, maxLimit, securityToken, callback)
         var dialerIp = config.Dialer.ip;
         var dialerPort = config.Dialer.port;
 
-        if(dialerIp && dialerPort)
+        if(dialerIp)
         {
-            var httpUrl = util.format('http://%s:%d/DialerSelfHost/Campaign/SetMaxChannelLimit', dialerIp, dialerPort);
+            var httpUrl = util.format('http://%s/DialerSelfHost/Campaign/SetMaxChannelLimit', dialerIp);
+
+            if(validator.isIP(dialerIp))
+            {
+                httpUrl = util.format('http://%s:%d/DialerSelfHost/Campaign/SetMaxChannelLimit', dialerIp, dialerPort);
+            }
 
             var jsonStr = campId + '_' + maxLimit;
 
@@ -182,10 +198,15 @@ var GetModCallCenterAgentCount = function(reqId, campId, callback)
         var fsIp = config.Freeswitch.ip;
         var fsPort = config.Freeswitch.httport;
 
-        if(fsIp && fsPort)
+        if(fsIp)
         {
 
-            var httpUrl = util.format('http://%s:%s/api/callcenter_config? queue count agents election@%s Available', fsIp, fsPort, campId);
+            var httpUrl = util.format('http://%s/api/callcenter_config? queue count agents election@%s Available', fsIp, campId);
+
+            if(validator.isIP(fsIp))
+            {
+                httpUrl = util.format('http://%s:%s/api/callcenter_config? queue count agents election@%s Available', fsIp, fsPort, campId);
+            }
 
             var options = {
                 url: httpUrl
