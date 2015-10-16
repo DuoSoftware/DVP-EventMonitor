@@ -15,11 +15,11 @@ var IncrementMaxChanLimit = function(reqId, campId, securityToken, callback)
 
         if(dialerIp)
         {
-            var httpUrl = util.format('http://%s/DialerSelfHost/Campaign/IncrMaxChannelLimit', dialerIp);
+            var httpUrl = util.format('http://%s/DVP/DialerAPI/IncrMaxChannelLimit', dialerIp);
 
             if(validator.isIP(dialerIp))
             {
-                httpUrl = util.format('http://%s:%d/DialerSelfHost/Campaign/IncrMaxChannelLimit', dialerIp, dialerPort);
+                httpUrl = util.format('http://%s:%d/DVP/DialerAPI/IncrMaxChannelLimit', dialerIp, dialerPort);
             }
 
             var jsonStr = campId;
@@ -77,11 +77,11 @@ var DecrementMaxChanLimit = function(reqId, campId, securityToken, callback)
 
         if(dialerIp)
         {
-            var httpUrl = util.format('http://%s/DialerSelfHost/Campaign/DecrMaxChannelLimit', dialerIp);
+            var httpUrl = util.format('http://%s/DVP/DialerAPI/DecrMaxChannelLimit', dialerIp);
 
             if(validator.isIP(dialerIp))
             {
-                httpUrl = util.format('http://%s:%d/DialerSelfHost/Campaign/DecrMaxChannelLimit', dialerIp, dialerPort);
+                httpUrl = util.format('http://%s:%d/DVP/DialerAPI/DecrMaxChannelLimit', dialerIp, dialerPort);
             }
 
             var jsonStr = campId;
@@ -139,11 +139,11 @@ var SetMaxChanLimit = function(reqId, campId, maxLimit, securityToken, callback)
 
         if(dialerIp)
         {
-            var httpUrl = util.format('http://%s/DialerSelfHost/Campaign/SetMaxChannelLimit', dialerIp);
+            var httpUrl = util.format('http://%s/DVP/DialerAPI/SetMaxChannelLimit', dialerIp);
 
             if(validator.isIP(dialerIp))
             {
-                httpUrl = util.format('http://%s:%d/DialerSelfHost/Campaign/SetMaxChannelLimit', dialerIp, dialerPort);
+                httpUrl = util.format('http://%s:%d/DVP/DialerAPI/SetMaxChannelLimit', dialerIp, dialerPort);
             }
 
             var jsonStr = campId + '_' + maxLimit;
