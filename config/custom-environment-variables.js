@@ -19,8 +19,8 @@ module.exports = {
     },
 
     Dialer: {
-        ip: 'SYS_DIALERAPI_HOST',
-        port: 'SYS_DIALERAPI_PORT'
+        ip: 'SYS_DIALER_HOST',
+        port: 'SYS_DIALER_PORT'
     },
 
     ARDS: {
