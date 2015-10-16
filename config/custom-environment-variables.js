@@ -3,10 +3,10 @@
  */
 module.exports = {
     Freeswitch: {
-        ip: 'FS_IP',
-        port: 'FS_PORT',
-        password: 'FS_PASSWORD',
-        httport: 'FS_HTTP_PORT'
+        ip: 'SYS_FREESWITCH_HOST',
+        port: 'SYS_EVENTSOCKET_PORT',
+        password: 'SYS_FREESWITCH_EVENTSOCKET_PASSWORD',
+        httport: 'SYS_XMLRPC_PORT'
     },
 
     "DB": {
