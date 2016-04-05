@@ -21,26 +21,22 @@ var ardsHandler = require('./ArdsResourceStateHandler.js');
 //open a connection
 var redisPort = config.Redis.port;
 var redisIp = config.Redis.ip;
+var redisPass = config.Redis.password;
 var freeswitchIp = config.Freeswitch.ip;
 var fsPort = config.Freeswitch.port;
 var fsPassword = config.Freeswitch.password;
 var fsHttpPort = config.Freeswitch.httport;
 
-
-//var timeInGMT = moment(dd).utcOffset('0000');
-
-//var ss = timeInGMT.toISOString();
-
-
-
-////////////////////////////redis/////////////////////////////////////////////////////
 var redisClient = redis.createClient(redisPort,redisIp);
+
+redisClient.auth(redisPass, function (err) {
+    console.log("Error Authenticating Redis : " + err);
+});
+
 
 redisClient.on('error',function(err){
 
     });
-//////////////////////////////////////////////////////////////////////////////////////
-
 
 
     var redisMessageHandler = function (err, reply)
@@ -65,10 +61,10 @@ redisClient.on('error',function(err){
             if (header)
             {
                 logger.info('[DVP-EventMonitor.handler] - [%s] - FS EVENT RECEIVED', reqId);
-                logger.debug('[DVP-EventMonitor.handler] - [%s] - Event Data - EVENT_TYPE : ' + event.type + ', CHANNEL_STATE : ' + event.getHeader('Channel-State') + ', SESSION_ID : ' + event.getHeader('Unique-ID') + ', CALLER_UUID : ' + event.getHeader('Caller-Unique-ID') + 'SWITCH NAME : ' + event.getHeader('FreeSWITCH-Switchname'), reqId);
+
 
                 var evtType = event.type;
-                var sessionId = event.getHeader('Unique-ID');
+                var uniqueId = event.getHeader('Unique-ID');
                 var customCompanyStr = event.getHeader('variable_CustomCompanyStr');
                 var dvpCustPubId = event.getHeader('variable_DVP_CUSTOM_PUBID');
                 var campaignId = event.getHeader('variable_CampaignId');
@@ -76,10 +72,21 @@ redisClient.on('error',function(err){
                 var tenantId = event.getHeader('variable_tenantid');
                 var variableEvtTime = event.getHeader("variable_Event-Date-Timestamp");
                 var switchName = event.getHeader('FreeSWITCH-Switchname');
-                var chanCount = switchName + '#DVP_CHANNEL_COUNT';
-                var callCount = switchName + '#DVP_CALL_COUNT';
+                var chanCountInstance = 'DVP_CHANNEL_COUNT_INSTANCE:' + switchName;
+                var callCountInstance = 'DVP_CALL_COUNT_INSTANCE:' + switchName;
+                var callCountCompany = 'DVP_CALL_COUNT_COMPANY:' + tenantId + ':' + companyId;
                 var callerDestNum = event.getHeader('Caller-Destination-Number');
+                var ardsAction = event.getHeader('ARDS-Action');
+                var ardsClientUuid = event.getHeader('ards_client_uuid');
+                var dvpAppId = event.getHeader('variable_dvp_app_id');
                 var eventTime = '';
+
+                if(ardsClientUuid)
+                {
+                    uniqueId = ardsClientUuid;
+                }
+
+                logger.debug('[DVP-EventMonitor.handler] - [%s] - Event Data - EVENT_TYPE : ' + evtType + ', CHANNEL_STATE : ' + event.getHeader('Channel-State') + ', SESSION_ID : ' + uniqueId + ', CALLER_UUID : ' + event.getHeader('Caller-Unique-ID') + 'SWITCH NAME : ' + switchName, reqId);
 
                 if (variableEvtTime)
                 {
@@ -92,12 +99,12 @@ redisClient.on('error',function(err){
 
                 var evtData =
                 {
-                    SessionId: sessionId,
+                    SessionId: uniqueId,
                     EventClass: "CALL",
                     EventType: "CHANNEL",
                     EventTime: eventTime,
                     EventName: evtType,
-                    EventData: sessionId,
+                    EventData: uniqueId,
                     AuthData: customCompanyStr,
                     SwitchName: switchName,
                     CampaignId: campaignId,
@@ -107,11 +114,36 @@ redisClient.on('error',function(err){
                     TenantId: tenantId
                 };
 
-                switch (event.type)
+                switch (evtType)
                 {
+                    case 'ARDS_EVENT':
+
+                        evtData.EventCategory = ardsAction;
+
+                        var jsonStr = JSON.stringify(evtData);
+
+                        if(dvpCustPubId)
+                        {
+                            redisClient.publish(dvpCustPubId, jsonStr);
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+                        }
+                        else
+                        {
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
+                        }
+
+                        redisClient.hset(uniqueId, 'ARDS-State', ardsAction, redisMessageHandler);
+                        break;
+
                     case 'CHANNEL_BRIDGE':
 
-                        redisClient.incr(callCount, redisMessageHandler);
+                        redisClient.incr(callCountInstance, redisMessageHandler);
+                        redisClient.incr(callCountCompany, redisMessageHandler);
+
+                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "DVP", "CALL", "ADDED", dvpAppId, "", uniqueId);
+
+                        redisClient.publish('event', pubMessage);
 
                         evtData.EventCategory = "CHANNEL_BRIDGE";
 
@@ -128,38 +160,41 @@ redisClient.on('error',function(err){
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 
-                        redisClient.hset(event.getHeader('Unique-ID'), 'Bridge-State', 'Bridged', redisMessageHandler);
+                        var otherleg = event.getHeader('Other-Leg-Unique-ID');
+
+                        redisClient.hset(uniqueId, 'Bridge-State', 'Bridged', redisMessageHandler);
+                        redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', otherleg, redisMessageHandler);
                         break;
 
                     case 'CHANNEL_CALLSTATE':
                     {
                         var otherleg;
                         var calltype;
-                        if (event.getHeader('Other-Leg-Unique-ID')) {
-                            redisClient.hset(event.getHeader('Unique-ID'), 'Other-Leg-Unique-ID', event.getHeader('Other-Leg-Unique-ID'), redisMessageHandler);
+                        if (event.getHeader('Other-Leg-Unique-ID'))
+                        {
+                            redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', event.getHeader('Other-Leg-Unique-ID'), redisMessageHandler);
                             otherleg = event.getHeader('Other-Leg-Unique-ID');
                             calltype = "NORMAL";
                         }
 
-                        if (event.getHeader('variable_fifo_bridge_uuid')) {
+                        if (event.getHeader('variable_fifo_bridge_uuid'))
+                        {
 
-                            redisClient.hset(event.getHeader('Unique-ID'), 'Other-Leg-Unique-ID', event.getHeader('variable_fifo_bridge_uuid'), redisMessageHandler);
+                            redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', event.getHeader('variable_fifo_bridge_uuid'), redisMessageHandler);
                             otherleg = event.getHeader('variable_fifo_bridge_uuid');
                             calltype = 'FIFO';
-                            redisClient.hset(event.getHeader('Unique-ID'), 'Call-Type', calltype, redisMessageHandler);
+                            redisClient.hset(uniqueId, 'Call-Type', calltype, redisMessageHandler);
                         }
 
-                        //var postData = { channel: event.getHeader('Channel-Name'), direction: event.getHeader('Call-Direction'), presence: event.getHeader('Channel-Presence-ID'), callstate: event.getHeader('Channel-Call-State'), uuid: event.getHeader('Unique-ID'), otheruuid: otherleg, type: calltype };
-                        //httpPOST('ChannelState', postData);
+
                     }
-                        redisClient.hset(event.getHeader('Unique-ID'), 'data', event.serialize('json'), redisMessageHandler);
-                        redisClient.hset(event.getHeader('Unique-ID'), 'Channel-Call-State', event.getHeader('Channel-Call-State'), redisMessageHandler);
+                        redisClient.hset(uniqueId, 'data', event.serialize('json'), redisMessageHandler);
+                        redisClient.hset(uniqueId, 'Channel-Call-State', event.getHeader('Channel-Call-State'), redisMessageHandler);
 
                         break;
 
                     case 'CHANNEL_CREATE':
 
-                        var uniqueId = event.getHeader('Unique-ID');
                         var channelState = event.getHeader('Channel-State');
                         var channelName = event.getHeader('Channel-Name');
                         var direction = event.getHeader('Call-Direction');
@@ -172,7 +207,7 @@ redisClient.on('error',function(err){
                         var variableLoopbackApp = event.getHeader("variable_loopback_app");
                         var variableSipAuthRealm = event.getHeader("variable_sip_auth_realm");
 
-                        redisClient.incr(chanCount, redisMessageHandler);
+                        redisClient.incr(chanCountInstance, redisMessageHandler);
 
                         evtData.EventCategory = "CHANNEL_CREATE";
 
@@ -188,63 +223,10 @@ redisClient.on('error',function(err){
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 
-                        var channelSetName = "CHANNEL@" + variableSipAuthRealm;
+                        var channelSetName = "CHANNELS:" + tenantId + ":" + companyId;
 
-                        if (!variableLoopbackApp) {
-                            if (variableSipAuthRealm) {
-                                redisClient.sismember(channelSetName, uniqueId, function (err, reply)
-                                {
-                                    if(err)
-                                    {
-                                        logger.error('[DVP-EventMonitor.handler] - [%s] - REDIS ERROR', err);
-                                    }
-                                    else
-                                    {
-                                        logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS SUCCESS');
-                                        if (reply === 0)
-                                        {
-                                            redisClient.sadd(channelSetName, uniqueId, redisMessageHandler);
-                                        }
-                                    }
-
-                                });
-                            }
-                            else
-                            {
-                                //get hash from first
-                                redisClient.hget(otherLegUuid, 'variable_sip_auth_realm', function (err, val)
-                                {
-                                    if(err)
-                                    {
-                                        logger.error('[DVP-EventMonitor.handler] - [%s] - REDIS ERROR', err);
-                                    }
-                                    else
-                                    {
-                                        logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS SUCCESS');
-                                    }
-                                    if (!err && val)
-                                    {
-                                        var newChannelSetName = "CHANNEL@" + val;
-                                        redisClient.sismember(newChannelSetName, uniqueId, function (err, reply)
-                                        {
-                                            if(err)
-                                            {
-                                                logger.error('[DVP-EventMonitor.handler] - [%s] - REDIS ERROR', err);
-                                            }
-                                            else
-                                            {
-                                                logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS SUCCESS');
-                                            }
-                                            if (reply === 0)
-                                            {
-                                                redisClient.sadd(newChannelSetName, uniqueId, redisMessageHandler);
-                                            }
-                                        });
-                                    }
-
-                                })
-                            }
-
+                        if (!variableLoopbackApp)
+                        {
                             redisClient.hset(uniqueId, 'Channel-State', channelState, redisMessageHandler);
                             redisClient.hset(uniqueId, 'FreeSWITCH-Switchname', switchName, redisMessageHandler);
                             redisClient.hset(uniqueId, 'Channel-Name', channelName, redisMessageHandler);
@@ -252,16 +234,19 @@ redisClient.on('error',function(err){
                             redisClient.hset(uniqueId, 'Caller-Destination-Number', callerDestNum, redisMessageHandler);
                             redisClient.hset(uniqueId, 'Caller-Unique-ID', callerUniqueId, redisMessageHandler);
                             redisClient.hset(uniqueId, 'variable_sip_auth_realm', variableSipAuthRealm, redisMessageHandler);
+                            redisClient.hset(uniqueId, 'variable_dvp_app_id', dvpAppId, redisMessageHandler);
 
                             var otherleg = 'none';
 
-                            if (otherLegUuid) {
+                            if (otherLegUuid)
+                            {
                                 redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', otherLegUuid, redisMessageHandler);
                                 otherleg = otherLegUuid;
                                 calltype = "NORMAL";
                             }
 
-                            if (fifoBridgeUuid) {
+                            if (fifoBridgeUuid)
+                            {
                                 redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', fifoBridgeUuid, redisMessageHandler);
                                 otherleg = fifoBridgeUuid;
                                 calltype = 'FIFO';
@@ -275,18 +260,17 @@ redisClient.on('error',function(err){
 
                         break;
                     case 'CHANNEL_STATE':
-
                         if (event.getHeader('Channel-State') != 'CS_DESTROY')
                         {
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS GET');
-                            if (redisClient.exists(event.getHeader('Unique-ID')))
+                            if (redisClient.exists(uniqueId))
                             {
-                                redisClient.hset(event.getHeader('Unique-ID'), 'Channel-State', event.getHeader('Channel-State'), redisMessageHandler);
+                                redisClient.hset(uniqueId, 'Channel-State', event.getHeader('Channel-State'), redisMessageHandler);
                             }
                         }
                         else
                         {
-                            redisClient.del(event.getHeader('Unique-ID'), redisMessageHandler);
+                            redisClient.del(uniqueId, redisMessageHandler);
                         }
                         break;
                     case 'CHANNEL_ANSWER':
@@ -312,7 +296,12 @@ redisClient.on('error',function(err){
 
                     case 'CHANNEL_UNBRIDGE':
 
-                        redisClient.decr(callCount);
+                        redisClient.decr(callCountInstance);
+                        redisClient.decr(callCountCompany);
+
+                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "DVP", "CALL", "REMOVED", dvpAppId, "", uniqueId);
+
+                        redisClient.publish('event', pubMessage);
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
                         break;
 
@@ -345,7 +334,7 @@ redisClient.on('error',function(err){
 
                         ardsHandler.SendResourceStatus(reqId, event, 'Completed');
 
-                        redisClient.decr(chanCount);
+                        redisClient.decr(chanCountInstance);
 
                         evtData.EventCategory = "CHANNEL_DESTROY";
                         evtData.DisconnectReason = event.getHeader('Hangup-Cause');
@@ -364,12 +353,12 @@ redisClient.on('error',function(err){
 
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH');
 
-                        var uniqueId = event.getHeader('Unique-ID');
-                        var variableSipAuthRealm = event.getHeader("variable_sip_auth_realm");
+                        var channelSetName = 'CHANNELS:' + tenantId + ':' + companyId;
 
-                        var channelSetName = "CHANNEL@" + variableSipAuthRealm;
+                        var channelSetNameApp = 'CHANNELS_APP:' + dvpAppId;
 
-                        redisClient.del(channelSetName, redisMessageHandler);
+                        redisClient.srem(channelSetName, uniqueId, redisMessageHandler);
+                        redisClient.srem(channelSetNameApp, uniqueId, redisMessageHandler);
                         redisClient.del(uniqueId, redisMessageHandler);
 
                         break;
@@ -652,6 +641,7 @@ redisClient.on('error',function(err){
     };
 
 var flag = true;
+var conn;
 
 var errorHandler = function(err)
 {
@@ -691,61 +681,69 @@ var CreateESLConnection = function()
                 try
                 {
                     logger.debug('CREATING ESL CONNECTION');
-                    var conn = new esl.Connection(freeswitchIp, fsPort, fsPassword, function()
+                    if(conn == null || conn.socket == null || conn.socket.destroyed)
                     {
-                        try
+                        conn = new esl.Connection(freeswitchIp, fsPort, fsPassword, function()
                         {
-                            conn.subscribe(/*['CHANNEL_CREATE',
-                             'CHANNEL_CALLSTATE',
-                             'CHANNEL_STATE',
-                             'CHANNEL_EXECUTE',
-                             'CHANNEL_EXECUTE_COMPLETE',
-                             'CHANNEL_DESTROY',
-                             'CHANNEL_PARK',
-                             'CHANNEL_ANSWER',
-                             'CHANNEL_UNBRIDGE',
-                             'CHANNEL_BRIDGE',
-                             'RECV_INFO',
-                             'MESSAGE',
-                             'DTMF',
-                             'CHANNEL_EXECUTE_COMPLETE',
-                             'PLAYBACK_STOP',
-                             'CHANNEL_HANGUP_COMPLETE',
-                             'RECORD_STOP',
-                             'CHANNEL_DATA',
-                             'CUSTOM',
-                             'HEARTBEAT',
-                             'conference::maintenance',
-                             'sofia::register',
-                             'sofia::pre_register',
-                             'sofia::register_attempt',
-                             'sofia::register_failure',
-                             'sofia::unregister',
-                             'sofia::expire',
-                             'sofia::gateway_add',
-                             'sofia::gateway_delete',
-                             'sofia::gateway_state',
-                             'fifo:info',
-                             'valet_parking::info',
-                             'spandsp::txfaxresult',
-                             'spandsp::rxfaxresult']*/['all'], function () {
+                            try
+                            {
+                                conn.subscribe(/*['CHANNEL_CREATE',
+                                 'CHANNEL_CALLSTATE',
+                                 'CHANNEL_STATE',
+                                 'CHANNEL_EXECUTE',
+                                 'CHANNEL_EXECUTE_COMPLETE',
+                                 'CHANNEL_DESTROY',
+                                 'CHANNEL_PARK',
+                                 'CHANNEL_ANSWER',
+                                 'CHANNEL_UNBRIDGE',
+                                 'CHANNEL_BRIDGE',
+                                 'RECV_INFO',
+                                 'MESSAGE',
+                                 'DTMF',
+                                 'CHANNEL_EXECUTE_COMPLETE',
+                                 'PLAYBACK_STOP',
+                                 'CHANNEL_HANGUP_COMPLETE',
+                                 'RECORD_STOP',
+                                 'CHANNEL_DATA',
+                                 'CUSTOM',
+                                 'HEARTBEAT',
+                                 'conference::maintenance',
+                                 'sofia::register',
+                                 'sofia::pre_register',
+                                 'sofia::register_attempt',
+                                 'sofia::register_failure',
+                                 'sofia::unregister',
+                                 'sofia::expire',
+                                 'sofia::gateway_add',
+                                 'sofia::gateway_delete',
+                                 'sofia::gateway_state',
+                                 'fifo:info',
+                                 'valet_parking::info',
+                                 'spandsp::txfaxresult',
+                                 'spandsp::rxfaxresult']*/['all'], function () {
 
-                                conn.on('esl::event::**', handler);
-                                conn.on('error', errorHandler);
-                                conn.on('esl::end', connectionHandler);
-                                conn.on('esl::ready', connectionReadyHandler);
-                                logger.info('[DVP-EventMonitor.AppStart] - Subscribed to FS Events.....');
-                                flag = false;
-                                CreateESLWithTimeout();
-                            });
+                                    conn.on('esl::event::**', handler);
+                                    conn.on('error', errorHandler);
+                                    conn.on('esl::end', connectionHandler);
+                                    conn.on('esl::ready', connectionReadyHandler);
+                                    logger.info('[DVP-EventMonitor.AppStart] - Subscribed to FS Events.....');
+                                    flag = false;
+                                    CreateESLWithTimeout();
+                                });
 
-                        }
-                        catch (ex)
-                        {
-                            logger.error('ERROR OCCURRED', ex);
-                        }
+                            }
+                            catch (ex)
+                            {
+                                logger.error('ERROR OCCURRED', ex);
+                            }
 
-                    });
+                        });
+                    }
+                    else
+                    {
+                        CreateESLWithTimeout();
+                    }
+
                 }
                 catch(ex)
                 {

@@ -10,6 +10,7 @@
     "couchbase": "^1.2.4",
     "dvp-common": "^0.0.16",
     "dvp-dbmodels": "^0.0.21",
+    "esl": "^5.2.1",
     "modesl": "^1.1.3",
     "moment": "^2.10.3",
     "nimble": "^0.0.2",

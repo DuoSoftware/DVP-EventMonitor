@@ -14,9 +14,8 @@ var SendResourceStatus = function(reqId, event, state)
         {
             var ardsCompany = event.getHeader('variable_companyid');
             var ardsTenant = event.getHeader('variable_tenantid');
-            var ardsClass = event.getHeader('variable_ards_class');
-            var ardsType = event.getHeader('variable_ards_type');
-            var ardsCategory = event.getHeader('variable_ards_category');
+            var ardsServerType = event.getHeader('variable_ards_server_type');
+            var ardsReqType = event.getHeader('variable_ards_request_type');
             var ardsResourceId = event.getHeader('variable_ards_resource_id');
 
             logger.debug('[DVP-EventMonitor.SendResourceStatus] - [%s] -  Creating PUT Message', reqId);
@@ -29,6 +28,8 @@ var SendResourceStatus = function(reqId, event, state)
             {
                 var securityToken = ardsTenant + '#' + ardsCompany;
 
+                var companyInfoHeader = ardsTenant + ':' + ardsCompany;
+
                 var httpUrl = util.format('http://%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s', ardsIp, ardsVersion, ardsResourceId, ardsClientUuid);
 
                 if(validator.isIP(ardsIp))
@@ -37,7 +38,7 @@ var SendResourceStatus = function(reqId, event, state)
                 }
 
 
-                var jsonObj = { ReqClass: ardsClass, ReqType: ardsType, ReqCategory: ardsCategory, State: state, OtherInfo: "" };
+                var jsonObj = { ServerType: ardsServerType, RequestType: ardsReqType, State: state, OtherInfo: "", Company: ardsCompany, Tenant: ardsTenant };
 
                 var jsonStr = JSON.stringify(jsonObj);
 
@@ -46,6 +47,7 @@ var SendResourceStatus = function(reqId, event, state)
                     method: 'PUT',
                     headers: {
                         'authorization': securityToken,
+                        'companyinfo': companyInfoHeader,
                         'content-type': 'application/json'
                     },
                     body: jsonStr
