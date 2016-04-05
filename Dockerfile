@@ -8,6 +8,7 @@
 #EXPOSE 8806
 
 FROM node:argon
+RUN npm install npm
 RUN git clone git://github.com/DuoSoftware/DVP-EventMonitor.git /usr/local/src/eventmonitor
 RUN cd /usr/local/src/eventmonitor;
 WORKDIR /usr/local/src/eventmonitor
