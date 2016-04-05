@@ -37,5 +37,7 @@ module.exports = {
         ip: '104.131.67.21',
         port: 6389,
         password: "123"
-    }
+    },
+
+    Token: "123"
 };

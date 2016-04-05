@@ -40,5 +40,7 @@ module.exports = {
         ip: 'SYS_REDIS_HOST',
         port: 'SYS_REDIS_PORT',
         password: "SYS_REDIS_PASSWORD"
-    }
+    },
+
+    Token: "HOST_TOKEN"
 };

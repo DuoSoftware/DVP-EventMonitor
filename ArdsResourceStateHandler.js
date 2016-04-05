@@ -4,6 +4,8 @@ var util = require('util');
 var validator = require('validator');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 
+var token = config.Token;
+
 var SendResourceStatus = function(reqId, event, state)
 {
     try
@@ -26,7 +28,7 @@ var SendResourceStatus = function(reqId, event, state)
 
             if(ardsIp && ardsPort && ardsVersion)
             {
-                var securityToken = ardsTenant + '#' + ardsCompany;
+                var securityToken = 'bearer ' + token;
 
                 var companyInfoHeader = ardsTenant + ':' + ardsCompany;
 
