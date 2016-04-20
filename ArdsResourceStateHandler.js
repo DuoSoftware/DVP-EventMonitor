@@ -16,8 +16,8 @@ var SendResourceStatus = function(reqId, event, state)
         {
             var ardsCompany = event.getHeader('variable_companyid');
             var ardsTenant = event.getHeader('variable_tenantid');
-            var ardsServerType = event.getHeader('variable_ards_server_type');
-            var ardsReqType = event.getHeader('variable_ards_request_type');
+            var ardsServerType = event.getHeader('variable_ards_servertype');
+            var ardsReqType = event.getHeader('variable_ards_requesttype');
             var ardsResourceId = event.getHeader('variable_ards_resource_id');
 
             logger.debug('[DVP-EventMonitor.SendResourceStatus] - [%s] -  Creating PUT Message', reqId);
