@@ -6,19 +6,12 @@ var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 
 var token = config.Token;
 
-var SendResourceStatus = function(reqId, event, state)
+var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, state, otherInfo, reason)
 {
     try
     {
-        var ardsClientUuid = event.getHeader('variable_ards_client_uuid');
-
         if(ardsClientUuid)
         {
-            var ardsCompany = event.getHeader('variable_companyid');
-            var ardsTenant = event.getHeader('variable_tenantid');
-            var ardsServerType = event.getHeader('variable_ards_servertype');
-            var ardsReqType = event.getHeader('variable_ards_requesttype');
-            var ardsResourceId = event.getHeader('variable_ards_resource_id');
 
             logger.debug('[DVP-EventMonitor.SendResourceStatus] - [%s] -  Creating PUT Message', reqId);
 
@@ -40,7 +33,7 @@ var SendResourceStatus = function(reqId, event, state)
                 }
 
 
-                var jsonObj = { ServerType: ardsServerType, RequestType: ardsReqType, State: state, OtherInfo: "", Company: ardsCompany, Tenant: ardsTenant };
+                var jsonObj = { ServerType: ardsServerType, RequestType: ardsReqType, State: state, OtherInfo: otherInfo, Reason: reason, Company: ardsCompany, Tenant: ardsTenant };
 
                 var jsonStr = JSON.stringify(jsonObj);
 

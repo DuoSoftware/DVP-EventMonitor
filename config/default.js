@@ -21,7 +21,7 @@ module.exports = {
     },
 
     ARDS: {
-        ip: '192.168.0.15',
+        ip: '127.0.01',
         port: 2225,
         version: '1.0.0.0'
     },
@@ -34,7 +34,7 @@ module.exports = {
     },
 
     Redis: {
-        ip: '127.0.0.1',
+        ip: '127.0.01',
         port: 6379,
         password: "123"
     },

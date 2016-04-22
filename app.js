@@ -275,7 +275,14 @@ redisClient.on('error',function(err){
                         break;
                     case 'CHANNEL_ANSWER':
 
-                        ardsHandler.SendResourceStatus(reqId, event, 'Connected');
+                        var ardsClientUuid = event.getHeader('variable_ards_client_uuid');
+                        var ardsCompany = event.getHeader('variable_companyid');
+                        var ardsTenant = event.getHeader('variable_tenantid');
+                        var ardsServerType = event.getHeader('variable_ards_servertype');
+                        var ardsReqType = event.getHeader('variable_ards_requesttype');
+                        var ardsResourceId = event.getHeader('variable_ards_resource_id');
+
+                        ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '');
 
                         evtData.EventCategory = "CHANNEL_ANSWER";
 
@@ -332,7 +339,14 @@ redisClient.on('error',function(err){
 
                     case 'CHANNEL_DESTROY':
 
-                        ardsHandler.SendResourceStatus(reqId, event, 'Completed');
+                        var ardsClientUuid = event.getHeader('variable_ards_client_uuid');
+                        var ardsCompany = event.getHeader('variable_companyid');
+                        var ardsTenant = event.getHeader('variable_tenantid');
+                        var ardsServerType = event.getHeader('variable_ards_servertype');
+                        var ardsReqType = event.getHeader('variable_ards_requesttype');
+                        var ardsResourceId = event.getHeader('variable_ards_resource_id');
+
+                        ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
 
                         redisClient.decr(chanCountInstance);
 
@@ -620,7 +634,24 @@ redisClient.on('error',function(err){
 
                                 }
 
-                                //console.log(subClass.yellow);
+                            }
+                            else if(subClass == 'ards::info')
+                            {
+
+                                var action = event.getHeader('ARDS-Action');
+
+                                if(action === 'agent-rejected')
+                                {
+                                    var ardsClientUuid = event.getHeader('ARDS-Call-UUID');
+                                    var ardsCompany = event.getHeader('Company');
+                                    var ardsTenant = event.getHeader('Tenant');
+                                    var ardsServerType = event.getHeader('ServerType');
+                                    var ardsReqType = event.getHeader('RequestType');
+                                    var ardsResourceId = event.getHeader('ARDS-Resource-Id');
+                                    var reason = event.getHeader('ARDS-Reason');
+
+                                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Reject', 'Reject', reason);
+                                }
 
                             }
 
