@@ -332,7 +332,7 @@ redisClient.on('error',function(err){
 
                         if(switchName)
                         {
-                            redisClient.set(switchName + '#DVP_CS_INSTANCE_INFO', JSON.stringify(hbData), redisMessageHandler);
+                            redisClient.set(switchName + '#DVP_CS_INSTANCE_INFO', hbData, redisMessageHandler);
                         }
 
                         break;
@@ -391,7 +391,7 @@ redisClient.on('error',function(err){
                                     Domain: uriSplit[1],
                                     Status: userStatus
                                 };
-                                redisClient.set('SIPPRESENCE:' + uriSplit[1] + ':' + uriSplit[0], JSON.stringify(presObj), redisMessageHandler);
+                                redisClient.set('SIPPRESENCE:' + uriSplit[1] + ':' + uriSplit[0], presObj, redisMessageHandler);
                                 dbOp.UpdatePresenceDB(uriSplit[0], userStatus);
                             }
                         }
@@ -628,7 +628,7 @@ redisClient.on('error',function(err){
                                             Status: 'REGISTERED'
                                         };
 
-                                        redisClient.set('SIPPRESENCE:' + realm + ':' + username, JSON.stringify(presObj), redisMessageHandler);
+                                        redisClient.set('SIPPRESENCE:' + realm + ':' + username, presObj, redisMessageHandler);
                                         dbOp.AddPresenceDB(username, realm, 'REGISTERED');
 
                                         break;
