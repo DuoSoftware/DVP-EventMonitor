@@ -386,6 +386,7 @@ redisClient.on('error',function(err){
                         {
                             if(userStatus === 'Busy' || userStatus === 'Available')
                             {
+                                redisClient.set('SIPPRESENCE:' + uriSplit[1] + ':' + uriSplit[0], userStatus, redisMessageHandler);
                                 dbOp.UpdatePresenceDB(uriSplit[0], userStatus);
                             }
                         }
@@ -616,18 +617,19 @@ redisClient.on('error',function(err){
                                 switch (subClass) {
 
                                     case 'sofia::register':
-
+                                        redisClient.set('SIPPRESENCE:' + realm + ':' + username, 'REGISTERED', redisMessageHandler);
                                         dbOp.AddPresenceDB(username, realm, 'REGISTERED');
 
                                         break;
 
                                     case 'sofia::expire':
+                                        redisClient.del('SIPPRESENCE:' + realm + ':' + username, redisMessageHandler);
                                         dbOp.DeletePresenceDB(username);
 
                                         break;
 
                                     case 'sofia::unregister':
-
+                                        redisClient.del('SIPPRESENCE:' + realm + ':' + username, redisMessageHandler);
                                         dbOp.DeletePresenceDB(username);
 
                                         break;
