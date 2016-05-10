@@ -225,6 +225,8 @@ redisClient.on('error',function(err){
 
                         var channelSetName = "CHANNELS:" + tenantId + ":" + companyId;
 
+                        redisClient.sadd(channelSetName, uniqueId, redisMessageHandler);
+
                         if (!variableLoopbackApp)
                         {
                             redisClient.hset(uniqueId, 'Channel-State', channelState, redisMessageHandler);
@@ -345,6 +347,8 @@ redisClient.on('error',function(err){
                         var ardsServerType = event.getHeader('variable_ards_servertype');
                         var ardsReqType = event.getHeader('variable_ards_requesttype');
                         var ardsResourceId = event.getHeader('variable_ards_resource_id');
+
+                        redisClient.srem(channelSetName, uniqueId, redisMessageHandler);
 
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
 
