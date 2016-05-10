@@ -386,7 +386,12 @@ redisClient.on('error',function(err){
                         {
                             if(userStatus === 'Busy' || userStatus === 'Available')
                             {
-                                redisClient.set('SIPPRESENCE:' + uriSplit[1] + ':' + uriSplit[0], userStatus, redisMessageHandler);
+                                var presObj = {
+                                    SipUsername: uriSplit[0],
+                                    Domain: uriSplit[1],
+                                    Status: userStatus
+                                };
+                                redisClient.set('SIPPRESENCE:' + uriSplit[1] + ':' + uriSplit[0], JSON.stringify(presObj), redisMessageHandler);
                                 dbOp.UpdatePresenceDB(uriSplit[0], userStatus);
                             }
                         }
@@ -617,7 +622,13 @@ redisClient.on('error',function(err){
                                 switch (subClass) {
 
                                     case 'sofia::register':
-                                        redisClient.set('SIPPRESENCE:' + realm + ':' + username, 'REGISTERED', redisMessageHandler);
+                                        var presObj = {
+                                            SipUsername: username,
+                                            Domain: realm,
+                                            Status: 'REGISTERED'
+                                        };
+
+                                        redisClient.set('SIPPRESENCE:' + realm + ':' + username, JSON.stringify(presObj), redisMessageHandler);
                                         dbOp.AddPresenceDB(username, realm, 'REGISTERED');
 
                                         break;
