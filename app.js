@@ -348,6 +348,8 @@ redisClient.on('error',function(err){
                         var ardsReqType = event.getHeader('variable_ards_requesttype');
                         var ardsResourceId = event.getHeader('variable_ards_resource_id');
 
+                        var channelSetName = "CHANNELS:" + tenantId + ":" + companyId;
+
                         redisClient.srem(channelSetName, uniqueId, redisMessageHandler);
 
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
