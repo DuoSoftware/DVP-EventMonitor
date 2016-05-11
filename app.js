@@ -350,6 +350,8 @@ redisClient.on('error',function(err){
 
                         var channelSetName = "CHANNELS:" + tenantId + ":" + companyId;
 
+                        logger.debug('[DVP-EventMonitor.handler] - REDIS REMOVE FROM SET : %s', channelSetName);
+
                         redisClient.srem(channelSetName, uniqueId, redisMessageHandler);
 
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
@@ -374,6 +376,7 @@ redisClient.on('error',function(err){
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH');
 
                         var channelSetNameApp = 'CHANNELS_APP:' + dvpAppId;
+
 
                         redisClient.srem(channelSetNameApp, uniqueId, redisMessageHandler);
                         redisClient.del(uniqueId, redisMessageHandler);
