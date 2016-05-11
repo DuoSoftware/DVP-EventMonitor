@@ -125,12 +125,12 @@ redisClient.on('error',function(err){
                         if(dvpCustPubId)
                         {
                             redisClient.publish(dvpCustPubId, jsonStr);
-                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+                            //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
                         }
                         else
                         {
                             redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
-                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
+                            //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 
                         redisClient.hset(uniqueId, 'ARDS-State', ardsAction, redisMessageHandler);
@@ -152,12 +152,12 @@ redisClient.on('error',function(err){
                         if(dvpCustPubId)
                         {
                             redisClient.publish(dvpCustPubId, jsonStr);
-                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+                            //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
                         }
                         else
                         {
                             redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
-                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
+                            //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 
                         var otherleg = event.getHeader('Other-Leg-Unique-ID');
@@ -215,12 +215,12 @@ redisClient.on('error',function(err){
                         if(dvpCustPubId)
                         {
                             redisClient.publish(dvpCustPubId, jsonStr);
-                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM : CHANNEL : %s , DATA : %s', reqId, dvpCustPubId, jsonStr);
+                            //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM : CHANNEL : %s , DATA : %s', reqId, dvpCustPubId, jsonStr);
                         }
                         else
                         {
                             redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
-                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
+                            //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 
                         var channelSetName = "CHANNELS:" + tenantId + ":" + companyId;
@@ -293,12 +293,12 @@ redisClient.on('error',function(err){
                         if(dvpCustPubId)
                         {
                             redisClient.publish(dvpCustPubId, jsonStr);
-                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+                            //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
                         }
                         else
                         {
                             redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
-                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
+                            //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 
                         break;
@@ -363,21 +363,18 @@ redisClient.on('error',function(err){
                         if(dvpCustPubId)
                         {
                             redisClient.publish(dvpCustPubId, jsonStr);
-                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+                            //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
                         }
                         else
                         {
                             redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
-                            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
+                            //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH');
 
-                        var channelSetName = 'CHANNELS:' + tenantId + ':' + companyId;
-
                         var channelSetNameApp = 'CHANNELS_APP:' + dvpAppId;
 
-                        redisClient.srem(channelSetName, uniqueId, redisMessageHandler);
                         redisClient.srem(channelSetNameApp, uniqueId, redisMessageHandler);
                         redisClient.del(uniqueId, redisMessageHandler);
 
