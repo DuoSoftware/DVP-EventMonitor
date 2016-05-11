@@ -370,6 +370,17 @@ redisClient.on('error',function(err){
                         else
                         {
                             logger.debug('=========================== REMOVE FROM SET - COMPANY NOT SET : [%s] ==========================', channelSetName, uniqueId);
+
+                            redisClient.get('CHANNELMAP:' + uniqueId, function(err, mapObj)
+                            {
+                                if(mapObj)
+                                {
+                                    redisClient.srem(mapObj, uniqueId, redisMessageHandler);
+
+                                    logger.debug('=========================== REMOVE FROM SET WITH FAILSAFE: [%s] - [%s] ==========================', mapObj, uniqueId);
+                                }
+
+                            });
                         }
 
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
