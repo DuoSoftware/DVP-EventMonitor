@@ -225,7 +225,18 @@ redisClient.on('error',function(err){
 
                         var channelSetName = "CHANNELS:" + tenantId + ":" + companyId;
 
-                        redisClient.sadd(channelSetName, uniqueId, redisMessageHandler);
+                        if(companyId && tenantId)
+                        {
+                            redisClient.sadd(channelSetName, uniqueId, redisMessageHandler);
+
+                            logger.debug('=========================== ADD TO SET : [%s] - [%s] ==========================', channelSetName, uniqueId);
+                        }
+                        else
+                        {
+                            logger.debug('=========================== ADD TO SET - COMPANY NOT SET : [%s] ==========================', channelSetName, uniqueId);
+                        }
+
+
 
                         if (!variableLoopbackApp)
                         {
@@ -350,9 +361,16 @@ redisClient.on('error',function(err){
 
                         var channelSetName = "CHANNELS:" + tenantId + ":" + companyId;
 
-                        logger.debug('[DVP-EventMonitor.handler] - REDIS REMOVE FROM SET : %s', channelSetName);
+                        if(companyId && tenantId)
+                        {
+                            redisClient.srem(channelSetName, uniqueId, redisMessageHandler);
 
-                        redisClient.srem(channelSetName, uniqueId, redisMessageHandler);
+                            logger.debug('=========================== REMOVE FROM SET : [%s] - [%s] ==========================', channelSetName, uniqueId);
+                        }
+                        else
+                        {
+                            logger.debug('=========================== REMOVE FROM SET - COMPANY NOT SET : [%s] ==========================', channelSetName, uniqueId);
+                        }
 
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
 
