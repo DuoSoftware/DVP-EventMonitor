@@ -188,7 +188,7 @@ redisClient.on('error',function(err){
 
 
                     }
-                        redisClient.hset(uniqueId, 'data', event.serialize('json'), redisMessageHandler);
+                        //redisClient.hset(uniqueId, 'data', event.serialize('json'), redisMessageHandler);
                         redisClient.hset(uniqueId, 'Channel-Call-State', event.getHeader('Channel-Call-State'), redisMessageHandler);
 
                         break;
@@ -256,7 +256,7 @@ redisClient.on('error',function(err){
                             }
 
 
-                            redisClient.hset(uniqueId, 'data', event.serialize('json'), redisMessageHandler);
+                            //redisClient.hset(uniqueId, 'data', event.serialize('json'), redisMessageHandler);
 
                         }
 
