@@ -75,6 +75,7 @@ redisClient.on('error',function(err){
                 var chanCountInstance = 'DVP_CHANNEL_COUNT_INSTANCE:' + switchName;
                 var callCountInstance = 'DVP_CALL_COUNT_INSTANCE:' + switchName;
                 var callCountCompany = 'DVP_CALL_COUNT_COMPANY:' + tenantId + ':' + companyId;
+                var chanCountCompany = 'DVP_CHANNEL_COUNT_COMPANY:' + tenantId + ':' + companyId;
                 var callerDestNum = event.getHeader('Caller-Destination-Number');
                 var ardsAction = event.getHeader('ARDS-Action');
                 var ardsClientUuid = event.getHeader('ards_client_uuid');
@@ -206,6 +207,11 @@ redisClient.on('error',function(err){
                         var sipGatewayName = event.getHeader("variable_sip_gateway_name");
                         var variableLoopbackApp = event.getHeader("variable_loopback_app");
                         var variableSipAuthRealm = event.getHeader("variable_sip_auth_realm");
+
+                        if(companyId && tenantId)
+                        {
+                            redisClient.incr(chanCountCompany, redisMessageHandler);
+                        }
 
                         redisClient.incr(chanCountInstance, redisMessageHandler);
 
@@ -359,6 +365,8 @@ redisClient.on('error',function(err){
                         var ardsReqType = event.getHeader('variable_ards_requesttype');
                         var ardsResourceId = event.getHeader('variable_ards_resource_id');
 
+                        redisClient.del(uniqueId + '_data', redisMessageHandler);
+
                         var channelSetName = "CHANNELS:" + tenantId + ":" + companyId;
 
                         if(companyId && tenantId)
@@ -444,8 +452,6 @@ redisClient.on('error',function(err){
 
                                     var action = event.getHeader('Action');
 
-                                    //console.log(subClass);
-                                    //console.log(action);
                                     var conferenceName = event.getHeader('Conference-Name');
                                     var conferenceSize = event.getHeader('Conference-Size');
                                     var conferenceID = event.getHeader('Conference-Unique-ID');
@@ -455,72 +461,59 @@ redisClient.on('error',function(err){
                                     var direction = event.getHeader('Caller-Direction');
                                     var resultx = event.getHeader('Result');
 
-                                    var results = {
-                                        ID: conferenceID,
-                                        name: conferenceName,
-                                        size: conferenceSize,
-                                        eventAction: action
-                                    };
 
                                     switch (action) {
                                         case 'conference-create':
-                                            results.event = 'create';
-                                            redisClient.lpush("Conference-List", conferenceID, redisMessageHandler);
-                                            redisClient.set('ConferenceNameMap_' + conferenceName, conferenceID, redisMessageHandler);
-                                            redisClient.hset(conferenceID, 'Conference-Unique-ID', conferenceID, redisMessageHandler);
-                                            redisClient.hset(conferenceID, 'Conference-Name', conferenceName, redisMessageHandler);
-                                            redisClient.hset(conferenceID, 'SwitchName', switchName, redisMessageHandler);
-                                            redisClient.hset(conferenceID, 'Data', event.serialize('json'), redisMessageHandler);
+                                            //results.event = 'create';
+                                            //redisClient.lpush("Conference-List", conferenceID, redisMessageHandler);
+                                            //redisClient.set('ConferenceNameMap_' + conferenceName, conferenceID, redisMessageHandler);
+                                            //redisClient.hset(conferenceID, 'Conference-Unique-ID', conferenceID, redisMessageHandler);
+                                            //redisClient.hset(conferenceID, 'Conference-Name', conferenceName, redisMessageHandler);
+                                            //redisClient.hset(conferenceID, 'SwitchName', switchName, redisMessageHandler);
+                                            //redisClient.hset(conferenceID, 'Data', event.serialize('json'), redisMessageHandler);
                                             break;
                                         case 'conference-destroy':
                                             results.event = 'destroy';
-                                            redisClient.lrem("Conference-List", 0, conferenceID, redisMessageHandler);
-                                            redisClient.del(conferenceID, redisMessageHandler);
-                                            redisClient.del("Conference-Member-List-" + conferenceID, redisMessageHandler);
-                                            redisClient.del('ConferenceNameMap_' + conferenceName, redisMessageHandler);
+
+                                            redisClient.del('CONFERENCE-COUNT:' + conferenceName, redisMessageHandler);
+                                            redisClient.del('CONFERENCE-MEMBERS:' + conferenceName, userName, redisMessageHandler);
+
                                             break;
                                         case 'add-member':
-                                            results.event = 'add';
-                                            results.userID = userID;
-                                            results.userName = userName;
-                                            results.direction = direction;
-                                            results.userType = userType;
-                                            redisClient.hset("Conference-User-" + conferenceID + "-" + userName, 'Caller-Username', userName, redisMessageHandler);
-                                            redisClient.hset("Conference-User-" + conferenceID + "-" + userName, 'Member-Type', userType, redisMessageHandler);
-                                            redisClient.hset("Conference-User-" + conferenceID + "-" + userName, 'Member-State', 'ADDED', redisMessageHandler);
-                                            //redisClient.hset(conferenceID, userName, 'listen', redis.print);
-                                            redisClient.sadd("Conference-Member-List-" + conferenceID, userName, redisMessageHandler);
+
+                                            //--------------
+
+                                            redisClient.incr('CONFERENCE-COUNT:' + conferenceName, redisMessageHandler);
+                                            redisClient.sadd('CONFERENCE-MEMBERS:' + conferenceName, userName,  redisMessageHandler);
+
+
+                                            //------------
+                                            redisClient.hset("CONFERENCE-USER:" + userName, 'Caller-Username', userName, redisMessageHandler);
+                                            redisClient.hset("CONFERENCE-USER:" + userName, 'Member-Type', userType, redisMessageHandler);
+                                            redisClient.hset("CONFERENCE-USER:" + userName, 'Member-State', 'ADDED', redisMessageHandler);
+                                            redisClient.hset("CONFERENCE-USER:" + userName, 'Caller-Direction', direction, redisMessageHandler);
+                                            redisClient.hset("CONFERENCE-USER:" + userName, 'Conference-Unique-ID', conferenceID, redisMessageHandler);
+
+
                                             break;
                                         case 'del-member':
-                                            results.event = 'delete';
-                                            results.userID = userID;
-                                            results.userName = userName;
-                                            results.direction = direction;
-                                            results.userType = userType;
-                                            redisClient.hdel("Conference-User-" + conferenceID + "-" + userName, redisMessageHandler);
-                                            redisClient.srem("Conference-Member-List-" + conferenceID, userName, redisMessageHandler);
+
+                                            redisClient.decr('CONFERENCE-COUNT:' + conferenceName, redisMessageHandler);
+                                            redisClient.srem('CONFERENCE-MEMBERS:' + conferenceName, userName,  redisMessageHandler);
+
+                                            redisClient.del('CONFERENCE-USER:' + userName, redisMessageHandler);
+
                                             break;
                                         case 'start-talking':
-                                            results.event = 'talking';
-                                            results.userID = userID;
-                                            results.userName = userName;
-                                            results.direction = direction;
-                                            results.userType = userType;
-                                            redisClient.hset("Conference-User-" + conferenceID + "-" + userName, 'Member-State', 'TALKING', redisMessageHandler);
-                                            //redisClient.hset(conferenceID, userName, 'talking', redis.print);
+
+                                            redisClient.hset("CONFERENCE-USER:" + userName, 'Member-State', 'TALKING', redisMessageHandler);
+
                                             break;
                                         case 'stop-talking':
-                                            results.event = 'stoptalking';
-                                            results.userID = userID;
-                                            results.userName = userName;
-                                            results.direction = direction;
-                                            results.userType = userType;
-                                            redisClient.hset("Conference-User-" + conferenceID + "-" + userName, 'Member-State', 'LISTENING', redisMessageHandler);
-                                            //redisClient.hset(conferenceID, userName, 'listen', redis.print);
+                                            redisClient.hset("CONFERENCE-USER:" + userName, 'Member-State', 'LISTENING', redisMessageHandler);
                                             break;
                                         case 'bgdial-result':
-                                            results.event = 'bgdial';
-                                            results.result = resultx;
+
                                             break;
 
                                     }
