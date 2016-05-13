@@ -142,7 +142,7 @@ redisClient.on('error',function(err){
                         redisClient.incr(callCountInstance, redisMessageHandler);
                         redisClient.incr(callCountCompany, redisMessageHandler);
 
-                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "DVP", "CALL", "ADDED", dvpAppId, "", uniqueId);
+                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "CALLSERVER", "CALL", "BRIDGE", dvpAppId, "", uniqueId);
 
                         redisClient.publish('event', pubMessage);
 
@@ -235,6 +235,10 @@ redisClient.on('error',function(err){
                         {
                             redisClient.sadd(channelSetName, uniqueId, redisMessageHandler);
 
+                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "CALLSERVER", "CHANNEL", "CREATE", dvpAppId, "", uniqueId);
+
+                            redisClient.publish('event', pubMessage);
+
                             logger.debug('=========================== ADD TO SET : [%s] - [%s] ==========================', channelSetName, uniqueId);
                         }
                         else
@@ -325,7 +329,7 @@ redisClient.on('error',function(err){
                         redisClient.decr(callCountInstance);
                         redisClient.decr(callCountCompany);
 
-                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "DVP", "CALL", "REMOVED", dvpAppId, "", uniqueId);
+                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "CALLSERVER", "CALL", "UNBRIDGE", dvpAppId, "", uniqueId);
 
                         redisClient.publish('event', pubMessage);
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
@@ -366,12 +370,19 @@ redisClient.on('error',function(err){
                         var ardsResourceId = event.getHeader('variable_ards_resource_id');
 
                         redisClient.del(uniqueId + '_data', redisMessageHandler);
+                        redisClient.del(uniqueId + '_dev', redisMessageHandler);
+                        redisClient.del(uniqueId + '_command', redisMessageHandler);
 
                         var channelSetName = "CHANNELS:" + tenantId + ":" + companyId;
 
                         if(companyId && tenantId)
                         {
                             redisClient.srem(channelSetName, uniqueId, redisMessageHandler);
+                            redisClient.del('CHANNELMAP:' + uniqueId, redisMessageHandler);
+
+                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "CALLSERVER", "CALL", "DESTROY", dvpAppId, "", uniqueId);
+
+                            redisClient.publish('event', pubMessage);
 
                             logger.debug('=========================== REMOVE FROM SET : [%s] - [%s] ==========================', channelSetName, uniqueId);
                         }
@@ -384,6 +395,8 @@ redisClient.on('error',function(err){
                                 if(mapObj)
                                 {
                                     redisClient.srem(mapObj, uniqueId, redisMessageHandler);
+
+                                    redisClient.del('CHANNELMAP:' + uniqueId, redisMessageHandler);
 
                                     logger.debug('=========================== REMOVE FROM SET WITH FAILSAFE: [%s] - [%s] ==========================', mapObj, uniqueId);
                                 }
