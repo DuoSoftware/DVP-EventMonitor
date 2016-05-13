@@ -144,7 +144,7 @@ redisClient.on('error',function(err){
 
                         var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "CALLSERVER", "CALL", "BRIDGE", dvpAppId, "", uniqueId);
 
-                        redisClient.publish('event', pubMessage);
+                        redisClient.publish('events', pubMessage);
 
                         evtData.EventCategory = "CHANNEL_BRIDGE";
 
@@ -237,7 +237,7 @@ redisClient.on('error',function(err){
 
                             var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "CALLSERVER", "CHANNEL", "CREATE", dvpAppId, "", uniqueId);
 
-                            redisClient.publish('event', pubMessage);
+                            redisClient.publish('events', pubMessage);
 
                             logger.debug('=========================== ADD TO SET : [%s] - [%s] ==========================', channelSetName, uniqueId);
                         }
@@ -331,7 +331,7 @@ redisClient.on('error',function(err){
 
                         var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "CALLSERVER", "CALL", "UNBRIDGE", dvpAppId, "", uniqueId);
 
-                        redisClient.publish('event', pubMessage);
+                        redisClient.publish('events', pubMessage);
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
                         break;
 
@@ -382,7 +382,7 @@ redisClient.on('error',function(err){
 
                             var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "CALLSERVER", "CALL", "DESTROY", dvpAppId, "", uniqueId);
 
-                            redisClient.publish('event', pubMessage);
+                            redisClient.publish('events', pubMessage);
 
                             logger.debug('=========================== REMOVE FROM SET : [%s] - [%s] ==========================', channelSetName, uniqueId);
                         }
