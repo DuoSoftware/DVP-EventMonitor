@@ -142,7 +142,7 @@ redisClient.on('error',function(err){
                         redisClient.incr(callCountInstance, redisMessageHandler);
                         redisClient.incr(callCountCompany, redisMessageHandler);
 
-                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "CALLSERVER", "CALL", "BRIDGE", dvpAppId, "", uniqueId);
+                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", dvpAppId, "", uniqueId);
 
                         redisClient.publish('events', pubMessage);
 
@@ -235,7 +235,7 @@ redisClient.on('error',function(err){
                         {
                             redisClient.sadd(channelSetName, uniqueId, redisMessageHandler);
 
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "CALLSERVER", "CHANNEL", "CREATE", dvpAppId, "", uniqueId);
+                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "CREATE", dvpAppId, "", uniqueId);
 
                             redisClient.publish('events', pubMessage);
 
@@ -329,7 +329,7 @@ redisClient.on('error',function(err){
                         redisClient.decr(callCountInstance);
                         redisClient.decr(callCountCompany);
 
-                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "CALLSERVER", "CALL", "UNBRIDGE", dvpAppId, "", uniqueId);
+                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", dvpAppId, "", uniqueId);
 
                         redisClient.publish('events', pubMessage);
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
@@ -380,7 +380,7 @@ redisClient.on('error',function(err){
                             redisClient.srem(channelSetName, uniqueId, redisMessageHandler);
                             redisClient.del('CHANNELMAP:' + uniqueId, redisMessageHandler);
 
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", companyId, tenantId, "CALLSERVER", "CALL", "DESTROY", dvpAppId, "", uniqueId);
+                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "DESTROY", dvpAppId, "", uniqueId);
 
                             redisClient.publish('events', pubMessage);
 
