@@ -142,7 +142,7 @@ redisClient.on('error',function(err){
                         redisClient.incr(callCountInstance, redisMessageHandler);
                         redisClient.incr(callCountCompany, redisMessageHandler);
 
-                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", dvpAppId, "", uniqueId);
+                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", "", "", uniqueId);
 
                         redisClient.publish('events', pubMessage);
 
@@ -693,17 +693,25 @@ redisClient.on('error',function(err){
 
                                 var action = event.getHeader('ARDS-Action');
 
+                                var ardsClientUuid = event.getHeader('ARDS-Call-UUID');
+                                var ardsCompany = event.getHeader('Company');
+                                var ardsTenant = event.getHeader('Tenant');
+
                                 if(action === 'agent-rejected')
                                 {
-                                    var ardsClientUuid = event.getHeader('ARDS-Call-UUID');
-                                    var ardsCompany = event.getHeader('Company');
-                                    var ardsTenant = event.getHeader('Tenant');
                                     var ardsServerType = event.getHeader('ServerType');
                                     var ardsReqType = event.getHeader('RequestType');
                                     var ardsResourceId = event.getHeader('ARDS-Resource-Id');
                                     var reason = event.getHeader('ARDS-Reason');
 
                                     ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Reject', 'Reject', reason);
+                                }
+                                else if(action === 'agent-routed')
+                                {
+                                    var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", ardsTenant, ardsCompany, "ARDS", "AGENT", "ROUTED", "", "", ardsClientUuid);
+
+                                    redisClient.publish('events', pubMessage);
+
                                 }
 
                             }
