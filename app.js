@@ -235,7 +235,7 @@ redisClient.on('error',function(err){
                         {
                             redisClient.sadd(channelSetName, uniqueId, redisMessageHandler);
 
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "CREATE", dvpAppId, "", uniqueId);
+                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "CREATE", "", "", uniqueId);
 
                             redisClient.publish('events', pubMessage);
 
@@ -380,7 +380,7 @@ redisClient.on('error',function(err){
                             redisClient.srem(channelSetName, uniqueId, redisMessageHandler);
                             redisClient.del('CHANNELMAP:' + uniqueId, redisMessageHandler);
 
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "DESTROY", dvpAppId, "", uniqueId);
+                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "DESTROY", dvpAppId, "", uniqueId);
 
                             redisClient.publish('events', pubMessage);
 
@@ -472,7 +472,6 @@ redisClient.on('error',function(err){
                                     var userType = event.getHeader('Member-Type');
                                     var userName = event.getHeader('Caller-Username');
                                     var direction = event.getHeader('Caller-Direction');
-                                    var resultx = event.getHeader('Result');
 
 
                                     switch (action) {
@@ -656,8 +655,8 @@ redisClient.on('error',function(err){
                             else if (subClass.indexOf('sofia::') > -1) {
 
                                 //redisClient.publish(subClass, event.serialize('json'), redis.print);
-                                var username = event.getHeader('username');
-                                var realm = event.getHeader('realm');
+                                var username = event.getHeader('from-user');
+                                var realm = event.getHeader('from-host');
 
 
                                 switch (subClass) {
@@ -670,19 +669,19 @@ redisClient.on('error',function(err){
                                         };
 
                                         redisClient.set('SIPPRESENCE:' + realm + ':' + username, JSON.stringify(presObj), redisMessageHandler);
-                                        dbOp.AddPresenceDB(username, realm, 'REGISTERED');
+
 
                                         break;
 
                                     case 'sofia::expire':
                                         redisClient.del('SIPPRESENCE:' + realm + ':' + username, redisMessageHandler);
-                                        dbOp.DeletePresenceDB(username);
+
 
                                         break;
 
                                     case 'sofia::unregister':
                                         redisClient.del('SIPPRESENCE:' + realm + ':' + username, redisMessageHandler);
-                                        dbOp.DeletePresenceDB(username);
+
 
                                         break;
 
@@ -765,6 +764,7 @@ var CreateESLConnection = function()
                 //set flag to stop
                 try
                 {
+                    flag = false;
                     logger.debug('CREATING ESL CONNECTION');
                     if(conn == null || conn.socket == null || conn.socket.destroyed)
                     {
