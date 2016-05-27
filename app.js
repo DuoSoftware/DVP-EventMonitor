@@ -80,6 +80,20 @@ redisClient.on('error',function(err){
                 var ardsAction = event.getHeader('ARDS-Action');
                 var ardsClientUuid = event.getHeader('ards_client_uuid');
                 var dvpAppId = event.getHeader('variable_dvp_app_id');
+                var appType = event.getHeader('variable_application_type');
+                var appPosition = event.getHeader('variable_application_position');
+
+
+                if(appType)
+                {
+                    redisClient.hset(uniqueId, 'Application-Type', appType, redisMessageHandler);
+                }
+
+                if(appPosition)
+                {
+                    redisClient.hset(uniqueId, 'Application-Position', appPosition, redisMessageHandler);
+                }
+
                 var eventTime = '';
 
                 if(ardsClientUuid)
@@ -110,7 +124,7 @@ redisClient.on('error',function(err){
                     SwitchName: switchName,
                     CampaignId: campaignId,
                     CallerDestNum: callerDestNum,
-                    EventParams: event,
+                    EventParams: "",
                     CompanyId: companyId,
                     TenantId: tenantId
                 };
@@ -286,15 +300,19 @@ redisClient.on('error',function(err){
                         if (event.getHeader('Channel-State') != 'CS_DESTROY')
                         {
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS GET');
-                            if (redisClient.exists(uniqueId))
-                            {
-                                redisClient.hset(uniqueId, 'Channel-State', event.getHeader('Channel-State'), redisMessageHandler);
-                            }
+                            redisClient.hset(uniqueId, 'Channel-State', event.getHeader('Channel-State'), redisMessageHandler);
                         }
                         else
                         {
                             redisClient.del(uniqueId, redisMessageHandler);
                         }
+                        break;
+
+                    case 'CHANNEL_HOLD':
+
+                        break;
+                    case 'CHANNEL_UNHOLD':
+
                         break;
                     case 'CHANNEL_ANSWER':
 
@@ -383,6 +401,8 @@ redisClient.on('error',function(err){
                             var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "DESTROY", dvpAppId, "", uniqueId);
 
                             redisClient.publish('events', pubMessage);
+
+                            redisClient.decr(chanCountCompany, redisMessageHandler);
 
                             logger.debug('=========================== REMOVE FROM SET : [%s] - [%s] ==========================', channelSetName, uniqueId);
                         }
@@ -696,13 +716,36 @@ redisClient.on('error',function(err){
                                 var ardsClientUuid = event.getHeader('ARDS-Call-UUID');
                                 var ardsCompany = event.getHeader('Company');
                                 var ardsTenant = event.getHeader('Tenant');
+                                var ardsServerType = event.getHeader('ServerType');
+                                var ardsReqType = event.getHeader('RequestType');
+                                var ardsResourceId = event.getHeader('ARDS-Resource-Id');
+                                var reason = event.getHeader('ARDS-Reason');
+                                var skill = event.getHeader('ARDS-Call-Skill');
+
+                                var obj = {
+                                    ServerType : ardsServerType,
+                                    ReqType: ardsReqType,
+                                    ResourceId: ardsResourceId,
+                                    Reason: reason,
+                                    Skill: skill
+                                };
+
+                                evtData.SessionId = ardsClientUuid;
+                                evtData.EventClass = "ARDS";
+                                evtData.EventType = "EVENT";
+                                evtData.EventCategory = "SYSTEM";
+                                evtData.EventName = action;
+                                evtData.EventData = skill;
+                                evtData.CompanyId = ardsCompany;
+                                evtData.TenantId = ardsTenant;
+                                evtData.EventParams = obj;
+
+                                var jsonStr = JSON.stringify(evtData);
+
+                                redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
 
                                 if(action === 'agent-rejected')
                                 {
-                                    var ardsServerType = event.getHeader('ServerType');
-                                    var ardsReqType = event.getHeader('RequestType');
-                                    var ardsResourceId = event.getHeader('ARDS-Resource-Id');
-                                    var reason = event.getHeader('ARDS-Reason');
 
                                     ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Reject', 'Reject', reason);
                                 }
