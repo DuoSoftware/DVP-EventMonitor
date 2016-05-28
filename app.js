@@ -83,6 +83,7 @@ redisClient.on('error',function(err){
                 var dvpAppId = event.getHeader('variable_dvp_app_id');
                 var appType = event.getHeader('variable_application_type');
                 var appPosition = event.getHeader('variable_application_position');
+                var callerIdNum = event.getHeader('Caller-Caller-ID-Number');
 
                 //fs.appendFile("D:/DVP/log.txt", evtType + ':' + event.getHeader('Channel-State') + ':' + event.getHeader('Call-Direction') + ':' + companyId + '\r\n', function(err) {
                 //    if(err) {
@@ -269,8 +270,6 @@ redisClient.on('error',function(err){
                             logger.debug('=========================== ADD TO SET - COMPANY NOT SET : [%s] ==========================', channelSetName, uniqueId);
                         }
 
-
-
                         if (!variableLoopbackApp)
                         {
                             redisClient.hset(uniqueId, 'Channel-State', channelState, redisMessageHandler);
@@ -281,6 +280,7 @@ redisClient.on('error',function(err){
                             redisClient.hset(uniqueId, 'Caller-Unique-ID', callerUniqueId, redisMessageHandler);
                             redisClient.hset(uniqueId, 'variable_sip_auth_realm', variableSipAuthRealm, redisMessageHandler);
                             redisClient.hset(uniqueId, 'variable_dvp_app_id', dvpAppId, redisMessageHandler);
+                            redisClient.hset(uniqueId, 'Caller-Caller-ID-Number', callerIdNum, redisMessageHandler);
 
                             var otherleg = 'none';
 
