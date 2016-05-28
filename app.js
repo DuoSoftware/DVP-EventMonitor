@@ -7,6 +7,7 @@ var colors = require('colors');
 var util = require('util');
 var request = require('request');
 var amqp = require('amqp');
+var fs = require('fs');
 var os = require('os');
 var nodeUuid = require('node-uuid');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
@@ -82,6 +83,14 @@ redisClient.on('error',function(err){
                 var dvpAppId = event.getHeader('variable_dvp_app_id');
                 var appType = event.getHeader('variable_application_type');
                 var appPosition = event.getHeader('variable_application_position');
+
+                fs.appendFile("D:/DVP/log.txt", evtType + ':' + event.getHeader('Channel-State') + ':' + event.getHeader('Call-Direction') + ':' + companyId + '\r\n', function(err) {
+                    if(err) {
+                        return console.log(err);
+                    }
+
+                    console.log("The file was saved!");
+                });
 
 
                 if(appType)
@@ -402,7 +411,16 @@ redisClient.on('error',function(err){
 
                             redisClient.publish('events', pubMessage);
 
-                            redisClient.decr(chanCountCompany, redisMessageHandler);
+                            redisClient.sismember(channelSetName, uniqueId, function(err, setContains)
+                            {
+                                if(setContains)
+                                {
+                                    redisClient.decr(chanCountCompany, redisMessageHandler);
+                                }
+
+                            });
+
+
 
                             logger.debug('=========================== REMOVE FROM SET : [%s] - [%s] ==========================', channelSetName, uniqueId);
                         }
