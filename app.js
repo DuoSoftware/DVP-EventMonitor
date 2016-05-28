@@ -84,13 +84,13 @@ redisClient.on('error',function(err){
                 var appType = event.getHeader('variable_application_type');
                 var appPosition = event.getHeader('variable_application_position');
 
-                fs.appendFile("D:/DVP/log.txt", evtType + ':' + event.getHeader('Channel-State') + ':' + event.getHeader('Call-Direction') + ':' + companyId + '\r\n', function(err) {
-                    if(err) {
-                        return console.log(err);
-                    }
-
-                    console.log("The file was saved!");
-                });
+                //fs.appendFile("D:/DVP/log.txt", evtType + ':' + event.getHeader('Channel-State') + ':' + event.getHeader('Call-Direction') + ':' + companyId + '\r\n', function(err) {
+                //    if(err) {
+                //        return console.log(err);
+                //    }
+                //
+                //    console.log("The file was saved!");
+                //});
 
 
                 if(appType)
