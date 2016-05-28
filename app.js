@@ -404,7 +404,6 @@ redisClient.on('error',function(err){
 
                         if(companyId && tenantId)
                         {
-                            redisClient.srem(channelSetName, uniqueId, redisMessageHandler);
                             redisClient.del('CHANNELMAP:' + uniqueId, redisMessageHandler);
 
                             var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "DESTROY", dvpAppId, "", uniqueId);
@@ -416,6 +415,7 @@ redisClient.on('error',function(err){
                                 if(setContains)
                                 {
                                     redisClient.decr(chanCountCompany, redisMessageHandler);
+                                    redisClient.srem(channelSetName, uniqueId, redisMessageHandler);
                                 }
 
                             });
