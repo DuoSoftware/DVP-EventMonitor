@@ -4,13 +4,6 @@ var util = require('util');
 var validator = require('validator');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 
-var winston = require('winston');
-
-
-var newLogger = new winston.Logger();
-
-var level = 'debug';
-newLogger.add(winston.transports.File, {filename: '/logs/ardslog.log', level: level, maxsize:1242880, maxFiles:20});
 
 var token = config.Token;
 
@@ -18,7 +11,6 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
 {
     try
     {
-        newLogger.error('ARDS TRYING - ARDS Uuid : ' + ardsClientUuid + ' , State : ' + state + ' , Company ID : ' + ardsCompany);
         if(ardsClientUuid)
         {
 
@@ -68,7 +60,6 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
                     }
                     else
                     {
-                        newLogger.error('ARDS ERROR - ARDS Uuid : ' + ardsClientUuid + ' , State : ' + state + ' Company ID : ' + ardsCompany, error);
                         logger.error('[DVP-EventMonitor.SendResourceStatus] - [%s] - Set Resource Status Fail', reqId, error);
                     }
                 })
