@@ -10,7 +10,7 @@ var winston = require('winston');
 var newLogger = new winston.Logger();
 
 var level = 'debug';
-newLogger.add(winston.transports.File, {filename: 'ards_log.log', level: level, maxsize:1242880, maxFiles:20});
+newLogger.add(winston.transports.File, {filename: '/logs/ardslog.log', level: level, maxsize:1242880, maxFiles:20});
 
 var token = config.Token;
 
