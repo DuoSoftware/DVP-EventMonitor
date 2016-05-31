@@ -16,7 +16,13 @@ var tcpp = require('tcp-ping');
 var moment = require('moment');
 var dbOp = require('./DbOperationsHandler.js');
 var ardsHandler = require('./ArdsResourceStateHandler.js');
+var winston = require('winston');
 
+
+var newLogger = new winston.Logger();
+
+var level = 'debug';
+newLogger.add(winston.transports.File, {filename: 'evtmonitor_log.log', level: level, maxsize:1242880, maxFiles:20});
 
 
 //open a connection
@@ -85,6 +91,8 @@ redisClient.on('error',function(err){
                 var appPosition = event.getHeader('variable_application_position');
                 var callerIdNum = event.getHeader('Caller-Caller-ID-Number');
                 var dvpCallDirection = event.getHeader('variable_DVP_CALL_DIRECTION');
+
+                newLogger.debug('EVT LOG - Unique ID : ' + uniqueId + ' , Event Type : ' + evtType + ' , Channel State : ' + event.getHeader('Channel-State') + ' , Company ID : ' + companyId + ' , ARDS Uuid : ' + ardsClientUuid);
 
                 //fs.appendFile("D:/DVP/log.txt", evtType + ':' + event.getHeader('Channel-State') + ':' + event.getHeader('Call-Direction') + ':' + companyId + '\r\n', function(err) {
                 //    if(err) {
@@ -165,6 +173,10 @@ redisClient.on('error',function(err){
                         }
 
                         redisClient.hset(uniqueId, 'ARDS-State', ardsAction, redisMessageHandler);
+                        break;
+
+                    case 'OUTGOING_CHANNEL':
+                        console.log('');
                         break;
 
                     case 'CHANNEL_BRIDGE':
