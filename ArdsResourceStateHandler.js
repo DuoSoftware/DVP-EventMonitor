@@ -18,7 +18,7 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
 {
     try
     {
-        newLogger.error('ARDS TRYING - ARDS Uuid : ' + ardsClientUuid + ' , Request Type : ' + ardsReqType + ' , Company ID : ' + ardsCompany);
+        newLogger.error('ARDS TRYING - ARDS Uuid : ' + ardsClientUuid + ' , State : ' + state + ' , Company ID : ' + ardsCompany);
         if(ardsClientUuid)
         {
 
@@ -68,7 +68,7 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
                     }
                     else
                     {
-                        newLogger.error('ARDS ERROR - ARDS Uuid : ' + ardsClientUuid + 'Request Type : ' + ardsReqType + ' Company ID : ' + ardsCompany);
+                        newLogger.error('ARDS ERROR - ARDS Uuid : ' + ardsClientUuid + ' , State : ' + state + ' Company ID : ' + ardsCompany, error);
                         logger.error('[DVP-EventMonitor.SendResourceStatus] - [%s] - Set Resource Status Fail', reqId, error);
                     }
                 })
