@@ -29,6 +29,13 @@ module.exports = {
         version: 'SYS_ARDSLITESERVICE_VERSION'
     },
 
+    NS: {
+        ip: 'SYS_NOTIFICATIONSERVICE_HOST',
+        port: 'SYS_NOTIFICATIONSERVICE_PORT',
+        version: 'SYS_NOTIFICATIONSERVICE_VERSION'
+    },
+
+
     WebAPI: {
 
         domain: 'WEBAPI_DOMAIN',

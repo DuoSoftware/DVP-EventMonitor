@@ -26,6 +26,12 @@ module.exports = {
         version: '1.0.0.0'
     },
 
+    NS: {
+        ip: '127.0.0.1',
+        port: 8765,
+        version: '1.0.0.0'
+    },
+
     WebAPI: {
 
         domain: '192.168.1.58',

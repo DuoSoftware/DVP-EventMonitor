@@ -509,7 +509,8 @@ redisClient.on('error',function(err){
                             if (subClass == 'conference::maintenance')
                             {
                                 redisClient.publish(subClass, event.serialize('json'), redisMessageHandler);
-                                if (event.getHeader('Action')) {
+                                if (event.getHeader('Action'))
+                                {
 
                                     var action = event.getHeader('Action');
 
@@ -531,6 +532,7 @@ redisClient.on('error',function(err){
                                             //redisClient.hset(conferenceID, 'Conference-Name', conferenceName, redisMessageHandler);
                                             //redisClient.hset(conferenceID, 'SwitchName', switchName, redisMessageHandler);
                                             //redisClient.hset(conferenceID, 'Data', event.serialize('json'), redisMessageHandler);
+                                            extApiAccess.SendNotificationByKey(reqId, 'conference_create', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference room ' + conferenceName + ' started', conferenceID);
                                             break;
                                         case 'conference-destroy':
                                             results.event = 'destroy';
@@ -538,10 +540,14 @@ redisClient.on('error',function(err){
                                             redisClient.del('CONFERENCE-COUNT:' + conferenceName, redisMessageHandler);
                                             redisClient.del('CONFERENCE-MEMBERS:' + conferenceName, userName, redisMessageHandler);
 
+                                            extApiAccess.SendNotificationByKey(reqId, 'conference_destroy', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference room ' + conferenceName + ' closed', conferenceID);
+
                                             break;
                                         case 'add-member':
 
                                             //--------------
+
+                                            extApiAccess.SendNotificationByKey(reqId, 'conference_member_joined', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference member ' + userName + ' joined', conferenceID);
 
                                             redisClient.incr('CONFERENCE-COUNT:' + conferenceName, redisMessageHandler);
                                             redisClient.sadd('CONFERENCE-MEMBERS:' + conferenceName, userName,  redisMessageHandler);
@@ -558,6 +564,8 @@ redisClient.on('error',function(err){
                                             break;
                                         case 'del-member':
 
+                                            extApiAccess.SendNotificationByKey(reqId, 'conference_member_left', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference member ' + userName + ' left', conferenceID);
+
                                             redisClient.decr('CONFERENCE-COUNT:' + conferenceName, redisMessageHandler);
                                             redisClient.srem('CONFERENCE-MEMBERS:' + conferenceName, userName,  redisMessageHandler);
 
@@ -566,10 +574,13 @@ redisClient.on('error',function(err){
                                             break;
                                         case 'start-talking':
 
+                                            extApiAccess.SendNotificationByKey(reqId, 'conference_member_status', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference member ' + userName + ' state is now talking', conferenceID);
+
                                             redisClient.hset("CONFERENCE-USER:" + userName, 'Member-State', 'TALKING', redisMessageHandler);
 
                                             break;
                                         case 'stop-talking':
+                                            extApiAccess.SendNotificationByKey(reqId, 'conference_member_status', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference member ' + userName + ' state is now listening', conferenceID);
                                             redisClient.hset("CONFERENCE-USER:" + userName, 'Member-State', 'LISTENING', redisMessageHandler);
                                             break;
                                         case 'bgdial-result':
@@ -577,7 +588,6 @@ redisClient.on('error',function(err){
                                             break;
 
                                     }
-                                    //httpPOST('ConferenceStatus', results);
                                 }
 
 
