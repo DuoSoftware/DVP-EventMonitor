@@ -3,9 +3,15 @@ var httpReq = require('request');
 var util = require('util');
 var validator = require('validator');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
+var winston = require('winston');
 
+var loggerCust = new winston.Logger();
+
+var level = 'debug';
 
 var token = config.Token;
+
+loggerCust.add(winston.transports.File, {filename: '/logs/ards_logger.log', level: level, maxsize:1242880, maxFiles:10});
 
 var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, state, otherInfo, reason)
 {
@@ -51,6 +57,8 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
 
                 logger.debug('[DVP-EventMonitor.SendResourceStatus] - [%s] - Creating Api Url : %s, state : %s', reqId, httpUrl, state);
 
+                loggerCust.debug('SendResourceStatus - START - [UUID : %s , State : %s' , ardsClientUuid, state);
+
 
                 httpReq.put(options, function (error, response, body)
                 {
@@ -60,6 +68,7 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
                     }
                     else
                     {
+                        loggerCust.error('SendResourceStatus - FAIL - [UUID : %s , State : %s' , ardsClientUuid, state, error);
                         logger.error('[DVP-EventMonitor.SendResourceStatus] - [%s] - Set Resource Status Fail', reqId, error);
                     }
                 })

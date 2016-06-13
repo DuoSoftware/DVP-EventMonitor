@@ -17,6 +17,14 @@ var moment = require('moment');
 var dbOp = require('./DbOperationsHandler.js');
 var ardsHandler = require('./ArdsResourceStateHandler.js');
 
+var winston = require('winston');
+
+var loggerCust = new winston.Logger();
+
+var level = 'debug';
+
+loggerCust.add(winston.transports.File, {filename: 'logs/common_logger.log', level: level, maxsize:1242880, maxFiles:10});
+
 //open a connection
 var redisPort = config.Redis.port;
 var redisIp = config.Redis.ip;
@@ -61,7 +69,6 @@ redisClient.on('error',function(err){
             {
                 logger.info('[DVP-EventMonitor.handler] - [%s] - FS EVENT RECEIVED', reqId);
 
-
                 var evtType = event.type;
                 var uniqueId = event.getHeader('Unique-ID');
                 var customCompanyStr = event.getHeader('variable_CustomCompanyStr');
@@ -83,6 +90,8 @@ redisClient.on('error',function(err){
                 var appPosition = event.getHeader('variable_application_position');
                 var callerIdNum = event.getHeader('Caller-Caller-ID-Number');
                 var dvpCallDirection = event.getHeader('variable_DVP_CALL_DIRECTION');
+
+                loggerCust.debug('EVENT RECEIVED - [UUID : %s , TYPE : %s' , uniqueId, evtType);
 
 
 
