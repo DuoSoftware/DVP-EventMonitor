@@ -300,6 +300,7 @@ redisClient.on('error',function(err){
                             redisClient.hset(uniqueId, 'variable_sip_auth_realm', variableSipAuthRealm, redisMessageHandler);
                             redisClient.hset(uniqueId, 'variable_dvp_app_id', dvpAppId, redisMessageHandler);
                             redisClient.hset(uniqueId, 'Caller-Caller-ID-Number', callerIdNum, redisMessageHandler);
+                            redisClient.hset(uniqueId, 'Channel-Create-Time', eventTime, redisMessageHandler);
 
                             var otherleg = 'none';
 
