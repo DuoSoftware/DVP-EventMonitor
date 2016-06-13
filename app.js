@@ -23,7 +23,7 @@ var loggerCust = new winston.Logger();
 
 var level = 'debug';
 
-loggerCust.add(winston.transports.File, {filename: 'logs/common_logger.log', level: level, maxsize:1242880, maxFiles:10});
+loggerCust.add(winston.transports.File, {filename: '/logs/common_logger.log', level: level, maxsize:1242880, maxFiles:10});
 
 //open a connection
 var redisPort = config.Redis.port;
