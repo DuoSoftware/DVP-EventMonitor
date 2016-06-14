@@ -291,6 +291,7 @@ redisClient.on('error',function(err){
 
                         if (!variableLoopbackApp)
                         {
+                            redisClient.hset(uniqueId, 'Unique-ID', uniqueId, redisMessageHandler);
                             redisClient.hset(uniqueId, 'Channel-State', channelState, redisMessageHandler);
                             redisClient.hset(uniqueId, 'FreeSWITCH-Switchname', switchName, redisMessageHandler);
                             redisClient.hset(uniqueId, 'Channel-Name', channelName, redisMessageHandler);
@@ -301,6 +302,7 @@ redisClient.on('error',function(err){
                             redisClient.hset(uniqueId, 'variable_dvp_app_id', dvpAppId, redisMessageHandler);
                             redisClient.hset(uniqueId, 'Caller-Caller-ID-Number', callerIdNum, redisMessageHandler);
                             redisClient.hset(uniqueId, 'Channel-Create-Time', eventTime, redisMessageHandler);
+
 
                             var otherleg = 'none';
 
