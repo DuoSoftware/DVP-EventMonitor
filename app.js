@@ -90,8 +90,10 @@ redisClient.on('error',function(err){
                 var appPosition = event.getHeader('variable_application_position');
                 var callerIdNum = event.getHeader('Caller-Caller-ID-Number');
                 var dvpCallDirection = event.getHeader('variable_DVP_CALL_DIRECTION');
+                var callMonitorOtherLeg = event.getHeader('variable_DVP_CALLMONITOR_OTHER_LEG');
+                var otherLegUniqueId = event.getHeader('Other-Leg-Unique-ID');
 
-                loggerCust.debug('EVENT RECEIVED - [UUID : %s , TYPE : %s' , uniqueId, evtType);
+                loggerCust.debug('EVENT RECEIVED - [UUID : %s , TYPE : %s, CompanyId : %s', uniqueId, evtType, companyId);
 
 
 
@@ -177,7 +179,7 @@ redisClient.on('error',function(err){
                         break;
 
                     case 'OUTGOING_CHANNEL':
-                        console.log('');
+
                         break;
 
                     case 'CHANNEL_BRIDGE':
@@ -204,31 +206,38 @@ redisClient.on('error',function(err){
                             //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 
-                        var otherleg = event.getHeader('Other-Leg-Unique-ID');
-
                         redisClient.hset(uniqueId, 'Bridge-State', 'Bridged', redisMessageHandler);
-                        redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', otherleg, redisMessageHandler);
+
+                        if(otherLegUniqueId)
+                        {
+                            redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', otherLegUniqueId, redisMessageHandler);
+                        }
+
                         break;
 
                     case 'CHANNEL_CALLSTATE':
                     {
-                        var otherleg;
-                        var calltype;
-                        if (event.getHeader('Other-Leg-Unique-ID'))
+
+                        if(callMonitorOtherLeg)
                         {
-                            redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', event.getHeader('Other-Leg-Unique-ID'), redisMessageHandler);
-                            otherleg = event.getHeader('Other-Leg-Unique-ID');
-                            calltype = "NORMAL";
+                            redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', callMonitorOtherLeg, redisMessageHandler);
+                        }
+                        else
+                        {
+                            if (otherLegUniqueId)
+                            {
+                                redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', otherLegUniqueId, redisMessageHandler);
+                            }
+
+                            if (event.getHeader('variable_fifo_bridge_uuid'))
+                            {
+                                redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', event.getHeader('variable_fifo_bridge_uuid'), redisMessageHandler);
+                                redisClient.hset(uniqueId, 'Call-Type', 'FIFO', redisMessageHandler);
+                            }
                         }
 
-                        if (event.getHeader('variable_fifo_bridge_uuid'))
-                        {
 
-                            redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', event.getHeader('variable_fifo_bridge_uuid'), redisMessageHandler);
-                            otherleg = event.getHeader('variable_fifo_bridge_uuid');
-                            calltype = 'FIFO';
-                            redisClient.hset(uniqueId, 'Call-Type', calltype, redisMessageHandler);
-                        }
+
 
 
                     }
@@ -243,7 +252,6 @@ redisClient.on('error',function(err){
                         var channelName = event.getHeader('Channel-Name');
                         var direction = event.getHeader('Call-Direction');
                         var callerUniqueId = event.getHeader('Caller-Unique-ID');
-                        var otherLegUuid = event.getHeader('Other-Leg-Unique-ID');
                         var fifoBridgeUuid = event.getHeader('variable_fifo_bridge_uuid');
                         var channelPresId = event.getHeader('Channel-Presence-ID');
                         var channelCallState = event.getHeader('Channel-Call-State');
@@ -303,26 +311,24 @@ redisClient.on('error',function(err){
                             redisClient.hset(uniqueId, 'Caller-Caller-ID-Number', callerIdNum, redisMessageHandler);
                             redisClient.hset(uniqueId, 'Channel-Create-Time', eventTime, redisMessageHandler);
 
-
-                            var otherleg = 'none';
-
-                            if (otherLegUuid)
+                            if(callMonitorOtherLeg)
                             {
-                                redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', otherLegUuid, redisMessageHandler);
-                                otherleg = otherLegUuid;
-                                calltype = "NORMAL";
+                                redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', callMonitorOtherLeg, redisMessageHandler);
                             }
-
-                            if (fifoBridgeUuid)
+                            else
                             {
-                                redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', fifoBridgeUuid, redisMessageHandler);
-                                otherleg = fifoBridgeUuid;
-                                calltype = 'FIFO';
-                                redisClient.hset(uniqueId, 'Call-Type', calltype, redisMessageHandler);
+                                if (otherLegUniqueId)
+                                {
+                                    redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', otherLegUniqueId, redisMessageHandler);
+                                }
+
+                                if (fifoBridgeUuid)
+                                {
+                                    redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', fifoBridgeUuid, redisMessageHandler);
+                                    otherLegUniqueId = fifoBridgeUuid;
+                                    redisClient.hset(uniqueId, 'Call-Type', 'FIFO', redisMessageHandler);
+                                }
                             }
-
-
-                            //redisClient.hset(uniqueId, 'data', event.serialize('json'), redisMessageHandler);
 
                         }
 
