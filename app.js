@@ -23,7 +23,7 @@ var loggerCust = new winston.Logger();
 
 var level = 'debug';
 
-loggerCust.add(winston.transports.File, {filename: '/logs/common_logger.log', level: level, maxsize:1242880, maxFiles:10});
+loggerCust.add(winston.transports.File, {filename: 'logs/common_logger.log', level: level, maxsize:1242880, maxFiles:10});
 
 //open a connection
 var redisPort = config.Redis.port;
@@ -105,20 +105,23 @@ redisClient.on('error',function(err){
                 //    console.log("The file was saved!");
                 //});
 
-                if(dvpCallDirection)
+                if(evtType === 'CHANNEL_BRIDGE' || evtType === 'CHANNEL_CALLSTATE' || evtType === 'CHANNEL_CREATE' || evtType === 'CHANNEL_STATE' || evtType === 'CHANNEL_ANSWER')
                 {
-                    redisClient.hset(uniqueId, 'DVP-Call-Direction', dvpCallDirection, redisMessageHandler);
-                }
+                    if(dvpCallDirection)
+                    {
+                        redisClient.hset(uniqueId, 'DVP-Call-Direction', dvpCallDirection, redisMessageHandler);
+                    }
 
 
-                if(appType)
-                {
-                    redisClient.hset(uniqueId, 'Application-Type', appType, redisMessageHandler);
-                }
+                    if(appType)
+                    {
+                        redisClient.hset(uniqueId, 'Application-Type', appType, redisMessageHandler);
+                    }
 
-                if(appPosition)
-                {
-                    redisClient.hset(uniqueId, 'Application-Position', appPosition, redisMessageHandler);
+                    if(appPosition)
+                    {
+                        redisClient.hset(uniqueId, 'Application-Position', appPosition, redisMessageHandler);
+                    }
                 }
 
                 var eventTime = '';
@@ -235,10 +238,6 @@ redisClient.on('error',function(err){
                                 redisClient.hset(uniqueId, 'Call-Type', 'FIFO', redisMessageHandler);
                             }
                         }
-
-
-
-
 
                     }
                         //redisClient.hset(uniqueId, 'data', event.serialize('json'), redisMessageHandler);
