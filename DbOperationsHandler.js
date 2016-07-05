@@ -72,6 +72,43 @@ var DeletePresenceDB = function(username)
     }
 };
 
+var SetConferenceMemberStatus = function(roomName, membername)
+{
+    try
+    {
+        dbModel.ConferenceUser.find({where: [{ConferenceId: roomName}], include:[{model: dbModel.SipUACEndpoint, as:"SipUACEndpoint", where:[{SipUsername: membername}]}]})
+            .then(function (confUser)
+            {
+                if(confUser)
+                {
+
+                    confUser.updateAttributes({UserStatus: 'JOINED'}).then(function(updateResult)
+                    {
+
+                    }).catch(function(err)
+                    {
+                        logger.error('[DVP-EventMonitor.SetConferenceMemberStatus] - [%s] - Update Conference User Status Fail', err);
+                    })
+
+                }
+                else
+                {
+                    logger.error('[DVP-EventMonitor.SetConferenceMemberStatus] - [%s] - Conference user not found');
+                }
+            })
+            .catch(function(err)
+            {
+                logger.error('[DVP-EventMonitor.SetConferenceMemberStatus] - [%s] - Update Conference User Status Fail', err);
+            });
+    }
+    catch(ex)
+    {
+        logger.error('[DVP-EventMonitor.SetConferenceMemberStatus] - [%s] - Update Conference User Status Fail', ex);
+    }
+
+}
+
 module.exports.AddPresenceDB = AddPresenceDB;
 module.exports.UpdatePresenceDB = UpdatePresenceDB;
 module.exports.DeletePresenceDB = DeletePresenceDB;
+module.exports.SetConferenceMemberStatus = SetConferenceMemberStatus;

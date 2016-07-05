@@ -573,9 +573,11 @@ redisClient.on('error',function(err){
                                             //------------
                                             redisClient.hset("CONFERENCE-USER:" + userName, 'Caller-Username', userName, redisMessageHandler);
                                             redisClient.hset("CONFERENCE-USER:" + userName, 'Member-Type', userType, redisMessageHandler);
-                                            redisClient.hset("CONFERENCE-USER:" + userName, 'Member-State', 'ADDED', redisMessageHandler);
+                                            redisClient.hset("CONFERENCE-USER:" + userName, 'Member-State', 'JOINED', redisMessageHandler);
                                             redisClient.hset("CONFERENCE-USER:" + userName, 'Caller-Direction', direction, redisMessageHandler);
                                             redisClient.hset("CONFERENCE-USER:" + userName, 'Conference-Unique-ID', conferenceID, redisMessageHandler);
+
+                                            dbOp.SetConferenceMemberStatus(conferenceName, userName);
 
 
                                             break;
