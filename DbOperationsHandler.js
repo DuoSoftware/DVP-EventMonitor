@@ -72,6 +72,30 @@ var DeletePresenceDB = function(username)
     }
 };
 
+var GetConferenceRoom = function(roomName)
+{
+    try
+    {
+        dbModel.ConferenceUser.find({where: [{ConferenceId: roomName}]})
+            .then(function (conf)
+            {
+                callback(null, conf);
+
+            }).catch(function(err)
+            {
+                callback(err, null);
+
+            })
+    }
+    catch(ex)
+    {
+        callback(ex, null);
+    }
+
+}
+
+
+
 var SetConferenceMemberStatus = function(roomName, membername)
 {
     try
@@ -112,3 +136,4 @@ module.exports.AddPresenceDB = AddPresenceDB;
 module.exports.UpdatePresenceDB = UpdatePresenceDB;
 module.exports.DeletePresenceDB = DeletePresenceDB;
 module.exports.SetConferenceMemberStatus = SetConferenceMemberStatus;
+module.exports.GetConferenceRoom = GetConferenceRoom;

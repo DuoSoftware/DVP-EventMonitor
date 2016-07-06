@@ -543,28 +543,62 @@ redisClient.on('error',function(err){
                                     switch (action) {
                                         case 'conference-create':
                                             //results.event = 'create';
-                                            //redisClient.lpush("Conference-List", conferenceID, redisMessageHandler);
-                                            //redisClient.set('ConferenceNameMap_' + conferenceName, conferenceID, redisMessageHandler);
-                                            //redisClient.hset(conferenceID, 'Conference-Unique-ID', conferenceID, redisMessageHandler);
-                                            //redisClient.hset(conferenceID, 'Conference-Name', conferenceName, redisMessageHandler);
-                                            //redisClient.hset(conferenceID, 'SwitchName', switchName, redisMessageHandler);
+                                            redisClient.hset('CONFERENCE:' + conferenceName, 'Conference-Unique-ID', conferenceID, redisMessageHandler);
+                                            redisClient.hset('CONFERENCE:' + conferenceName, 'Conference-Name', conferenceName, redisMessageHandler);
+                                            redisClient.hset('CONFERENCE:' + conferenceName, 'SwitchName', switchName, redisMessageHandler);
                                             //redisClient.hset(conferenceID, 'Data', event.serialize('json'), redisMessageHandler);
-                                            extApiAccess.SendNotificationByKey(reqId, 'conference_create', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference room ' + conferenceName + ' started', conferenceID);
+                                            if(conferenceName)
+                                            {
+                                                dbOp.GetConferenceRoom(function(err, confInfo)
+                                                {
+                                                    if(confInfo)
+                                                    {
+                                                        extApiAccess.SendNotificationByKey(reqId, 'conference_create', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference room ' + conferenceName + ' started', conferenceID, confInfo.CompanyId, confInfo.TenantId);
+
+                                                    }
+                                                })
+                                            }
+
                                             break;
                                         case 'conference-destroy':
                                             results.event = 'destroy';
 
                                             redisClient.del('CONFERENCE-COUNT:' + conferenceName, redisMessageHandler);
                                             redisClient.del('CONFERENCE-MEMBERS:' + conferenceName, userName, redisMessageHandler);
+                                            redisClient.del('CONFERENCE:' + conferenceName, redisMessageHandler);
 
-                                            extApiAccess.SendNotificationByKey(reqId, 'conference_destroy', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference room ' + conferenceName + ' closed', conferenceID);
+                                            if(conferenceName)
+                                            {
+                                                dbOp.GetConferenceRoom(function(err, confInfo)
+                                                {
+                                                    if(confInfo)
+                                                    {
+                                                        extApiAccess.SendNotificationByKey(reqId, 'conference_destroy', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference room ' + conferenceName + ' closed', conferenceID, confInfo.CompanyId, confInfo.TenantId);
+
+                                                    }
+                                                })
+                                            }
+
+
 
                                             break;
                                         case 'add-member':
 
                                             //--------------
 
-                                            extApiAccess.SendNotificationByKey(reqId, 'conference_member_joined', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference member ' + userName + ' joined', conferenceID);
+                                            if(conferenceName)
+                                            {
+                                                dbOp.GetConferenceRoom(function(err, confInfo)
+                                                {
+                                                    if(confInfo)
+                                                    {
+                                                        extApiAccess.SendNotificationByKey(reqId, 'conference_member_joined', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference member ' + userName + ' joined', conferenceID, confInfo.CompanyId, confInfo.TenantId);
+
+                                                    }
+                                                })
+                                            }
+
+
 
                                             redisClient.incr('CONFERENCE-COUNT:' + conferenceName, redisMessageHandler);
                                             redisClient.sadd('CONFERENCE-MEMBERS:' + conferenceName, userName,  redisMessageHandler);
@@ -583,7 +617,17 @@ redisClient.on('error',function(err){
                                             break;
                                         case 'del-member':
 
-                                            extApiAccess.SendNotificationByKey(reqId, 'conference_member_left', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference member ' + userName + ' left', conferenceID);
+                                            if(conferenceName)
+                                            {
+                                                dbOp.GetConferenceRoom(function(err, confInfo)
+                                                {
+                                                    if(confInfo)
+                                                    {
+                                                        extApiAccess.SendNotificationByKey(reqId, 'conference_member_left', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference member ' + userName + ' left', conferenceID, confInfo.CompanyId, confInfo.TenantId);
+
+                                                    }
+                                                })
+                                            }
 
                                             redisClient.decr('CONFERENCE-COUNT:' + conferenceName, redisMessageHandler);
                                             redisClient.srem('CONFERENCE-MEMBERS:' + conferenceName, userName,  redisMessageHandler);
@@ -593,13 +637,36 @@ redisClient.on('error',function(err){
                                             break;
                                         case 'start-talking':
 
-                                            extApiAccess.SendNotificationByKey(reqId, 'conference_member_status', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference member ' + userName + ' state is now talking', conferenceID);
+                                            if(conferenceName)
+                                            {
+                                                dbOp.GetConferenceRoom(function(err, confInfo)
+                                                {
+                                                    if(confInfo)
+                                                    {
+                                                        extApiAccess.SendNotificationByKey(reqId, 'conference_member_status', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference member ' + userName + ' state is now talking', conferenceID, confInfo.CompanyId, confInfo.TenantId);
+
+                                                    }
+                                                })
+                                            }
+
 
                                             redisClient.hset("CONFERENCE-USER:" + userName, 'Member-State', 'TALKING', redisMessageHandler);
 
                                             break;
                                         case 'stop-talking':
-                                            extApiAccess.SendNotificationByKey(reqId, 'conference_member_status', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference member ' + userName + ' state is now listening', conferenceID);
+
+                                            if(conferenceName)
+                                            {
+                                                dbOp.GetConferenceRoom(function(err, confInfo)
+                                                {
+                                                    if(confInfo)
+                                                    {
+                                                        extApiAccess.SendNotificationByKey(reqId, 'conference_member_status', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference member ' + userName + ' state is now listening', conferenceID, confInfo.CompanyId, confInfo.TenantId);
+
+                                                    }
+                                                })
+                                            }
+
                                             redisClient.hset("CONFERENCE-USER:" + userName, 'Member-State', 'LISTENING', redisMessageHandler);
                                             break;
                                         case 'bgdial-result':

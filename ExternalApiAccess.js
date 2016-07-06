@@ -248,7 +248,7 @@ var GetModCallCenterAgentCount = function(reqId, campId, callback)
 
 //Notification Server
 
-var SendNotificationByKey = function(reqId, eventname, eventuuid, chanId, message, refId)
+var SendNotificationByKey = function(reqId, eventname, eventuuid, chanId, message, refId, companyId, tenantId)
 {
     try
     {
@@ -280,7 +280,8 @@ var SendNotificationByKey = function(reqId, eventname, eventuuid, chanId, messag
                 'content-type': 'application/json',
                 'eventname': eventname,
                 'eventuuid': eventuuid,
-                'querykey': chanId
+                'querykey': chanId,
+                'companyinfo': tenantId + ':' + companyId
             },
             body: jsonStr
         };
