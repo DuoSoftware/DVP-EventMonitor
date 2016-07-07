@@ -72,7 +72,7 @@ var DeletePresenceDB = function(username)
     }
 };
 
-var GetConferenceRoom = function(roomName)
+var GetConferenceRoom = function(roomName, callback)
 {
     try
     {
