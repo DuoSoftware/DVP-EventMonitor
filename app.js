@@ -258,6 +258,26 @@ redisClient.on('error',function(err){
                         var variableLoopbackApp = event.getHeader("variable_loopback_app");
                         var variableSipAuthRealm = event.getHeader("variable_sip_auth_realm");
 
+
+                        //Sending Resource Status For Agent Outbound Calls
+
+                        var callerContext = event.getHeader('Caller-Context');
+                        var sipFromUri = event.getHeader('variable_sip_from_uri');
+
+                        if(sipFromUri && direction === 'inbound')
+                        {
+                            redisClient.get('SIPUSER_RESOURCE_MAP:'+ sipFromUri, function(err, obj)
+                            {
+                                if(obj && obj.Context && callerContext === obj.Context)
+                                {
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Reserved', '', '');
+
+                                }
+                            })
+                        }
+
+
+
                         if(companyId && tenantId)
                         {
                             redisClient.incr(chanCountCompany, redisMessageHandler);
@@ -358,6 +378,23 @@ redisClient.on('error',function(err){
                         var ardsServerType = event.getHeader('variable_ards_servertype');
                         var ardsReqType = event.getHeader('variable_ards_requesttype');
                         var ardsResourceId = event.getHeader('variable_ards_resource_id');
+
+                        //Sending Resource Status For Agent Outbound Calls
+
+                        var callerContext = event.getHeader('Caller-Context');
+                        var sipFromUri = event.getHeader('variable_sip_from_uri');
+
+                        if(sipFromUri && direction === 'inbound')
+                        {
+                            redisClient.get('SIPUSER_RESOURCE_MAP:'+ sipFromUri, function(err, obj)
+                            {
+                                if(obj && obj.Context && callerContext === obj.Context)
+                                {
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Connected', '', '');
+
+                                }
+                            })
+                        }
 
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '');
 
@@ -467,6 +504,23 @@ redisClient.on('error',function(err){
                                 }
 
                             });
+                        }
+
+                        //Sending Resource Status For Agent Outbound Calls
+
+                        var callerContext = event.getHeader('Caller-Context');
+                        var sipFromUri = event.getHeader('variable_sip_from_uri');
+
+                        if(sipFromUri && direction === 'inbound')
+                        {
+                            redisClient.get('SIPUSER_RESOURCE_MAP:'+ sipFromUri, function(err, obj)
+                            {
+                                if(obj && obj.Context && callerContext === obj.Context)
+                                {
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Available', '', '');
+
+                                }
+                            })
                         }
 
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
