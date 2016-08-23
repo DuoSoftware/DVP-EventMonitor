@@ -401,7 +401,7 @@ redisClient.on('error',function(err){
                                 {
                                     var nsObj = {
                                         Ref: uniqueId,
-                                        To: obj.ResourceId,
+                                        To: obj.Issuer,
                                         Timeout: 1000,
                                         Direction: 'STATELESS',
                                         From: 'CALLSERVER',
