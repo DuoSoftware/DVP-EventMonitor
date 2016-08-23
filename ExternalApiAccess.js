@@ -248,12 +248,12 @@ var GetModCallCenterAgentCount = function(reqId, campId, callback)
 
 //Notification Server
 
-var SendNotificationByKey = function(reqId, eventname, eventuuid, chanId, message, refId, companyId, tenantId)
+var SendNotificationByKey = function(reqId, eventname, eventuuid, chanId, payload, companyId, tenantId)
 {
     try
     {
         var nsIp = config.NS.ip;
-        var nsPort = config.ND.port;
+        var nsPort = config.NS.port;
         var nsVersion = config.NS.version;
 
         var token = config.Token;
@@ -265,18 +265,15 @@ var SendNotificationByKey = function(reqId, eventname, eventuuid, chanId, messag
             httpUrl = util.format('http://%s:%d/DVP/API/%s/NotificationService/Notification/Publish', nsIp, nsPort, nsVersion);
         }
 
-        var nsObj = {
-            Ref: refId,
-            Message: message
-        };
 
-        var jsonStr = JSON.stringify(nsObj);
+
+        var jsonStr = JSON.stringify(payload);
 
         var options = {
             url: httpUrl,
             method: 'POST',
             headers: {
-                'authorization': token,
+                'authorization': 'bearer ' + token,
                 'content-type': 'application/json',
                 'eventname': eventname,
                 'eventuuid': eventuuid,

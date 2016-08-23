@@ -16,6 +16,7 @@ var tcpp = require('tcp-ping');
 var moment = require('moment');
 var dbOp = require('./DbOperationsHandler.js');
 var ardsHandler = require('./ArdsResourceStateHandler.js');
+var redisHandler = require('./RedisHandler.js');
 
 var winston = require('winston');
 
@@ -76,7 +77,7 @@ redisClient.on('error',function(err){
                 var campaignId = event.getHeader('variable_CampaignId');
                 var companyId = event.getHeader('variable_companyid');
                 var tenantId = event.getHeader('variable_tenantid');
-                var variableEvtTime = event.getHeader("variable_Event-Date-Timestamp");
+                var variableEvtTime = event.getHeader("Event-Date-Timestamp");
                 var switchName = event.getHeader('FreeSWITCH-Switchname');
                 var chanCountInstance = 'DVP_CHANNEL_COUNT_INSTANCE:' + switchName;
                 var callCountInstance = 'DVP_CALL_COUNT_INSTANCE:' + switchName;
@@ -89,6 +90,8 @@ redisClient.on('error',function(err){
                 var appType = event.getHeader('variable_application_type');
                 var appPosition = event.getHeader('variable_application_position');
                 var callerIdNum = event.getHeader('Caller-Caller-ID-Number');
+                var callerIdName = event.getHeader('Caller-Caller-ID-Name');
+                var direction = event.getHeader('Call-Direction');
                 var dvpCallDirection = event.getHeader('variable_DVP_CALL_DIRECTION');
                 var callMonitorOtherLeg = event.getHeader('variable_DVP_CALLMONITOR_OTHER_LEG');
                 var otherLegUniqueId = event.getHeader('Other-Leg-Unique-ID');
@@ -249,7 +252,7 @@ redisClient.on('error',function(err){
 
                         var channelState = event.getHeader('Channel-State');
                         var channelName = event.getHeader('Channel-Name');
-                        var direction = event.getHeader('Call-Direction');
+
                         var callerUniqueId = event.getHeader('Caller-Unique-ID');
                         var fifoBridgeUuid = event.getHeader('variable_fifo_bridge_uuid');
                         var channelPresId = event.getHeader('Channel-Presence-ID');
@@ -379,20 +382,41 @@ redisClient.on('error',function(err){
                         var ardsReqType = event.getHeader('variable_ards_requesttype');
                         var ardsResourceId = event.getHeader('variable_ards_resource_id');
 
+
                         //Sending Resource Status For Agent Outbound Calls
 
                         var callerContext = event.getHeader('Caller-Context');
-                        var sipFromUri = event.getHeader('variable_sip_from_uri');
 
-                        if(sipFromUri && direction === 'inbound')
+                        if(direction === 'outbound' && companyId && tenantId)
                         {
-                            redisClient.get('SIPUSER_RESOURCE_MAP:'+ sipFromUri, function(err, obj)
+
+                            var callerOrigIdName = event.getHeader('Caller-Orig-Caller-ID-Name');
+                            var callerOrigIdNumber = event.getHeader('Caller-Orig-Caller-ID-Number');
+
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                             {
+                                var obj = JSON.parse(objString);
+
                                 if(obj && obj.Context && callerContext === obj.Context)
                                 {
+                                    var nsObj = {
+                                        Ref: uniqueId,
+                                        To: obj.ResourceId,
+                                        Timeout: 1000,
+                                        Direction: 'STATELESS',
+                                        From: 'CALLSERVER',
+                                        Callback: '',
+                                        Message: 'agent_found|' + uniqueId + 'OUTBOUND|' + callerOrigIdNumber + '|' + callerOrigIdName + '|' + callerDestNum + '|OUTBOUND'
+                                    };
+
+                                    extApiAccess.SendNotificationByKey(reqId, 'agent_found', uniqueId, '', nsObj, obj.CompanyId, obj.TenantId);
+
+
                                     ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Connected', '', '');
 
+
                                 }
+
                             })
                         }
 
@@ -405,12 +429,10 @@ redisClient.on('error',function(err){
                         if(dvpCustPubId)
                         {
                             redisClient.publish(dvpCustPubId, jsonStr);
-                            //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
                         }
                         else
                         {
                             redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
-                            //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                         }
 
                         break;
@@ -460,6 +482,23 @@ redisClient.on('error',function(err){
                         var ardsReqType = event.getHeader('variable_ards_requesttype');
                         var ardsResourceId = event.getHeader('variable_ards_resource_id');
 
+
+                        //Adding call discon record to redis set for cdr summary
+
+                        if(direction === 'inbound'){
+
+                            var utcMoment = moment(eventTime).utc();
+                            var year = utcMoment.year();
+                            var month = utcMoment.month() + 1;
+                            var day = utcMoment.date();
+                            var hr = utcMoment.hour();
+
+                            var setName = 'CDRDISCON:' + year + ':' + month + ':' + day + ':' + hr;
+
+                            redisHandler.addToSet(setName, uniqueId, redisMessageHandler);
+                        }
+
+
                         redisClient.del(uniqueId + '_data', redisMessageHandler);
                         redisClient.del(uniqueId + '_dev', redisMessageHandler);
                         redisClient.del(uniqueId + '_command', redisMessageHandler);
@@ -506,22 +545,50 @@ redisClient.on('error',function(err){
                             });
                         }
 
-                        //Sending Resource Status For Agent Outbound Calls
-
+                        //Send Resource Status on Outbound Call
                         var callerContext = event.getHeader('Caller-Context');
-                        var sipFromUri = event.getHeader('variable_sip_from_uri');
 
-                        if(sipFromUri && direction === 'inbound')
+                        if(direction === 'outbound' && companyId && tenantId)
                         {
-                            redisClient.get('SIPUSER_RESOURCE_MAP:'+ sipFromUri, function(err, obj)
+                            var callerOrigIdName = event.getHeader('Caller-Orig-Caller-ID-Name');
+
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                             {
+                                var obj = JSON.parse(objString);
                                 if(obj && obj.Context && callerContext === obj.Context)
                                 {
-                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Available', '', '');
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Connected', '', '');
 
                                 }
+
                             })
                         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
 
@@ -607,7 +674,12 @@ redisClient.on('error',function(err){
                                                 {
                                                     if(confInfo)
                                                     {
-                                                        extApiAccess.SendNotificationByKey(reqId, 'conference_create', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference room ' + conferenceName + ' started', conferenceID, confInfo.CompanyId, confInfo.TenantId);
+                                                        var nsObj = {
+                                                            Ref: conferenceID,
+                                                            Message: 'Conference member ' + userName + ' state is now listening'
+                                                        };
+
+                                                        extApiAccess.SendNotificationByKey(reqId, 'conference_create', conferenceID, 'CONFERENCE:' + conferenceName, nsObj, confInfo.CompanyId, confInfo.TenantId);
 
                                                     }
                                                 })
@@ -716,7 +788,11 @@ redisClient.on('error',function(err){
                                                 {
                                                     if(confInfo)
                                                     {
-                                                        extApiAccess.SendNotificationByKey(reqId, 'conference_member_status', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference member ' + userName + ' state is now listening', conferenceID, confInfo.CompanyId, confInfo.TenantId);
+                                                        var nsObj = {
+                                                            Ref: conferenceID,
+                                                            Message: 'Conference member ' + userName + ' state is now listening'
+                                                        };
+                                                        extApiAccess.SendNotificationByKey(reqId, 'conference_member_status', conferenceID, 'CONFERENCE:' + conferenceName, 'Conference member ' + userName + ' state is now listening', nsObj, confInfo.CompanyId, confInfo.TenantId);
 
                                                     }
                                                 })
@@ -961,13 +1037,16 @@ var errorHandler = function(err)
 {
     logger.error('Error occurred', err);
     //CreateESLWithTimeout();
+    conn = null;
     flag = true;
+
 };
 
 var connectionHandler = function()
 {
     logger.debug('CONNECTION END');
     //CreateESLWithTimeout();
+    conn = null;
     flag = true;
 };
 
@@ -1077,6 +1156,7 @@ var CreateESLConnection = function()
         {
             //retry
             logger.debug('CONNECTION CANNOT BE ESTABLISHED - RETRYING');
+            conn = null;
             flag = true;
             CreateESLWithTimeout();
         }
