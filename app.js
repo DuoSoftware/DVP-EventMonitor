@@ -409,7 +409,7 @@ redisClient.on('error',function(err){
                                         Message: 'agent_found|' + uniqueId + 'OUTBOUND|' + callerOrigIdNumber + '|' + callerOrigIdName + '|' + callerDestNum + '|OUTBOUND'
                                     };
 
-                                    extApiAccess.SendNotificationByKey(reqId, 'agent_found', uniqueId, '', nsObj, obj.CompanyId, obj.TenantId);
+                                    extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
 
                                     ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Connected', '', '');
