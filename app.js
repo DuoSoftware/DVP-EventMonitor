@@ -912,13 +912,22 @@ redisClient.on('error',function(err){
                                 switch (subClass) {
 
                                     case 'sofia::register':
-                                        var presObj = {
-                                            SipUsername: username,
-                                            Domain: realm,
-                                            Status: 'REGISTERED'
-                                        };
 
-                                        redisClient.set('SIPPRESENCE:' + realm + ':' + username, JSON.stringify(presObj), redisMessageHandler);
+                                        dbOp.getUserDetailsByDomain(username, realm, function(err, usr)
+                                        {
+                                            var presObj = {
+                                                SipUsername: username,
+                                                Domain: realm,
+                                                Status: 'REGISTERED'
+                                            };
+
+                                            if(usr && usr.Extension && usr.Extension.Extension)
+                                            {
+                                                presObj.Extension = usr.Extension.Extension;
+                                            }
+
+                                            redisClient.set('SIPPRESENCE:' + realm + ':' + username, JSON.stringify(presObj), redisMessageHandler);
+                                        });
 
 
                                         break;

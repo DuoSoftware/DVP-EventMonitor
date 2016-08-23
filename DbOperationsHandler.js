@@ -94,6 +94,26 @@ var GetConferenceRoom = function(roomName, callback)
 
 }
 
+var getUserDetailsByDomain = function(username, domain, callback)
+{
+    try
+    {
+        dbModel.SipUACEndpoint.find({where: {SipUsername: username}, include: [{model: dbModel.CloudEndUser, as: "CloudEndUser", where: {Domain: domain}}, {model: dbModel.Extension, as: "Extension"}]})
+            .then(function (usr)
+            {
+                callback(null, usr);
+
+            }).catch(function(err)
+            {
+                callback(err, null);
+
+            })
+    }
+    catch(ex)
+    {
+        callback(ex, null);
+    }
+};
 
 
 var SetConferenceMemberStatus = function(roomName, membername)
@@ -137,3 +157,4 @@ module.exports.UpdatePresenceDB = UpdatePresenceDB;
 module.exports.DeletePresenceDB = DeletePresenceDB;
 module.exports.SetConferenceMemberStatus = SetConferenceMemberStatus;
 module.exports.GetConferenceRoom = GetConferenceRoom;
+module.exports.getUserDetailsByDomain = getUserDetailsByDomain;
