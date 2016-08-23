@@ -316,11 +316,11 @@ var SendNotificationInitiate = function(reqId, eventname, eventuuid, payload, co
 
         var token = config.Token;
 
-        var httpUrl = util.format('http://%s/DVP/API/%s/NotificationService/Notification/Publish', nsIp, nsVersion);
+        var httpUrl = util.format('http://%s/DVP/API/%s/NotificationService/Notification/initiate', nsIp, nsVersion);
 
         if(validator.isIP(nsIp))
         {
-            httpUrl = util.format('http://%s:%d/DVP/API/%s/NotificationService/Notification/Publish', nsIp, nsPort, nsVersion);
+            httpUrl = util.format('http://%s:%d/DVP/API/%s/NotificationService/Notification/initiate', nsIp, nsPort, nsVersion);
         }
 
 
