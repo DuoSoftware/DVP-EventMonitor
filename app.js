@@ -1036,7 +1036,6 @@ var errorHandler = function(err)
 {
     logger.error('Error occurred', err);
     //CreateESLWithTimeout();
-    conn = null;
     flag = true;
 
 };
@@ -1045,7 +1044,6 @@ var connectionHandler = function()
 {
     logger.debug('CONNECTION END');
     //CreateESLWithTimeout();
-    conn = null;
     flag = true;
 };
 
@@ -1155,7 +1153,6 @@ var CreateESLConnection = function()
         {
             //retry
             logger.debug('CONNECTION CANNOT BE ESTABLISHED - RETRYING');
-            conn = null;
             flag = true;
             CreateESLWithTimeout();
         }
