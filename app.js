@@ -286,7 +286,7 @@ redisClient.on('error',function(err){
                                         Direction: 'STATELESS',
                                         From: 'CALLSERVER',
                                         Callback: '',
-                                        Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerOrigIdNumber + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound'
+                                        Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound'
                                     };
 
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
