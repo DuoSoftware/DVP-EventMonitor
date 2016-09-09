@@ -279,6 +279,8 @@ redisClient.on('error',function(err){
 
                                 if(obj && obj.Context && callerContext === obj.Context)
                                 {
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Connected', '', '');
+
                                     var nsObj = {
                                         Ref: uniqueId,
                                         To: obj.Issuer,
@@ -297,7 +299,7 @@ redisClient.on('error',function(err){
                             })
                         }
 
-                        if(sipFromUri && direction === 'inbound')
+                        /*if(sipFromUri && direction === 'inbound')
                         {
                             redisClient.get('SIPUSER_RESOURCE_MAP:'+ sipFromUri, function(err, obj)
                             {
@@ -307,7 +309,7 @@ redisClient.on('error',function(err){
 
                                 }
                             })
-                        }
+                        }*/
 
 
 
@@ -417,13 +419,14 @@ redisClient.on('error',function(err){
 
                         var callerContext = event.getHeader('Caller-Context');
 
-                        if(direction === 'outbound' && companyId && tenantId)
+                        /*if(direction === 'outbound' && companyId && tenantId)
                         {
 
                             var callerOrigIdName = event.getHeader('Caller-Orig-Caller-ID-Name');
 
                             redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                             {
+
                                 var obj = JSON.parse(objString);
 
                                 if(obj && obj.Context && callerContext === obj.Context)
@@ -433,9 +436,13 @@ redisClient.on('error',function(err){
                                 }
 
                             })
+                        }*/
+
+                        if(ardsClientUuid)
+                        {
+                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '');
                         }
 
-                        ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '');
 
                         evtData.EventCategory = "CHANNEL_ANSWER";
 
@@ -572,15 +579,19 @@ redisClient.on('error',function(err){
                                 var obj = JSON.parse(objString);
                                 if(obj && obj.Context && callerContext === obj.Context)
                                 {
-                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Connected', '', '');
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Completed', '', '');
 
                                 }
 
                             })
                         }
 
+                        if(ardsClientUuid)
+                        {
+                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
+                        }
 
-                        ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
+
 
                         redisClient.decr(chanCountInstance);
 
