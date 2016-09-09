@@ -279,7 +279,7 @@ redisClient.on('error',function(err){
 
                                 if(obj && obj.Context && callerContext === obj.Context)
                                 {
-                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Connected', '', '');
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Connected', '', '', 'outbound');
 
                                     var nsObj = {
                                         Ref: uniqueId,
@@ -440,7 +440,7 @@ redisClient.on('error',function(err){
 
                         if(ardsClientUuid)
                         {
-                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '');
+                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound');
                         }
 
 
@@ -579,7 +579,7 @@ redisClient.on('error',function(err){
                                 var obj = JSON.parse(objString);
                                 if(obj && obj.Context && callerContext === obj.Context)
                                 {
-                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Completed', '', '');
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Completed', '', '', 'outbound');
 
                                 }
 
@@ -588,7 +588,7 @@ redisClient.on('error',function(err){
 
                         if(ardsClientUuid)
                         {
-                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
+                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '', 'inbound');
                         }
 
 
@@ -1012,7 +1012,7 @@ redisClient.on('error',function(err){
                                 if(action === 'agent-rejected')
                                 {
 
-                                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Reject', 'Reject', reason);
+                                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Reject', 'Reject', reason, 'inbound');
                                 }
                                 else if(action === 'agent-routed')
                                 {
