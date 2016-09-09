@@ -40,9 +40,9 @@ module.exports = {
     },
 
     Redis: {
-        ip: '127.0.0.1',
-        port: 6379,
-        password: "123",
+        ip: '45.55.142.207',
+        port: 6389,
+        password: "DuoS123",
         db: 4
     },
 

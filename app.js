@@ -279,7 +279,7 @@ redisClient.on('error',function(err){
 
                                 if(obj && obj.Context && callerContext === obj.Context)
                                 {
-                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Connected', '', '', 'outbound');
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
 
                                     var nsObj = {
                                         Ref: uniqueId,
@@ -579,7 +579,7 @@ redisClient.on('error',function(err){
                                 var obj = JSON.parse(objString);
                                 if(obj && obj.Context && callerContext === obj.Context)
                                 {
-                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Completed', '', '', 'outbound');
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
 
                                 }
 
