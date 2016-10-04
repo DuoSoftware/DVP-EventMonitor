@@ -112,19 +112,27 @@ redisClient.on('error',function(err){
                 {
                     if(dvpCallDirection)
                     {
-                        redisClient.hset(uniqueId, 'DVP-Call-Direction', dvpCallDirection, redisMessageHandler);
+                        redisClient.hset(uniqueId, 'DVP-Call-Direction', dvpCallDirection, function (err, reply){
+                            redisClient.expire(uniqueId, 86400, redisMessageHandler);
+                        });
                     }
 
 
                     if(appType)
                     {
-                        redisClient.hset(uniqueId, 'Application-Type', appType, redisMessageHandler);
+                        redisClient.hset(uniqueId, 'Application-Type', appType, function (err, reply){
+                            redisClient.expire(uniqueId, 86400, redisMessageHandler);
+                        });
                     }
 
                     if(appPosition)
                     {
-                        redisClient.hset(uniqueId, 'Application-Position', appPosition, redisMessageHandler);
+                        redisClient.hset(uniqueId, 'Application-Position', appPosition, function (err, reply){
+                            redisClient.expire(uniqueId, 86400, redisMessageHandler);
+                        });
                     }
+
+
                 }
 
                 var eventTime = '';
@@ -218,6 +226,7 @@ redisClient.on('error',function(err){
                         {
                             redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', otherLegUniqueId, redisMessageHandler);
                         }
+                        redisClient.expire(uniqueId, 86400, redisMessageHandler);
 
                         break;
 
@@ -245,6 +254,7 @@ redisClient.on('error',function(err){
                     }
                         //redisClient.hset(uniqueId, 'data', event.serialize('json'), redisMessageHandler);
                         redisClient.hset(uniqueId, 'Channel-Call-State', event.getHeader('Channel-Call-State'), redisMessageHandler);
+                        redisClient.expire(uniqueId, 86400, redisMessageHandler);
 
                         break;
 
@@ -353,7 +363,10 @@ redisClient.on('error',function(err){
 
                         if (!variableLoopbackApp)
                         {
-                            redisClient.hset(uniqueId, 'Unique-ID', uniqueId, redisMessageHandler);
+                            redisClient.hset(uniqueId, 'Unique-ID', uniqueId, function(err, redisRes)
+                            {
+                                redisClient.expire(uniqueId, 86400, redisMessageHandler);
+                            });
                             redisClient.hset(uniqueId, 'Channel-State', channelState, redisMessageHandler);
                             redisClient.hset(uniqueId, 'FreeSWITCH-Switchname', switchName, redisMessageHandler);
                             redisClient.hset(uniqueId, 'Channel-Name', channelName, redisMessageHandler);
@@ -384,6 +397,8 @@ redisClient.on('error',function(err){
                                 }
                             }
 
+
+
                         }
 
                         break;
@@ -392,6 +407,7 @@ redisClient.on('error',function(err){
                         {
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS GET');
                             redisClient.hset(uniqueId, 'Channel-State', event.getHeader('Channel-State'), redisMessageHandler);
+                            redisClient.expire(uniqueId, 86400, redisMessageHandler);
                         }
                         else
                         {

@@ -68,14 +68,14 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
                     }
                     else
                     {
-                        loggerCust.error('SendResourceStatus - FAIL - [UUID : %s , State : %s' , ardsClientUuid, state, error);
-                        logger.error('[DVP-EventMonitor.SendResourceStatus] - [%s] - Set Resource Status Fail', reqId, error);
+                        //loggerCust.error('SendResourceStatus - FAIL - [UUID : %s , State : %s' , ardsClientUuid, state, error);
+                        logger.error('[DVP-EventMonitor.SendResourceStatus] - [%s] - Set Resource Status Fail - Response : [%s]', reqId, JSON.stringify(response), error);
                     }
                 })
             }
             else
             {
-                logger.error('[DVP-EventMonitor.SendResourceStatus] - [%s] - ARDS Endpoints not defined', reqId, error);
+                logger.error('[DVP-EventMonitor.SendResourceStatus] - [%s] - ARDS Endpoints not defined', reqId);
             }
 
 
