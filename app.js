@@ -68,7 +68,7 @@ redisClient.on('error',function(err){
 
             if (header)
             {
-                logger.info('[DVP-EventMonitor.handler] - [%s] - FS EVENT RECEIVED', reqId);
+                //logger.info('[DVP-EventMonitor.handler] - [%s] - FS EVENT RECEIVED', reqId);
 
                 var evtType = event.type;
                 var uniqueId = event.getHeader('Unique-ID');
@@ -96,7 +96,7 @@ redisClient.on('error',function(err){
                 var callMonitorOtherLeg = event.getHeader('variable_DVP_CALLMONITOR_OTHER_LEG');
                 var otherLegUniqueId = event.getHeader('Other-Leg-Unique-ID');
 
-                loggerCust.debug('EVENT RECEIVED - [UUID : %s , TYPE : %s, CompanyId : %s', uniqueId, evtType, companyId);
+                //loggerCust.debug('EVENT RECEIVED - [UUID : %s , TYPE : %s, CompanyId : %s', uniqueId, evtType, companyId);
 
 
 
@@ -134,7 +134,10 @@ redisClient.on('error',function(err){
                     uniqueId = ardsClientUuid;
                 }
 
-                logger.debug('[DVP-EventMonitor.handler] - [%s] - Event Data - EVENT_TYPE : ' + evtType + ', CHANNEL_STATE : ' + event.getHeader('Channel-State') + ', SESSION_ID : ' + uniqueId + ', CALLER_UUID : ' + event.getHeader('Caller-Unique-ID') + 'SWITCH NAME : ' + switchName, reqId);
+                if(evtType === 'CHANNEL_BRIDGE' || evtType === 'CHANNEL_CREATE' || evtType === 'CHANNEL_ANSWER' || evtType === 'ARDS_EVENT' || evtType === 'CHANNEL_HOLD' || evtType === 'CHANNEL_UNHOLD' || evtType === 'CHANNEL_UNBRIDGE' || evtType === 'CHANNEL_DESTROY')
+                {
+                    logger.debug('[DVP-EventMonitor.handler] - [%s] - Event Data - EVENT_TYPE : ' + evtType + ', CHANNEL_STATE : ' + event.getHeader('Channel-State') + ', SESSION_ID : ' + uniqueId + ', CALLER_UUID : ' + event.getHeader('Caller-Unique-ID') + 'SWITCH NAME : ' + switchName, reqId);
+                }
 
                 if (variableEvtTime)
                 {
@@ -647,6 +650,7 @@ redisClient.on('error',function(err){
                             var subClass = event.getHeader('Event-Subclass');
                             if (subClass == 'conference::maintenance')
                             {
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - Event Data - EVENT_TYPE : ' + evtType + ', CHANNEL_STATE : ' + event.getHeader('Channel-State') + ', SESSION_ID : ' + uniqueId + ', CALLER_UUID : ' + event.getHeader('Caller-Unique-ID') + 'SWITCH NAME : ' + switchName, reqId);
                                 redisClient.publish(subClass, event.serialize('json'), redisMessageHandler);
                                 if (event.getHeader('Action'))
                                 {
@@ -939,6 +943,8 @@ redisClient.on('error',function(err){
 
                                     case 'sofia::register':
 
+                                        logger.debug('[DVP-EventMonitor.handler] - [%s] - Event Data - EVENT_TYPE : ' + evtType + ', CHANNEL_STATE : ' + event.getHeader('Channel-State') + ', SESSION_ID : ' + uniqueId + ', CALLER_UUID : ' + event.getHeader('Caller-Unique-ID') + 'SWITCH NAME : ' + switchName, reqId);
+
                                         dbOp.getUserDetailsByDomain(username, realm, function(err, usr)
                                         {
                                             var presObj = {
@@ -959,12 +965,14 @@ redisClient.on('error',function(err){
                                         break;
 
                                     case 'sofia::expire':
+                                        logger.debug('[DVP-EventMonitor.handler] - [%s] - Event Data - EVENT_TYPE : ' + evtType + ', CHANNEL_STATE : ' + event.getHeader('Channel-State') + ', SESSION_ID : ' + uniqueId + ', CALLER_UUID : ' + event.getHeader('Caller-Unique-ID') + 'SWITCH NAME : ' + switchName, reqId);
                                         redisClient.del('SIPPRESENCE:' + realm + ':' + username, redisMessageHandler);
 
 
                                         break;
 
                                     case 'sofia::unregister':
+                                        logger.debug('[DVP-EventMonitor.handler] - [%s] - Event Data - EVENT_TYPE : ' + evtType + ', CHANNEL_STATE : ' + event.getHeader('Channel-State') + ', SESSION_ID : ' + uniqueId + ', CALLER_UUID : ' + event.getHeader('Caller-Unique-ID') + 'SWITCH NAME : ' + switchName, reqId);
                                         redisClient.del('SIPPRESENCE:' + realm + ':' + username, redisMessageHandler);
 
 
@@ -975,6 +983,8 @@ redisClient.on('error',function(err){
                             }
                             else if(subClass == 'ards::info')
                             {
+
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - Event Data - EVENT_TYPE : ' + evtType + ', CHANNEL_STATE : ' + event.getHeader('Channel-State') + ', SESSION_ID : ' + uniqueId + ', CALLER_UUID : ' + event.getHeader('Caller-Unique-ID') + 'SWITCH NAME : ' + switchName, reqId);
 
                                 var action = event.getHeader('ARDS-Action');
 
