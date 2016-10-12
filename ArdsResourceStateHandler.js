@@ -17,7 +17,7 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
 {
     try
     {
-        if(ardsClientUuid)
+        if(ardsClientUuid && ardsCompany && ardsTenant && ardsResourceId)
         {
 
             logger.debug('[DVP-EventMonitor.SendResourceStatus] - [%s] -  Creating PUT Message', reqId);
