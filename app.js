@@ -497,6 +497,19 @@ redisClient.on('error',function(err){
                         }
 
                         break;
+                    case 'CHANNEL_HANGUP':
+
+                        var ardsClientUuid = event.getHeader('variable_ards_client_uuid');
+                        var ardsCompany = event.getHeader('variable_companyid');
+                        var ardsTenant = event.getHeader('variable_tenantid');
+                        var ardsServerType = event.getHeader('variable_ards_servertype');
+                        var ardsReqType = event.getHeader('variable_ards_requesttype');
+                        var ardsResourceId = event.getHeader('variable_ards_resource_id');
+                        if(ardsClientUuid)
+                        {
+                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
+                        }
+                        break;
 
                     case 'CHANNEL_DESTROY':
 
@@ -589,10 +602,10 @@ redisClient.on('error',function(err){
                             })
                         }
 
-                        if(ardsClientUuid)
+                        /*if(ardsClientUuid)
                         {
                             ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
-                        }
+                        }*/
 
 
 
