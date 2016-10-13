@@ -523,7 +523,25 @@ redisClient.on('error',function(err){
                         var ardsResourceId = event.getHeader('variable_ards_resource_id');
                         if(ardsClientUuid)
                         {
-                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
+                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '', 'inbound');
+                        }
+
+                        var callerContext = event.getHeader('Caller-Context');
+
+                        if(direction === 'outbound' && companyId && tenantId)
+                        {
+                            var callerOrigIdName = event.getHeader('Caller-Orig-Caller-ID-Name');
+
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                            {
+                                var obj = JSON.parse(objString);
+                                if(obj && obj.Context && callerContext === obj.Context)
+                                {
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
+
+                                }
+
+                            })
                         }
                         break;
 
@@ -600,23 +618,7 @@ redisClient.on('error',function(err){
                         }
 
                         //Send Resource Status on Outbound Call
-                        var callerContext = event.getHeader('Caller-Context');
 
-                        if(direction === 'outbound' && companyId && tenantId)
-                        {
-                            var callerOrigIdName = event.getHeader('Caller-Orig-Caller-ID-Name');
-
-                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
-                            {
-                                var obj = JSON.parse(objString);
-                                if(obj && obj.Context && callerContext === obj.Context)
-                                {
-                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
-
-                                }
-
-                            })
-                        }
 
                         /*if(ardsClientUuid)
                         {
