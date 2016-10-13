@@ -282,7 +282,6 @@ redisClient.on('error',function(err){
 
                         if(direction === 'outbound' && companyId && tenantId)
                         {
-
                             var callerOrigIdName = event.getHeader('Caller-Orig-Caller-ID-Name');
                             var callerOrigIdNumber = event.getHeader('Caller-Orig-Caller-ID-Number');
 
@@ -292,6 +291,7 @@ redisClient.on('error',function(err){
 
                                 if(obj && obj.Context && callerContext === obj.Context)
                                 {
+                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - SENDING', reqId);
                                     ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
 
                                     var nsObj = {
@@ -307,6 +307,10 @@ redisClient.on('error',function(err){
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
 
+                                }
+                                else
+                                {
+                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - CONTEXT NOT FOUND', reqId);
                                 }
 
                             })
