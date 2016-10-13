@@ -17,7 +17,7 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
 {
     try
     {
-        if(ardsClientUuid)
+        if(ardsClientUuid && ardsCompany && ardsTenant && ardsResourceId)
         {
 
             logger.debug('[DVP-EventMonitor.SendResourceStatus] - [%s] -  Creating PUT Message', reqId);
@@ -57,8 +57,6 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
 
                 logger.debug('[DVP-EventMonitor.SendResourceStatus] - [%s] - Creating Api Url : %s, state : %s', reqId, httpUrl, state);
 
-                loggerCust.debug('SendResourceStatus - START - [UUID : %s , State : %s' , ardsClientUuid, state);
-
 
                 httpReq.put(options, function (error, response, body)
                 {
@@ -75,7 +73,7 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
             }
             else
             {
-                logger.error('[DVP-EventMonitor.SendResourceStatus] - [%s] - ARDS Endpoints not defined', reqId);
+                logger.error('[DVP-EventMonitor.SendResourceStatus] - [%s] - ARDS Endpoints not defined', reqId, new Error('ARDS Endpoints not defined'));
             }
 
 
