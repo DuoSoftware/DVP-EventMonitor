@@ -212,12 +212,8 @@ redisClient.on('error',function(err){
                             redisClient.incr(callCountCompanyDir, redisMessageHandler);
 
                         }
-                        else
-                        {
-                            dvpCallDirection = "";
-                        }
 
-                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", dvpCallDirection, "", uniqueId);
+                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", "", "", uniqueId);
 
                         redisClient.publish('events', pubMessage);
 
@@ -370,12 +366,7 @@ redisClient.on('error',function(err){
                         {
                             redisClient.sadd(channelSetName, uniqueId, redisMessageHandler);
 
-                            if(!dvpCallDirection)
-                            {
-                                dvpCallDirection = "";
-                            }
-
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "CREATE", dvpCallDirection, "", uniqueId);
+                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "CREATE", "", "", uniqueId);
 
                             redisClient.publish('events', pubMessage);
 
@@ -511,12 +502,8 @@ redisClient.on('error',function(err){
 
                             redisClient.incr(callCountCompanyDir, redisMessageHandler);
                         }
-                        else
-                        {
-                            dvpCallDirection = "";
-                        }
 
-                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", dvpCallDirection, "", uniqueId);
+                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", "", uniqueId);
 
                         redisClient.publish('events', pubMessage);
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
@@ -614,12 +601,8 @@ redisClient.on('error',function(err){
                         {
                             redisClient.del('CHANNELMAP:' + uniqueId, redisMessageHandler);
 
-                            if(!dvpCallDirection)
-                            {
-                                dvpCallDirection = "";
-                            }
 
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "DESTROY", dvpCallDirection, "", uniqueId);
+                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "DESTROY", "", "", uniqueId);
 
                             redisClient.publish('events', pubMessage);
 
