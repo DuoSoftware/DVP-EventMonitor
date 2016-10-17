@@ -211,7 +211,10 @@ redisClient.on('error',function(err){
 
                             redisClient.incr(callCountCompanyDir, redisMessageHandler);
 
-
+                        }
+                        else
+                        {
+                            dvpCallDirection = "";
                         }
 
                         var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", dvpCallDirection, "", uniqueId);
@@ -367,21 +370,12 @@ redisClient.on('error',function(err){
                         {
                             redisClient.sadd(channelSetName, uniqueId, redisMessageHandler);
 
-                            var tempDir = '';
-
-                            if(dvpCallDirection)
+                            if(!dvpCallDirection)
                             {
-                                if(dvpCallDirection === 'inbound')
-                                {
-                                    tempDir = 'INBOUND';
-                                }
-                                else if(dvpCallDirection === 'outbound')
-                                {
-                                    tempDir = 'OUTBOUND';
-                                }
+                                dvpCallDirection = "";
                             }
 
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "CREATE", tempDir, "", uniqueId);
+                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "CREATE", dvpCallDirection, "", uniqueId);
 
                             redisClient.publish('events', pubMessage);
 
@@ -511,25 +505,18 @@ redisClient.on('error',function(err){
                         redisClient.decr(callCountInstance);
                         redisClient.decr(callCountCompany);
 
-                        var tempDir = '';
-
                         if(dvpCallDirection)
                         {
-                            if(dvpCallDirection === 'inbound')
-                            {
-                                tempDir = 'INBOUND';
-                            }
-                            else if(dvpCallDirection === 'outbound')
-                            {
-                                tempDir = 'OUTBOUND';
-                            }
-
                             var callCountCompanyDir = 'DVP_CALL_COUNT_COMPANY_DIR:' + tenantId + ':' + companyId + ':' + dvpCallDirection;
 
                             redisClient.incr(callCountCompanyDir, redisMessageHandler);
                         }
+                        else
+                        {
+                            dvpCallDirection = "";
+                        }
 
-                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", tempDir, "", uniqueId);
+                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", dvpCallDirection, "", uniqueId);
 
                         redisClient.publish('events', pubMessage);
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
@@ -627,7 +614,12 @@ redisClient.on('error',function(err){
                         {
                             redisClient.del('CHANNELMAP:' + uniqueId, redisMessageHandler);
 
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "DESTROY", dvpAppId, "", uniqueId);
+                            if(!dvpCallDirection)
+                            {
+                                dvpCallDirection = "";
+                            }
+
+                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "DESTROY", dvpCallDirection, "", uniqueId);
 
                             redisClient.publish('events', pubMessage);
 
