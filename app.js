@@ -500,7 +500,7 @@ redisClient.on('error',function(err){
                         {
                             var callCountCompanyDir = 'DVP_CALL_COUNT_COMPANY_DIR:' + tenantId + ':' + companyId + ':' + dvpCallDirection;
 
-                            redisClient.incr(callCountCompanyDir, redisMessageHandler);
+                            redisClient.decr(callCountCompanyDir, redisMessageHandler);
                         }
 
                         var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", "", uniqueId);
