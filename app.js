@@ -204,7 +204,21 @@ redisClient.on('error',function(err){
                         redisClient.incr(callCountInstance, redisMessageHandler);
                         redisClient.incr(callCountCompany, redisMessageHandler);
 
-                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", "", "", uniqueId);
+                        var tempDir = '';
+
+                        if(dvpCallDirection)
+                        {
+                            if(dvpCallDirection === 'inbound')
+                            {
+                                tempDir = 'INBOUND';
+                            }
+                            else if(dvpCallDirection === 'outbound')
+                            {
+                                tempDir = 'OUTBOUND';
+                            }
+                        }
+
+                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", tempDir, "", uniqueId);
 
                         redisClient.publish('events', pubMessage);
 
@@ -357,7 +371,21 @@ redisClient.on('error',function(err){
                         {
                             redisClient.sadd(channelSetName, uniqueId, redisMessageHandler);
 
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "CREATE", "", "", uniqueId);
+                            var tempDir = '';
+
+                            if(dvpCallDirection)
+                            {
+                                if(dvpCallDirection === 'inbound')
+                                {
+                                    tempDir = 'INBOUND';
+                                }
+                                else if(dvpCallDirection === 'outbound')
+                                {
+                                    tempDir = 'OUTBOUND';
+                                }
+                            }
+
+                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "CREATE", tempDir, "", uniqueId);
 
                             redisClient.publish('events', pubMessage);
 
@@ -487,7 +515,21 @@ redisClient.on('error',function(err){
                         redisClient.decr(callCountInstance);
                         redisClient.decr(callCountCompany);
 
-                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", dvpAppId, "", uniqueId);
+                        var tempDir = '';
+
+                        if(dvpCallDirection)
+                        {
+                            if(dvpCallDirection === 'inbound')
+                            {
+                                tempDir = 'INBOUND';
+                            }
+                            else if(dvpCallDirection === 'outbound')
+                            {
+                                tempDir = 'OUTBOUND';
+                            }
+                        }
+
+                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", tempDir, "", uniqueId);
 
                         redisClient.publish('events', pubMessage);
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
