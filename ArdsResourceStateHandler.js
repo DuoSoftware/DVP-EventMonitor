@@ -32,11 +32,11 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
 
                 var companyInfoHeader = ardsTenant + ':' + ardsCompany;
 
-                var httpUrl = util.format('http://%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s/direction/%s', ardsIp, ardsVersion, ardsResourceId, ardsClientUuid, direction);
+                var httpUrl = util.format('http://%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s?direction=%s', ardsIp, ardsVersion, ardsResourceId, ardsClientUuid, direction);
 
                 if(validator.isIP(ardsIp))
                 {
-                    httpUrl = util.format('http://%s:%d/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s/direction/%s', ardsIp, ardsPort, ardsVersion, ardsResourceId, ardsClientUuid, direction);
+                    httpUrl = util.format('http://%s:%d/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s?direction=%s', ardsIp, ardsPort, ardsVersion, ardsResourceId, ardsClientUuid, direction);
                 }
 
 
