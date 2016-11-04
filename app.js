@@ -418,6 +418,9 @@ redisClient.on('error',function(err){
                         var ardsResourceId = event.getHeader('variable_ards_resource_id');
 
 
+                        logger.debug('[DVP-EventMonitor.handler] - [%s] - CHANNEL ANSWER ARDS DATA - EVENT_TYPE : ' + evtType + ', SESSION_ID : ' + uniqueId + 'SWITCH NAME : ' + switchName + 'ards_client_uuid : %s, companyid : %s, tenantid : %s, ards_resource_id : %s, ards_servertype : %s, ards_requesttype : %s', reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsResourceId, ardsServerType, ardsReqType);
+
+
                         //Sending Resource Status For Agent Outbound Calls
 
                         var callerContext = event.getHeader('Caller-Context');
@@ -505,6 +508,8 @@ redisClient.on('error',function(err){
                         var ardsServerType = event.getHeader('variable_ards_servertype');
                         var ardsReqType = event.getHeader('variable_ards_requesttype');
                         var ardsResourceId = event.getHeader('variable_ards_resource_id');
+
+                        logger.debug('[DVP-EventMonitor.handler] - [%s] - CHANNEL ANSWER ARDS DATA - EVENT_TYPE : ' + evtType + ', SESSION_ID : ' + uniqueId + 'SWITCH NAME : ' + switchName + 'ards_client_uuid : %s, companyid : %s, tenantid : %s, ards_resource_id : %s, ards_servertype : %s, ards_requesttype : %s', reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsResourceId, ardsServerType, ardsReqType);
                         if(ardsClientUuid)
                         {
                             ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
