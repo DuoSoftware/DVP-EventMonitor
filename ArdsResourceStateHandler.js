@@ -13,7 +13,7 @@ var token = config.Token;
 
 loggerCust.add(winston.transports.File, {filename: '/logs/ards_logger.log', level: level, maxsize:1242880, maxFiles:10});
 
-var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, state, otherInfo, reason)
+var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, state, otherInfo, reason, direction)
 {
     try
     {
@@ -32,11 +32,11 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
 
                 var companyInfoHeader = ardsTenant + ':' + ardsCompany;
 
-                var httpUrl = util.format('http://%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s', ardsIp, ardsVersion, ardsResourceId, ardsClientUuid);
+                var httpUrl = util.format('http://%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s?direction=%s', ardsIp, ardsVersion, ardsResourceId, ardsClientUuid, direction);
 
                 if(validator.isIP(ardsIp))
                 {
-                    httpUrl = util.format('http://%s:%d/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s', ardsIp, ardsPort, ardsVersion, ardsResourceId, ardsClientUuid);
+                    httpUrl = util.format('http://%s:%d/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s?direction=%s', ardsIp, ardsPort, ardsVersion, ardsResourceId, ardsClientUuid, direction);
                 }
 
 
@@ -66,7 +66,8 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
                     }
                     else
                     {
-                        logger.error('[DVP-EventMonitor.SendResourceStatus] - [%s] - Set Resource Status Fail - Response : %s', reqId, JSON.stringify(response), error);
+                        //loggerCust.error('SendResourceStatus - FAIL - [UUID : %s , State : %s' , ardsClientUuid, state, error);
+                        logger.error('[DVP-EventMonitor.SendResourceStatus] - [%s] - Set Resource Status Fail - Response : [%s]', reqId, JSON.stringify(response), error);
                     }
                 })
             }

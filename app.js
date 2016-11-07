@@ -112,19 +112,27 @@ redisClient.on('error',function(err){
                 {
                     if(dvpCallDirection)
                     {
-                        redisClient.hset(uniqueId, 'DVP-Call-Direction', dvpCallDirection, redisMessageHandler);
+                        redisClient.hset(uniqueId, 'DVP-Call-Direction', dvpCallDirection, function (err, reply){
+                            redisClient.expire(uniqueId, 86400, redisMessageHandler);
+                        });
                     }
 
 
                     if(appType)
                     {
-                        redisClient.hset(uniqueId, 'Application-Type', appType, redisMessageHandler);
+                        redisClient.hset(uniqueId, 'Application-Type', appType, function (err, reply){
+                            redisClient.expire(uniqueId, 86400, redisMessageHandler);
+                        });
                     }
 
                     if(appPosition)
                     {
-                        redisClient.hset(uniqueId, 'Application-Position', appPosition, redisMessageHandler);
+                        redisClient.hset(uniqueId, 'Application-Position', appPosition, function (err, reply){
+                            redisClient.expire(uniqueId, 86400, redisMessageHandler);
+                        });
                     }
+
+
                 }
 
                 var eventTime = '';
@@ -196,6 +204,15 @@ redisClient.on('error',function(err){
                         redisClient.incr(callCountInstance, redisMessageHandler);
                         redisClient.incr(callCountCompany, redisMessageHandler);
 
+                        if(dvpCallDirection)
+                        {
+
+                            var callCountCompanyDir = 'DVP_CALL_COUNT_COMPANY_DIR:' + tenantId + ':' + companyId + ':' + dvpCallDirection;
+
+                            redisClient.incr(callCountCompanyDir, redisMessageHandler);
+
+                        }
+
                         var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", "", "", uniqueId);
 
                         redisClient.publish('events', pubMessage);
@@ -221,6 +238,7 @@ redisClient.on('error',function(err){
                         {
                             redisClient.hset(uniqueId, 'Other-Leg-Unique-ID', otherLegUniqueId, redisMessageHandler);
                         }
+                        redisClient.expire(uniqueId, 86400, redisMessageHandler);
 
                         break;
 
@@ -248,6 +266,7 @@ redisClient.on('error',function(err){
                     }
                         //redisClient.hset(uniqueId, 'data', event.serialize('json'), redisMessageHandler);
                         redisClient.hset(uniqueId, 'Channel-Call-State', event.getHeader('Channel-Call-State'), redisMessageHandler);
+                        redisClient.expire(uniqueId, 86400, redisMessageHandler);
 
                         break;
 
@@ -272,7 +291,6 @@ redisClient.on('error',function(err){
 
                         if(direction === 'outbound' && companyId && tenantId)
                         {
-
                             var callerOrigIdName = event.getHeader('Caller-Orig-Caller-ID-Name');
                             var callerOrigIdNumber = event.getHeader('Caller-Orig-Caller-ID-Number');
 
@@ -282,7 +300,8 @@ redisClient.on('error',function(err){
 
                                 if(obj && obj.Context && callerContext === obj.Context)
                                 {
-                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Connected', '', '');
+                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - SENDING', reqId);
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
 
                                     var nsObj = {
                                         Ref: uniqueId,
@@ -297,6 +316,10 @@ redisClient.on('error',function(err){
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
 
+                                }
+                                else
+                                {
+                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - CONTEXT NOT FOUND', reqId);
                                 }
 
                             })
@@ -356,7 +379,10 @@ redisClient.on('error',function(err){
 
                         if (!variableLoopbackApp)
                         {
-                            redisClient.hset(uniqueId, 'Unique-ID', uniqueId, redisMessageHandler);
+                            redisClient.hset(uniqueId, 'Unique-ID', uniqueId, function(err, redisRes)
+                            {
+                                redisClient.expire(uniqueId, 86400, redisMessageHandler);
+                            });
                             redisClient.hset(uniqueId, 'Channel-State', channelState, redisMessageHandler);
                             redisClient.hset(uniqueId, 'FreeSWITCH-Switchname', switchName, redisMessageHandler);
                             redisClient.hset(uniqueId, 'Channel-Name', channelName, redisMessageHandler);
@@ -387,6 +413,8 @@ redisClient.on('error',function(err){
                                 }
                             }
 
+
+
                         }
 
                         break;
@@ -395,6 +423,7 @@ redisClient.on('error',function(err){
                         {
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS GET');
                             redisClient.hset(uniqueId, 'Channel-State', event.getHeader('Channel-State'), redisMessageHandler);
+                            redisClient.expire(uniqueId, 86400, redisMessageHandler);
                         }
                         else
                         {
@@ -446,7 +475,7 @@ redisClient.on('error',function(err){
 
                         if(ardsClientUuid)
                         {
-                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '');
+                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound');
                         }
 
 
@@ -470,7 +499,14 @@ redisClient.on('error',function(err){
                         redisClient.decr(callCountInstance);
                         redisClient.decr(callCountCompany);
 
-                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", dvpAppId, "", uniqueId);
+                        if(dvpCallDirection)
+                        {
+                            var callCountCompanyDir = 'DVP_CALL_COUNT_COMPANY_DIR:' + tenantId + ':' + companyId + ':' + dvpCallDirection;
+
+                            redisClient.decr(callCountCompanyDir, redisMessageHandler);
+                        }
+
+                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", "", uniqueId);
 
                         redisClient.publish('events', pubMessage);
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
@@ -512,7 +548,25 @@ redisClient.on('error',function(err){
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - CHANNEL ANSWER ARDS DATA - EVENT_TYPE : ' + evtType + ', SESSION_ID : ' + uniqueId + 'SWITCH NAME : ' + switchName + 'ards_client_uuid : %s, companyid : %s, tenantid : %s, ards_resource_id : %s, ards_servertype : %s, ards_requesttype : %s', reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsResourceId, ardsServerType, ardsReqType);
                         if(ardsClientUuid)
                         {
-                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
+                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '', 'inbound');
+                        }
+
+                        var callerContext = event.getHeader('Caller-Context');
+
+                        if(direction === 'outbound' && companyId && tenantId)
+                        {
+                            var callerOrigIdName = event.getHeader('Caller-Orig-Caller-ID-Name');
+
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                            {
+                                var obj = JSON.parse(objString);
+                                if(obj && obj.Context && callerContext === obj.Context)
+                                {
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
+
+                                }
+
+                            })
                         }
                         break;
 
@@ -552,7 +606,8 @@ redisClient.on('error',function(err){
                         {
                             redisClient.del('CHANNELMAP:' + uniqueId, redisMessageHandler);
 
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "DESTROY", dvpAppId, "", uniqueId);
+
+                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "DESTROY", "", "", uniqueId);
 
                             redisClient.publish('events', pubMessage);
 
@@ -589,27 +644,11 @@ redisClient.on('error',function(err){
                         }
 
                         //Send Resource Status on Outbound Call
-                        var callerContext = event.getHeader('Caller-Context');
 
-                        if(direction === 'outbound' && companyId && tenantId)
-                        {
-                            var callerOrigIdName = event.getHeader('Caller-Orig-Caller-ID-Name');
-
-                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
-                            {
-                                var obj = JSON.parse(objString);
-                                if(obj && obj.Context && callerContext === obj.Context)
-                                {
-                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Completed', '', '');
-
-                                }
-
-                            })
-                        }
 
                         /*if(ardsClientUuid)
                         {
-                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '');
+                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '', 'inbound');
                         }*/
 
 
@@ -1040,7 +1079,7 @@ redisClient.on('error',function(err){
                                 if(action === 'agent-rejected')
                                 {
 
-                                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Reject', 'Reject', reason);
+                                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Reject', 'Reject', reason, 'inbound');
                                 }
                                 else if(action === 'agent-routed')
                                 {
