@@ -363,9 +363,73 @@ var SendNotificationInitiate = function(reqId, eventname, eventuuid, payload, co
     }
 };
 
+var CreateEngagement = function(reqId, sessionId, channel, direction, from, to, companyId, tenantId)
+{
+    try
+    {
+        var engIp = config.Services.interactionServiceHost;
+        var engPort = config.Services.interactionServicePort;
+        var engVersion = config.Services.interactionServiceVersion;
+
+        var token = config.Token;
+
+        var httpUrl = util.format('http://%s/DVP/API/%s/EngagementSessionForProfile', engIp, engVersion);
+
+        if(validator.isIP(engIp))
+        {
+            httpUrl = util.format('http://%s:%d/DVP/API/%s/EngagementSessionForProfile', engIp, engPort, engVersion);
+        }
+
+        var payload = {
+            engagement_id: sessionId,
+            channel: channel,
+            direction: direction,
+            channel_from: from,
+            channel_to: to
+        };
+
+
+
+        var jsonStr = JSON.stringify(payload);
+
+        var options = {
+            url: httpUrl,
+            method: 'POST',
+            headers: {
+                'authorization': 'bearer ' + token,
+                'content-type': 'application/json',
+                'companyinfo': tenantId + ':' + companyId
+            },
+            body: jsonStr
+        };
+
+        logger.debug('[DVP-EventMonitor.CreateEngagement] - [%s] - Creating Api Url : %s', reqId, httpUrl);
+
+
+        httpReq.post(options, function (error, response, body)
+        {
+            if (!error && response.statusCode >= 200 && response.statusCode <= 299)
+            {
+                logger.debug('[DVP-EventMonitor.CreateEngagement] - [%s] - Create engagement Success : %s', reqId, body);
+            }
+            else
+            {
+                logger.error('[DVP-EventMonitor.CreateEngagement] - [%s] - Create engagement fail', reqId, error);
+            }
+        })
+
+    }
+    catch(ex)
+    {
+        logger.error('[DVP-EventMonitor.CreateEngagement] - [%s] - ERROR Occurred', reqId, ex);
+
+    }
+};
+
 module.exports.IncrementMaxChanLimit = IncrementMaxChanLimit;
 module.exports.DecrementMaxChanLimit = DecrementMaxChanLimit;
 module.exports.GetModCallCenterAgentCount = GetModCallCenterAgentCount;
 module.exports.SetMaxChanLimit = SetMaxChanLimit;
 module.exports.SendNotificationByKey = SendNotificationByKey;
 module.exports.SendNotificationInitiate = SendNotificationInitiate;
+module.exports.CreateEngagement = CreateEngagement;

@@ -35,6 +35,12 @@ module.exports = {
         version: 'SYS_NOTIFICATIONSERVICE_VERSION'
     },
 
+    Services : {
+        interactionServiceHost: "SYS_INTERACTIONS_HOST",
+        interactionServicePort: "SYS_INTERACTIONS_PORT",
+        interactionServiceVersion: "SYS_INTERACTIONS_VERSION"
+    },
+
 
     WebAPI: {
 

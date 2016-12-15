@@ -32,6 +32,12 @@ module.exports = {
         version: '1.0.0.0'
     },
 
+    Services : {
+        interactionServiceHost: "interactions.app.veery.cloud",
+        interactionServicePort: "8080",
+        interactionServiceVersion: "1.0.0.0"
+    },
+
     WebAPI: {
 
         domain: '192.168.1.58',
