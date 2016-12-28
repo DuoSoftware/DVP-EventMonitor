@@ -27,14 +27,14 @@ module.exports = {
     },
 
     NS: {
-        ip: '127.0.0.1',
+        ip: 'notificationservice.app.veery.cloud',
         port: 8765,
         version: '1.0.0.0'
     },
 
     Services : {
-        interactionServiceHost: "interactions.app.veery.cloud",
-        interactionServicePort: "8080",
+        interactionServiceHost: "192.168.0.132",
+        interactionServicePort: "3637",
         interactionServiceVersion: "1.0.0.0"
     },
 
