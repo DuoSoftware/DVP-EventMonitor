@@ -117,6 +117,17 @@ redisClient.on('error',function(err){
                         });
                     }
 
+                    if(companyId && tenantId)
+                    {
+                        redisClient.hset(uniqueId, 'DVP-CompanyId', companyId, function (err, reply){
+                            redisClient.expire(uniqueId, 86400, redisMessageHandler);
+                        });
+
+                        redisClient.hset(uniqueId, 'DVP-TenantId', tenantId, function (err, reply){
+                            redisClient.expire(uniqueId, 86400, redisMessageHandler);
+                        });
+                    }
+
 
                     if(appType)
                     {
