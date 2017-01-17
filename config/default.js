@@ -35,7 +35,10 @@ module.exports = {
     Services : {
         interactionServiceHost: "192.168.0.132",
         interactionServicePort: "3637",
-        interactionServiceVersion: "1.0.0.0"
+        interactionServiceVersion: "1.0.0.0",
+        dccaclientHost: "127.0.0.1",
+        dccaclientPort: 4555,
+        dccaclientVersion: "1.0.0.0"
     },
 
     WebAPI: {

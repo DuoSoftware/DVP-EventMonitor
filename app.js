@@ -77,6 +77,7 @@ redisClient.on('error',function(err){
                 var campaignId = event.getHeader('variable_CampaignId');
                 var companyId = event.getHeader('variable_companyid');
                 var tenantId = event.getHeader('variable_tenantid');
+                var operator = event.getHeader('variable_veeryoperator');
                 var variableEvtTime = event.getHeader("Event-Date-Timestamp");
                 var switchName = event.getHeader('FreeSWITCH-Switchname');
                 var chanCountInstance = 'DVP_CHANNEL_COUNT_INSTANCE:' + switchName;
@@ -95,6 +96,9 @@ redisClient.on('error',function(err){
                 var dvpCallDirection = event.getHeader('variable_DVP_CALL_DIRECTION');
                 var callMonitorOtherLeg = event.getHeader('variable_DVP_CALLMONITOR_OTHER_LEG');
                 var otherLegUniqueId = event.getHeader('Other-Leg-Unique-ID');
+
+                var callerOrigIdName = event.getHeader('Caller-Orig-Caller-ID-Name');
+                var callerOrigIdNumber = event.getHeader('Caller-Orig-Caller-ID-Number');
 
                 //loggerCust.debug('EVENT RECEIVED - [UUID : %s , TYPE : %s, CompanyId : %s', uniqueId, evtType, companyId);
 
@@ -217,6 +221,10 @@ redisClient.on('error',function(err){
 
                         if(dvpCallDirection)
                         {
+                            if(dvpCallDirection === 'outbound')
+                            {
+                                extApiAccess.BillCall(reqId, uniqueId, callerOrigIdName, callerDestNum, 'minute', operator, companyId, tenantId);
+                            }
 
                             var callCountCompanyDir = 'DVP_CALL_COUNT_COMPANY_DIR:' + tenantId + ':' + companyId + ':' + dvpCallDirection;
 
@@ -302,8 +310,7 @@ redisClient.on('error',function(err){
 
                         if(direction === 'outbound' && companyId && tenantId)
                         {
-                            var callerOrigIdName = event.getHeader('Caller-Orig-Caller-ID-Name');
-                            var callerOrigIdNumber = event.getHeader('Caller-Orig-Caller-ID-Number');
+
 
                             redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                             {
@@ -516,6 +523,11 @@ redisClient.on('error',function(err){
                             var callCountCompanyDir = 'DVP_CALL_COUNT_COMPANY_DIR:' + tenantId + ':' + companyId + ':' + dvpCallDirection;
 
                             redisClient.decr(callCountCompanyDir, redisMessageHandler);
+
+                            if(dvpCallDirection === 'outbound')
+                            {
+                                extApiAccess.BillEndCall(reqId, uniqueId, callerOrigIdName, callerDestNum, 'minute', companyId, tenantId);
+                            }
                         }
 
                         var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", "", uniqueId);
