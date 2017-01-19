@@ -96,9 +96,10 @@ redisClient.on('error',function(err){
                 var dvpCallDirection = event.getHeader('variable_DVP_CALL_DIRECTION');
                 var callMonitorOtherLeg = event.getHeader('variable_DVP_CALLMONITOR_OTHER_LEG');
                 var otherLegUniqueId = event.getHeader('Other-Leg-Unique-ID');
-
                 var callerOrigIdName = event.getHeader('Caller-Orig-Caller-ID-Name');
                 var callerOrigIdNumber = event.getHeader('Caller-Orig-Caller-ID-Number');
+                var opCat = event.getHeader('variable_DVP_OPERATION_CAT');
+
 
                 //loggerCust.debug('EVENT RECEIVED - [UUID : %s , TYPE : %s, CompanyId : %s', uniqueId, evtType, companyId);
 
@@ -221,9 +222,12 @@ redisClient.on('error',function(err){
 
                         if(dvpCallDirection)
                         {
-                            if(dvpCallDirection === 'outbound')
+                            var otherLegCallerIdNumber = event.getHeader('Other-Leg-Caller-ID-Number');
+                            var otherLegCalleeIdNumber = event.getHeader('Other-Leg-Callee-ID-Number');
+
+                            if(dvpCallDirection === 'outbound' && opCat === 'GATEWAY' && otherLegCalleeIdNumber && otherLegCallerIdNumber)
                             {
-                                extApiAccess.BillCall(reqId, uniqueId, callerOrigIdName, callerDestNum, 'minute', operator, companyId, tenantId);
+                                extApiAccess.BillCall(reqId, uniqueId, otherLegCallerIdNumber, otherLegCalleeIdNumber, 'minute', operator, companyId, tenantId);
                             }
 
                             var callCountCompanyDir = 'DVP_CALL_COUNT_COMPANY_DIR:' + tenantId + ':' + companyId + ':' + dvpCallDirection;
