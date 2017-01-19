@@ -8,9 +8,9 @@ var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 
 var token = config.Token;
 
-var dccaclientHost = config.Token.dccaclientHost;
-var dccaclientPort = config.Token.dccaclientPort;
-var dccaclientVersion = config.Token.dccaclientVersion;
+var dccaclientHost = config.Services.dccaclientHost;
+var dccaclientPort = config.Services.dccaclientPort;
+var dccaclientVersion = config.Services.dccaclientVersion;
 
 var BillCall = function(reqId, uuid, from, to, type, provider, companyId, tenantId)
 {
