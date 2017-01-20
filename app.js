@@ -225,7 +225,7 @@ redisClient.on('error',function(err){
                             var otherLegCallerIdNumber = event.getHeader('Other-Leg-Caller-ID-Number');
                             var otherLegCalleeIdNumber = event.getHeader('Other-Leg-Callee-ID-Number');
 
-                            if(dvpCallDirection === 'outbound' && opCat === 'GATEWAY' && otherLegCalleeIdNumber && otherLegCallerIdNumber)
+                            if(opCat === 'GATEWAY' && otherLegCalleeIdNumber && otherLegCallerIdNumber)
                             {
                                 extApiAccess.BillCall(reqId, uniqueId, otherLegCallerIdNumber, otherLegCalleeIdNumber, 'minute', operator, companyId, tenantId);
                             }
