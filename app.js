@@ -528,7 +528,7 @@ redisClient.on('error',function(err){
 
                             redisClient.decr(callCountCompanyDir, redisMessageHandler);
 
-                            if(dvpCallDirection === 'outbound')
+                            if(opCat === 'GATEWAY')
                             {
                                 extApiAccess.BillEndCall(reqId, uniqueId, callerOrigIdName, callerDestNum, 'minute', companyId, tenantId);
                             }
