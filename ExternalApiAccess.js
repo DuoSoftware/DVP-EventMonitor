@@ -11,92 +11,109 @@ var token = config.Token;
 var dccaclientHost = config.Services.dccaclientHost;
 var dccaclientPort = config.Services.dccaclientPort;
 var dccaclientVersion = config.Services.dccaclientVersion;
+var billingEnabled = config.billingEnabled;
 
 var BillCall = function(reqId, uuid, from, to, type, provider, companyId, tenantId)
 {
-    logger.debug('[DVP-EventMonitor.BillCall] - [%s] -  bill call', reqId);
-
-    var httpUrl = util.format('http://%s/DVP/API/%s/dcca/billcall', dccaclientHost, dccaclientVersion);
-
-    if(validator.isIP(dccaclientHost))
+    if(billingEnabled)
     {
-        httpUrl = util.format('http://%s:%s/DVP/API/%s/dcca/billcall', dccaclientHost, dccaclientPort, dccaclientVersion);
+        logger.debug('[DVP-EventMonitor.BillCall] - [%s] -  bill call', reqId);
+
+        var httpUrl = util.format('http://%s/DVP/API/%s/dcca/billcall', dccaclientHost, dccaclientVersion);
+
+        if(validator.isIP(dccaclientHost))
+        {
+            httpUrl = util.format('http://%s:%s/DVP/API/%s/dcca/billcall', dccaclientHost, dccaclientPort, dccaclientVersion);
+        }
+
+        var jsonObj = { csid: uuid, to: to, from: from, type: type, provider: provider };
+
+        var compInfo = tenantId + ':' + companyId;
+
+        var jsonStr = JSON.stringify(jsonObj);
+
+        var options = {
+            url: httpUrl,
+            method: 'POST',
+            headers: {
+                'authorization': 'bearer ' + token,
+                'companyinfo': compInfo,
+                'content-type': 'application/json'
+            },
+            body: jsonStr
+        };
+
+        logger.debug('[DVP-EventMonitor.BillCall] - [%s] - Creating Api Url : %s', reqId, httpUrl);
+
+        httpReq.post(options, function (error, response, body)
+        {
+            if (!error && response.statusCode == 200)
+            {
+                logger.debug('[DVP-EventMonitor.BillCall] - [%s] - Bill call Api returned : %s', reqId, body);
+            }
+            else
+            {
+                logger.error('[DVP-EventMonitor.BillCall] - [%s] - Bill call Api call failed', reqId, error);
+            }
+        })
+    }
+    else
+    {
+        logger.debug('[DVP-EventMonitor.BillCall] - [%s] -  Billing not enabled', reqId);
     }
 
-    var jsonObj = { csid: uuid, to: to, from: from, type: type, provider: provider };
-
-    var compInfo = tenantId + ':' + companyId;
-
-    var jsonStr = JSON.stringify(jsonObj);
-
-    var options = {
-        url: httpUrl,
-        method: 'POST',
-        headers: {
-            'authorization': 'bearer ' + token,
-            'companyinfo': compInfo,
-            'content-type': 'application/json'
-        },
-        body: jsonStr
-    };
-
-    logger.debug('[DVP-EventMonitor.BillCall] - [%s] - Creating Api Url : %s', reqId, httpUrl);
-
-    httpReq.post(options, function (error, response, body)
-    {
-        if (!error && response.statusCode == 200)
-        {
-            logger.debug('[DVP-EventMonitor.BillCall] - [%s] - Bill call Api returned : %s', reqId, body);
-        }
-        else
-        {
-            logger.error('[DVP-EventMonitor.BillCall] - [%s] - Bill call Api call failed', reqId, error);
-        }
-    })
 
 };
 
 var BillEndCall = function(reqId, uuid, from, to, type, companyId, tenantId)
 {
-    logger.debug('[DVP-EventMonitor.BillEndCall] - [%s] -  end call', reqId);
-
-    var httpUrl = util.format('http://%s/DVP/API/%s/dcca/endcall', dccaclientHost, dccaclientVersion);
-
-    if(validator.isIP(dccaclientHost))
+    if(billingEnabled)
     {
-        httpUrl = util.format('http://%s:%s/DVP/API/%s/dcca/endcall', dccaclientHost, dccaclientPort, dccaclientVersion);
+        logger.debug('[DVP-EventMonitor.BillEndCall] - [%s] -  end call', reqId);
+
+        var httpUrl = util.format('http://%s/DVP/API/%s/dcca/endcall', dccaclientHost, dccaclientVersion);
+
+        if(validator.isIP(dccaclientHost))
+        {
+            httpUrl = util.format('http://%s:%s/DVP/API/%s/dcca/endcall', dccaclientHost, dccaclientPort, dccaclientVersion);
+        }
+
+        var jsonObj = { csid: uuid, to: to, from: from, type: type, dsid: '1830913305' };
+
+        var compInfo = tenantId + ':' + companyId;
+
+        var jsonStr = JSON.stringify(jsonObj);
+
+        var options = {
+            url: httpUrl,
+            method: 'POST',
+            headers: {
+                'authorization': 'bearer ' + token,
+                'companyinfo': compInfo,
+                'content-type': 'application/json'
+            },
+            body: jsonStr
+        };
+
+        logger.debug('[DVP-EventMonitor.BillEndCall] - [%s] - Creating Api Url : %s', reqId, httpUrl);
+
+        httpReq.post(options, function (error, response, body)
+        {
+            if (!error && response.statusCode == 200)
+            {
+                logger.debug('[DVP-EventMonitor.BillEndCall] - [%s] - Bill call Api returned : %s', reqId, body);
+            }
+            else
+            {
+                logger.error('[DVP-EventMonitor.BillEndCall] - [%s] - Bill call Api call failed', reqId, error);
+            }
+        })
+    }
+    else
+    {
+        logger.debug('[DVP-EventMonitor.BillCall] - [%s] -  Billing not enabled', reqId);
     }
 
-    var jsonObj = { csid: uuid, to: to, from: from, type: type, dsid: '1830913305' };
-
-    var compInfo = tenantId + ':' + companyId;
-
-    var jsonStr = JSON.stringify(jsonObj);
-
-    var options = {
-        url: httpUrl,
-        method: 'POST',
-        headers: {
-            'authorization': 'bearer ' + token,
-            'companyinfo': compInfo,
-            'content-type': 'application/json'
-        },
-        body: jsonStr
-    };
-
-    logger.debug('[DVP-EventMonitor.BillEndCall] - [%s] - Creating Api Url : %s', reqId, httpUrl);
-
-    httpReq.post(options, function (error, response, body)
-    {
-        if (!error && response.statusCode == 200)
-        {
-            logger.debug('[DVP-EventMonitor.BillEndCall] - [%s] - Bill call Api returned : %s', reqId, body);
-        }
-        else
-        {
-            logger.error('[DVP-EventMonitor.BillEndCall] - [%s] - Bill call Api call failed', reqId, error);
-        }
-    })
 
 };
 

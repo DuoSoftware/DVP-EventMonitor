@@ -59,5 +59,6 @@ module.exports = {
         db: "SYS_REDIS_DB_PROCESSEDCDR"
     },
 
-    Token: "HOST_TOKEN"
+    Token: "HOST_TOKEN",
+    billingEnabled: "SYS_BILLING_ENABLED"
 };
