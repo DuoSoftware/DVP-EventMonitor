@@ -99,6 +99,7 @@ redisClient.on('error',function(err){
                 var callerOrigIdName = event.getHeader('Caller-Orig-Caller-ID-Name');
                 var callerOrigIdNumber = event.getHeader('Caller-Orig-Caller-ID-Number');
                 var opCat = event.getHeader('variable_DVP_OPERATION_CAT');
+                var resourceId = event.getHeader('variable_ARDS-Resource-Id');
 
 
                 //loggerCust.debug('EVENT RECEIVED - [UUID : %s , TYPE : %s, CompanyId : %s', uniqueId, evtType, companyId);
@@ -129,6 +130,13 @@ redisClient.on('error',function(err){
                         });
 
                         redisClient.hset(uniqueId, 'DVP-TenantId', tenantId, function (err, reply){
+                            redisClient.expire(uniqueId, 86400, redisMessageHandler);
+                        });
+                    }
+
+                    if(resourceId)
+                    {
+                        redisClient.hset(uniqueId, 'Agent-Resource-Id', resourceId, function (err, reply){
                             redisClient.expire(uniqueId, 86400, redisMessageHandler);
                         });
                     }
@@ -219,6 +227,17 @@ redisClient.on('error',function(err){
 
                         redisClient.incr(callCountInstance, redisMessageHandler);
                         redisClient.incr(callCountCompany, redisMessageHandler);
+
+                        var resId = event.getHeader('variable_ards_resource_id');
+
+                        if((opCat === 'ATT_XFER_USER' || opCat === 'ATT_XFER_GATEWAY') && tenantId && companyId && resId && ardsClientUuid && dvpCallDirection)
+                        {
+                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "TRANSFER", resId, dvpCallDirection, ardsClientUuid);
+
+                            redisClient.publish('events', pubMessage);
+                        }
+
+
 
                         if(dvpCallDirection)
                         {
@@ -456,8 +475,55 @@ redisClient.on('error',function(err){
 
                     case 'CHANNEL_HOLD':
 
+                        var channelUuid = event.getHeader('Channel-Call-UUID');
+
+                        redisClient.hgetall(channelUuid, function(err, channelHash)
+                        {
+
+                            if(channelHash)
+                            {
+                                var hashResId = channelHash['Agent-Resource-Id'];
+                                var hashCompany = channelHash['DVP-CompanyId'];
+                                var hashTenant = channelHash['DVP-TenantId'];
+                                var hashArdsClientUuid = channelHash['ARDS-Client-Uuid'];
+                                var hashCallDirection = channelHash['DVP-Call-Direction'];
+
+                                if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                                {
+                                    var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+
+                                    redisClient.publish('events', pubMessage);
+                                }
+
+                            }
+
+                        });
                         break;
                     case 'CHANNEL_UNHOLD':
+
+                        var channelUuid = event.getHeader('Channel-Call-UUID');
+
+                        redisClient.hgetall(channelUuid, function(err, channelHash)
+                        {
+
+                            if(channelHash)
+                            {
+                                var hashResId = channelHash['Agent-Resource-Id'];
+                                var hashCompany = channelHash['DVP-CompanyId'];
+                                var hashTenant = channelHash['DVP-TenantId'];
+                                var hashArdsClientUuid = channelHash['ARDS-Client-Uuid'];
+                                var hashCallDirection = channelHash['DVP-Call-Direction'];
+
+                                if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                                {
+                                    var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+
+                                    redisClient.publish('events', pubMessage);
+                                }
+
+                            }
+
+                        });
 
                         break;
                     case 'CHANNEL_ANSWER':
@@ -498,6 +564,7 @@ redisClient.on('error',function(err){
 
                         if(ardsClientUuid)
                         {
+                            redisClient.hset(ardsClientUuid, 'ARDS-Client-Uuid', ardsClientUuid, redisMessageHandler);
                             ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound');
                         }
 
