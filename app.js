@@ -229,10 +229,12 @@ redisClient.on('error',function(err){
                         redisClient.incr(callCountCompany, redisMessageHandler);
 
                         var resId = event.getHeader('variable_ards_resource_id');
+                        var varArdsClientUuid = event.getHeader('variable_ards_client_uuid');
+                        var otherLegDir = event.getHeader('Other-Leg-Direction');
 
-                        if((opCat === 'ATT_XFER_USER' || opCat === 'ATT_XFER_GATEWAY') && tenantId && companyId && resId && ardsClientUuid && dvpCallDirection)
+                        if((opCat === 'ATT_XFER_USER' || opCat === 'ATT_XFER_GATEWAY') && tenantId && companyId && resId && varArdsClientUuid && otherLegDir === 'outbound')
                         {
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "TRANSFER", resId, dvpCallDirection, ardsClientUuid);
+                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "TRANSFER", resId, '', varArdsClientUuid);
 
                             redisClient.publish('events', pubMessage);
                         }
