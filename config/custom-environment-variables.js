@@ -38,7 +38,10 @@ module.exports = {
     Services : {
         interactionServiceHost: "SYS_INTERACTIONS_HOST",
         interactionServicePort: "SYS_INTERACTIONS_PORT",
-        interactionServiceVersion: "SYS_INTERACTIONS_VERSION"
+        interactionServiceVersion: "SYS_INTERACTIONS_VERSION",
+        dccaclientHost: "SYS_DIAMETERCLIENT_HOST",
+        dccaclientPort: "SYS_DIAMETERCLIENT_PORT",
+        dccaclientVersion: "SYS_DIAMETERCLIENT_VERSION"
     },
 
 
@@ -56,5 +59,6 @@ module.exports = {
         db: "SYS_REDIS_DB_PROCESSEDCDR"
     },
 
-    Token: "HOST_TOKEN"
+    Token: "HOST_TOKEN",
+    billingEnabled: "SYS_BILLING_ENABLED"
 };
