@@ -597,7 +597,7 @@ redisClient.on('error',function(err){
 
                             redisClient.decr(callCountCompanyDir, redisMessageHandler);
 
-                            if((opCat === 'GATEWAY' || opCat === 'ATT_XFER_GATEWAY')
+                            if(opCat === 'GATEWAY' || opCat === 'ATT_XFER_GATEWAY')
                             {
                                 extApiAccess.BillEndCall(reqId, uniqueId, callerOrigIdName, callerDestNum, 'minute', companyId, tenantId);
                             }
