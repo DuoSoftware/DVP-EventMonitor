@@ -246,7 +246,7 @@ redisClient.on('error',function(err){
                             var otherLegCallerIdNumber = event.getHeader('Other-Leg-Caller-ID-Number');
                             var otherLegCalleeIdNumber = event.getHeader('Other-Leg-Callee-ID-Number');
 
-                            if(opCat === 'GATEWAY' && otherLegCalleeIdNumber && otherLegCallerIdNumber)
+                            if((opCat === 'GATEWAY' || opCat === 'ATT_XFER_GATEWAY') && otherLegCalleeIdNumber && otherLegCallerIdNumber)
                             {
                                 extApiAccess.BillCall(reqId, uniqueId, otherLegCallerIdNumber, otherLegCalleeIdNumber, 'minute', operator, companyId, tenantId);
                             }
@@ -597,7 +597,7 @@ redisClient.on('error',function(err){
 
                             redisClient.decr(callCountCompanyDir, redisMessageHandler);
 
-                            if(opCat === 'GATEWAY')
+                            if((opCat === 'GATEWAY' || opCat === 'ATT_XFER_GATEWAY')
                             {
                                 extApiAccess.BillEndCall(reqId, uniqueId, callerOrigIdName, callerDestNum, 'minute', companyId, tenantId);
                             }
