@@ -100,6 +100,7 @@ redisClient.on('error',function(err){
                 var callerOrigIdNumber = event.getHeader('Caller-Orig-Caller-ID-Number');
                 var opCat = event.getHeader('variable_DVP_OPERATION_CAT');
                 var resourceId = event.getHeader('variable_ARDS-Resource-Id');
+                var callerContext = event.getHeader('Caller-Context');
 
 
                 //loggerCust.debug('EVENT RECEIVED - [UUID : %s , TYPE : %s, CompanyId : %s', uniqueId, evtType, companyId);
@@ -240,15 +241,22 @@ redisClient.on('error',function(err){
                         }
 
 
-
                         if(dvpCallDirection)
                         {
                             var otherLegCallerIdNumber = event.getHeader('Other-Leg-Caller-ID-Number');
                             var otherLegCalleeIdNumber = event.getHeader('Other-Leg-Callee-ID-Number');
+                            var otherLegContext = event.getHeader('Other-Leg-Context');
 
-                            if((opCat === 'GATEWAY' || opCat === 'ATT_XFER_GATEWAY') && otherLegCalleeIdNumber && otherLegCallerIdNumber)
+                            if(opCat === 'ATT_XFER_GATEWAY' && otherLegContext === 'PBXFeatures' && otherLegCalleeIdNumber && otherLegCallerIdNumber && dvpCallDirection === 'outbound' && operator)
                             {
                                 extApiAccess.BillCall(reqId, uniqueId, otherLegCallerIdNumber, otherLegCalleeIdNumber, 'minute', operator, companyId, tenantId);
+
+                            }
+
+                            if(opCat === 'GATEWAY' && otherLegCalleeIdNumber && otherLegCallerIdNumber && dvpCallDirection === 'outbound' && operator)
+                            {
+                                extApiAccess.BillCall(reqId, uniqueId, otherLegCallerIdNumber, otherLegCalleeIdNumber, 'minute', operator, companyId, tenantId);
+
                             }
 
                             var callCountCompanyDir = 'DVP_CALL_COUNT_COMPANY_DIR:' + tenantId + ':' + companyId + ':' + dvpCallDirection;
@@ -330,7 +338,7 @@ redisClient.on('error',function(err){
 
                         //Sending Resource Status For Agent Outbound Calls
 
-                        var callerContext = event.getHeader('Caller-Context');
+
                         var sipFromUri = event.getHeader('variable_sip_from_uri');
 
                         if(direction === 'outbound' && companyId && tenantId)
@@ -543,8 +551,6 @@ redisClient.on('error',function(err){
 
                         //Sending Resource Status For Agent Outbound Calls
 
-                        var callerContext = event.getHeader('Caller-Context');
-
                         /*if(direction === 'outbound' && companyId && tenantId)
                         {
 
@@ -597,10 +603,6 @@ redisClient.on('error',function(err){
 
                             redisClient.decr(callCountCompanyDir, redisMessageHandler);
 
-                            if(opCat === 'GATEWAY' || opCat === 'ATT_XFER_GATEWAY')
-                            {
-                                extApiAccess.BillEndCall(reqId, uniqueId, callerOrigIdName, callerDestNum, 'minute', companyId, tenantId);
-                            }
                         }
 
                         var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", "", uniqueId);
@@ -648,7 +650,23 @@ redisClient.on('error',function(err){
                             ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '', 'inbound');
                         }
 
-                        var callerContext = event.getHeader('Caller-Context');
+                        var varCallerIdNum = event.getHeader('variable_origination_caller_id_number');
+                        var varOrigLegUuid = event.getHeader('variable_originating_leg_uuid');
+
+                        if(!varOrigLegUuid)
+                        {
+                            varOrigLegUuid = uniqueId;
+                        }
+
+                        if(opCat === 'ATT_XFER_GATEWAY' && direction === 'outbound' && callerContext === 'PBXFeatures' && dvpCallDirection === 'outbound')
+                        {
+                            extApiAccess.BillEndCall(reqId, varOrigLegUuid, varCallerIdNum, callerDestNum, 'minute', companyId, tenantId);
+                        }
+
+                        if(opCat === 'GATEWAY' && direction === 'outbound' && dvpCallDirection === 'outbound' && otherLegUniqueId)
+                        {
+                            extApiAccess.BillEndCall(reqId, otherLegUniqueId, varCallerIdNum, callerDestNum, 'minute', companyId, tenantId);
+                        }
 
                         if(direction === 'outbound' && companyId && tenantId)
                         {
