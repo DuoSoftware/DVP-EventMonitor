@@ -230,8 +230,17 @@ redisClient.on('error',function(err){
                         redisClient.incr(callCountCompany, redisMessageHandler);
 
                         var resId = event.getHeader('variable_ards_resource_id');
+                        var skillAgent = event.getHeader('variable_ards_skill_display');
+                        var channelBridgeTimeStamp = event.getHeader('Caller-Channel-Bridged-Time');
                         var varArdsClientUuid = event.getHeader('variable_ards_client_uuid');
                         var otherLegDir = event.getHeader('Other-Leg-Direction');
+
+                        if (channelBridgeTimeStamp)
+                        {
+                            var dt = new Date(0); // The 0 there is the key, which sets the date to the epoch
+                            dt.setUTCSeconds(parseInt(channelBridgeTimeStamp)/1000000);
+                            redisClient.hset(uniqueId, 'CHANNEL-BRIDGE-TIME', dt.toISOString(), redisMessageHandler);
+                        }
 
                         if((opCat === 'ATT_XFER_USER' || opCat === 'ATT_XFER_GATEWAY') && tenantId && companyId && resId && varArdsClientUuid && otherLegDir === 'outbound')
                         {
@@ -285,6 +294,7 @@ redisClient.on('error',function(err){
                         }
 
                         redisClient.hset(uniqueId, 'Bridge-State', 'Bridged', redisMessageHandler);
+                        redisClient.hset(uniqueId, 'ARDS-Skill-Display', skillAgent, redisMessageHandler);
 
                         if(otherLegUniqueId)
                         {
