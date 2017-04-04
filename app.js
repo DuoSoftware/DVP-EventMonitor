@@ -43,6 +43,8 @@ redisClient.auth(redisPass, function (err) {
 
 var evtConsumeType = config.evtConsumeType;
 
+console.log('EVENT CONSUME TYPE : ' + evtConsumeType);
+
 
 var rmqIp = config.RabbitMQ.ip;
 var rmqPort = config.RabbitMQ.port;
