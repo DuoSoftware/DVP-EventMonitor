@@ -620,6 +620,10 @@ redisClient.on('error',function(err){
 
             case 'HEARTBEAT':
 
+                var utcSec = parseInt(variableEvtTime)/1000000;
+                var dat = new Date(0); // The 0 there is the key, which sets the date to the epoch
+                dat.setUTCSeconds(utcSec);
+
                 var hbData =
                 {
                     FsHostName: evtObj['FreeSWITCH-Hostname'],
@@ -633,7 +637,8 @@ redisClient.on('error',function(err){
                     SessionsPerSec: evtObj['Session-Per-Sec'],
                     SessionsPerSecMax: evtObj['Session-Per-Sec-Max'],
                     SessionsSinceStartUp: evtObj['Session-Since-Startup'],
-                    IdleCpu: evtObj['Idle-CPU']
+                    IdleCpu: evtObj['Idle-CPU'],
+                    EventTime: dat.toISOString()
                 };
 
                 if(switchName)
@@ -1316,6 +1321,7 @@ redisClient.on('error',function(err){
                 evtObj['ARDS-Reason'] = event.getHeader('ARDS-Reason');
                 evtObj['ARDS-Call-Skill'] = event.getHeader('ARDS-Call-Skill');
 
+
                 eventHandler(reqId, evtObj);
 
 
@@ -1490,6 +1496,8 @@ if(evtConsumeType)
                     // Print messages to stdout
                     var reqId = nodeUuid.v1();
                     eventHandler(reqId, message);
+
+
                 });
 
             });
