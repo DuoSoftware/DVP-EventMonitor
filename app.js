@@ -245,9 +245,8 @@ redisClient.on('error',function(err){
                         {
                             var otherLegCallerIdNumber = event.getHeader('Other-Leg-Caller-ID-Number');
                             var otherLegCalleeIdNumber = event.getHeader('Other-Leg-Callee-ID-Number');
-                            var otherLegContext = event.getHeader('Other-Leg-Context');
 
-                            if(opCat === 'ATT_XFER_GATEWAY' && otherLegContext === 'PBXFeatures' && otherLegCalleeIdNumber && otherLegCallerIdNumber && dvpCallDirection === 'outbound' && operator)
+                            if(opCat === 'ATT_XFER_GATEWAY' && otherLegCalleeIdNumber && otherLegCallerIdNumber && dvpCallDirection === 'outbound' && operator)
                             {
                                 extApiAccess.BillCall(reqId, uniqueId, otherLegCallerIdNumber, otherLegCalleeIdNumber, 'minute', operator, companyId, tenantId);
 
@@ -544,43 +543,25 @@ redisClient.on('error',function(err){
                         var ardsServerType = event.getHeader('variable_ards_servertype');
                         var ardsReqType = event.getHeader('variable_ards_requesttype');
                         var ardsResourceId = event.getHeader('variable_ards_resource_id');
+                        var otherLegDir = event.getHeader('Other-Leg-Direction');
 
 
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - CHANNEL ANSWER ARDS DATA - EVENT_TYPE : ' + evtType + ', SESSION_ID : ' + uniqueId + 'SWITCH NAME : ' + switchName + 'ards_client_uuid : %s, companyid : %s, tenantid : %s, ards_resource_id : %s, ards_servertype : %s, ards_requesttype : %s', reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsResourceId, ardsServerType, ardsReqType);
 
 
-                        //Sending Resource Status For Agent Outbound Calls
 
-                        /*if(direction === 'outbound' && companyId && tenantId)
-                        {
-
-                            var callerOrigIdName = event.getHeader('Caller-Orig-Caller-ID-Name');
-
-                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
-                            {
-
-                                var obj = JSON.parse(objString);
-
-                                if(obj && obj.Context && callerContext === obj.Context)
-                                {
-                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, '', '', obj.ResourceId, 'Connected', '', '');
-
-                                }
-
-                            })
-                        }*/
-                        if((opCat === 'ATT_XFER_USER') && tenantId && companyId && resId && varArdsClientUuid && otherLegDir === 'outbound')
+                        if((opCat === 'ATT_XFER_USER') && ardsCompany && ardsTenant && ardsClientUuid)
                         {
                             var callerOrigIdName = event.getHeader('Caller-Callee-ID-Number');
 
-                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + callerOrigIdName, function(err, objString)
                             {
 
                                 var obj = JSON.parse(objString);
 
-                                if(obj && obj.Context && callerContext === obj.Context)
+                                if(obj && obj.Context)
                                 {
-                                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, obj.ResourceId, 'Connected', '', '', 'inbound');
+                                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
                                 }
 
                             })
@@ -663,21 +644,22 @@ redisClient.on('error',function(err){
                         var ardsServerType = event.getHeader('variable_ards_servertype');
                         var ardsReqType = event.getHeader('variable_ards_requesttype');
                         var ardsResourceId = event.getHeader('variable_ards_resource_id');
+                        var otherLegDir = event.getHeader('Other-Leg-Direction');
 
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - CHANNEL ANSWER ARDS DATA - EVENT_TYPE : ' + evtType + ', SESSION_ID : ' + uniqueId + 'SWITCH NAME : ' + switchName + 'ards_client_uuid : %s, companyid : %s, tenantid : %s, ards_resource_id : %s, ards_servertype : %s, ards_requesttype : %s', reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsResourceId, ardsServerType, ardsReqType);
 
-                        if((opCat === 'ATT_XFER_USER') && tenantId && companyId && resId && varArdsClientUuid && otherLegDir === 'outbound')
+                        if((opCat === 'ATT_XFER_USER') && ardsCompany && ardsTenant && ardsClientUuid)
                         {
                             var callerOrigIdName = event.getHeader('Caller-Callee-ID-Number');
 
-                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + callerOrigIdName, function(err, objString)
                             {
 
                                 var obj = JSON.parse(objString);
 
-                                if(obj && obj.Context && callerContext === obj.Context)
+                                if(obj && obj.Context)
                                 {
-                                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, obj.ResourceId, 'Completed', '', '', 'inbound');
+                                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
                                 }
 
                             })
@@ -715,7 +697,7 @@ redisClient.on('error',function(err){
                             varOrigLegUuid = uniqueId;
                         }
 
-                        if(opCat === 'ATT_XFER_GATEWAY' && direction === 'outbound' && callerContext === 'PBXFeatures' && dvpCallDirection === 'outbound')
+                        if(opCat === 'ATT_XFER_GATEWAY' && direction === 'outbound' && dvpCallDirection === 'outbound')
                         {
                             extApiAccess.BillEndCall(reqId, varOrigLegUuid, varCallerIdNum, callerDestNum, 'minute', companyId, tenantId);
                         }
@@ -729,13 +711,6 @@ redisClient.on('error',function(err){
                         break;
 
                     case 'CHANNEL_DESTROY':
-
-                        var ardsClientUuid = event.getHeader('variable_ards_client_uuid');
-                        var ardsCompany = event.getHeader('variable_companyid');
-                        var ardsTenant = event.getHeader('variable_tenantid');
-                        var ardsServerType = event.getHeader('variable_ards_servertype');
-                        var ardsReqType = event.getHeader('variable_ards_requesttype');
-                        var ardsResourceId = event.getHeader('variable_ards_resource_id');
 
 
                         //Adding call discon record to redis set for cdr summary
