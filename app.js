@@ -343,6 +343,7 @@ redisClient.on('error',function(err){
                 var sipGatewayName = evtObj["variable_sip_gateway_name"];
                 var variableLoopbackApp = evtObj["variable_loopback_app"];
                 var variableSipAuthRealm = evtObj["variable_sip_auth_realm"];
+                var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
 
 
                 //Sending Resource Status For Agent Outbound Calls
@@ -368,7 +369,7 @@ redisClient.on('error',function(err){
                                 Direction: 'STATELESS',
                                 From: 'CALLSERVER',
                                 Callback: '',
-                                Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound'
+                                Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId
                             };
 
                             extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
