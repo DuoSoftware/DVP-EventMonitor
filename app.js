@@ -589,6 +589,8 @@ redisClient.on('error',function(err){
                         {
                             var obj = JSON.parse(objString);
 
+                            var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
+
                             if(obj && obj.Context && callerContext === obj.Context)
                             {
                                 var nsObj = {
@@ -740,6 +742,8 @@ redisClient.on('error',function(err){
                             if(obj && obj.Context && callerContext === obj.Context)
                             {
                                 ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
+
+                                var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
 
                                 var nsObj = {
                                     Ref: uniqueId,
