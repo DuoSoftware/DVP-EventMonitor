@@ -101,6 +101,11 @@ redisClient.on('error',function(err){
         var resourceId = evtObj['variable_ARDS-Resource-Id'];
         var callerContext = evtObj['Caller-Context'];
 
+        if(!callerOrigIdName)
+        {
+            callerOrigIdName = evtObj['Other-Leg-Caller-ID-Number'];
+        }
+
 
         //loggerCust.debug('EVENT RECEIVED - [UUID : %s , TYPE : %s, CompanyId : %s', uniqueId, evtType, companyId);
 
@@ -357,22 +362,25 @@ redisClient.on('error',function(err){
                     {
                         var obj = JSON.parse(objString);
 
-                        if(obj && obj.Context && callerContext === obj.Context)
+                        if(obj && obj.Context)
                         {
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - SENDING', reqId);
+
+                            if(dvpCallDirection === 'outbound' && opCat === 'GATEWAY')
+                            {
+                                var nsObj = {
+                                    Ref: uniqueId,
+                                    To: obj.Issuer,
+                                    Timeout: 1000,
+                                    Direction: 'STATELESS',
+                                    From: 'CALLSERVER',
+                                    Callback: '',
+                                    Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId
+                                };
+
+                                extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+                            }
                             ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
-
-                            var nsObj = {
-                                Ref: uniqueId,
-                                To: obj.Issuer,
-                                Timeout: 1000,
-                                Direction: 'STATELESS',
-                                From: 'CALLSERVER',
-                                Callback: '',
-                                Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId
-                            };
-
-                            extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
                             extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', callerOrigIdName, callerDestNum, obj.CompanyId, obj.TenantId);
 
 
@@ -593,17 +601,22 @@ redisClient.on('error',function(err){
 
                             if(obj && obj.Context && callerContext === obj.Context)
                             {
-                                var nsObj = {
-                                    Ref: uniqueId,
-                                    To: obj.Issuer,
-                                    Timeout: 1000,
-                                    Direction: 'STATELESS',
-                                    From: 'CALLSERVER',
-                                    Callback: '',
-                                    Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId
-                                };
 
-                                extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+                                if(dvpCallDirection === 'outbound' && opCat === 'GATEWAY')
+                                {
+                                    var nsObj = {
+                                        Ref: uniqueId,
+                                        To: obj.Issuer,
+                                        Timeout: 1000,
+                                        Direction: 'STATELESS',
+                                        From: 'CALLSERVER',
+                                        Callback: '',
+                                        Message: 'agent_connected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId
+                                    };
+
+                                    extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+                                }
+
 
 
                             }
@@ -732,6 +745,23 @@ redisClient.on('error',function(err){
                         extApiAccess.BillEndCall(reqId, otherLegUniqueId, varCallerIdNum, callerDestNum, 'minute', companyId, tenantId);
                     }
 
+                    if(dvpCallDirection === 'outbound' && companyId && tenantId && direction === 'inbound')
+                    {
+                        var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
+
+                        var nsObj = {
+                            Ref: uniqueId,
+                            To: obj.Issuer,
+                            Timeout: 1000,
+                            Direction: 'STATELESS',
+                            From: 'CALLSERVER',
+                            Callback: '',
+                            Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId
+                        };
+
+                        extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
+                    }
+
                     if(direction === 'outbound' && companyId && tenantId)
                     {
                         var callerOrigIdName = evtObj['Caller-Orig-Caller-ID-Name'];
@@ -743,19 +773,6 @@ redisClient.on('error',function(err){
                             {
                                 ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
 
-                                var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
-
-                                var nsObj = {
-                                    Ref: uniqueId,
-                                    To: obj.Issuer,
-                                    Timeout: 1000,
-                                    Direction: 'STATELESS',
-                                    From: 'CALLSERVER',
-                                    Callback: '',
-                                    Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId
-                                };
-
-                                extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
                             }
 
