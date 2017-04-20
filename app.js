@@ -61,10 +61,6 @@ redisClient.on('error',function(err){
         {
             logger.error('[DVP-EventMonitor.handler] - REDIS ERROR', err);
         }
-        else
-        {
-            logger.debug('[DVP-EventMonitor.handler] - REDIS SUCCESS');
-        }
     };
 
     var eventHandler = function(reqId, evtObj)
@@ -379,6 +375,8 @@ redisClient.on('error',function(err){
                                 };
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
                             }
                             ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
                             extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', callerOrigIdName, callerDestNum, obj.CompanyId, obj.TenantId);
@@ -489,7 +487,7 @@ redisClient.on('error',function(err){
             case 'CHANNEL_STATE':
                 if (evtObj['Channel-State'] != 'CS_DESTROY')
                 {
-                    logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS GET');
+                    //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS GET');
                     redisClient.hset(uniqueId, 'Channel-State', evtObj['Channel-State'], redisMessageHandler);
                     redisClient.expire(uniqueId, 86400, redisMessageHandler);
                 }
@@ -614,6 +612,8 @@ redisClient.on('error',function(err){
                                     };
 
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT CONNECTED - Message : ', reqId, nsObj.Message);
                                 }
 
 
@@ -632,7 +632,7 @@ redisClient.on('error',function(err){
                 evtData.EventCategory = "CHANNEL_ANSWER";
 
                 var jsonStr = JSON.stringify(evtData);
-                logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH');
+                //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH');
                 if(dvpCustPubId)
                 {
                     redisClient.publish(dvpCustPubId, jsonStr);
@@ -660,7 +660,7 @@ redisClient.on('error',function(err){
                 var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", "", uniqueId);
 
                 redisClient.publish('events', pubMessage);
-                logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
+                //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
                 break;
 
             case 'HEARTBEAT':
@@ -772,6 +772,8 @@ redisClient.on('error',function(err){
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
 
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT DISCONNECTED - Message : ', reqId, nsObj.Message);
+
                                 ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
 
 
@@ -876,7 +878,7 @@ redisClient.on('error',function(err){
                     //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                 }
 
-                logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH');
+                //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH');
 
                 var channelSetNameApp = 'CHANNELS_APP:' + dvpAppId;
 
