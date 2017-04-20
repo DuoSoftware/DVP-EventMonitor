@@ -589,7 +589,7 @@ redisClient.on('error',function(err){
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound');
                     }
 
-                    if(direction === 'outbound' && companyId && tenantId)
+                    if(direction === 'inbound' && companyId && tenantId)
                     {
 
 
@@ -597,9 +597,7 @@ redisClient.on('error',function(err){
                         {
                             var obj = JSON.parse(objString);
 
-                            var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
-
-                            if(obj && obj.Context && callerContext === obj.Context)
+                            if(obj && obj.Context)
                             {
 
                                 if(dvpCallDirection === 'outbound' && opCat === 'GATEWAY')
@@ -611,7 +609,7 @@ redisClient.on('error',function(err){
                                         Direction: 'STATELESS',
                                         From: 'CALLSERVER',
                                         Callback: '',
-                                        Message: 'agent_connected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId
+                                        Message: 'agent_connected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + uniqueId
                                     };
 
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
@@ -747,19 +745,28 @@ redisClient.on('error',function(err){
 
                     if(dvpCallDirection === 'outbound' && companyId && tenantId && direction === 'inbound')
                     {
-                        var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
+                        redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                        {
+                            var obj = JSON.parse(objString);
+                            if(obj && obj.Context)
+                            {
+                                var nsObj = {
+                                    Ref: uniqueId,
+                                    To: obj.Issuer,
+                                    Timeout: 1000,
+                                    Direction: 'STATELESS',
+                                    From: 'CALLSERVER',
+                                    Callback: '',
+                                    Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + uniqueId
+                                };
 
-                        var nsObj = {
-                            Ref: uniqueId,
-                            To: obj.Issuer,
-                            Timeout: 1000,
-                            Direction: 'STATELESS',
-                            From: 'CALLSERVER',
-                            Callback: '',
-                            Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId
-                        };
+                                extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
 
-                        extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
+                            }
+
+                        })
+
+
                     }
 
                     if(direction === 'outbound' && companyId && tenantId)
