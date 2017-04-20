@@ -592,7 +592,7 @@ redisClient.on('error',function(err){
                     if(direction === 'outbound' && companyId && tenantId)
                     {
 
-                        var ii = evtObj;
+                        //var ii = evtObj;
 
                         redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                         {
