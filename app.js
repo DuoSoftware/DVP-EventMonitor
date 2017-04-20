@@ -744,9 +744,16 @@ redisClient.on('error',function(err){
                         extApiAccess.BillEndCall(reqId, otherLegUniqueId, varCallerIdNum, callerDestNum, 'minute', companyId, tenantId);
                     }
 
+
+
                     if(direction === 'outbound' && companyId && tenantId)
                     {
                         //var callerOrigIdName = evtObj['Caller-Orig-Caller-ID-Name'];
+
+                        if(evtObj['variable_DVP_CLICKTOCALL'] === 'C2C')
+                        {
+                            callerOrigIdName = evtObj['Caller-Caller-ID-Number'];
+                        }
 
                         redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                         {
