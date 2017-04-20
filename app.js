@@ -96,6 +96,7 @@ redisClient.on('error',function(err){
         var opCat = evtObj['variable_DVP_OPERATION_CAT'];
         var resourceId = evtObj['variable_ARDS-Resource-Id'];
         var callerContext = evtObj['Caller-Context'];
+        var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
 
         if(!callerOrigIdName)
         {
@@ -344,7 +345,6 @@ redisClient.on('error',function(err){
                 var sipGatewayName = evtObj["variable_sip_gateway_name"];
                 var variableLoopbackApp = evtObj["variable_loopback_app"];
                 var variableSipAuthRealm = evtObj["variable_sip_auth_realm"];
-                var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
 
 
                 //Sending Resource Status For Agent Outbound Calls
