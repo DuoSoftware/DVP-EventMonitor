@@ -97,6 +97,7 @@ redisClient.on('error',function(err){
         var resourceId = evtObj['variable_ARDS-Resource-Id'];
         var callerContext = evtObj['Caller-Context'];
         var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
+        var calleeNumber = event.getHeader('Caller-Callee-ID-Number');
 
         if(!callerOrigIdName)
         {
@@ -565,9 +566,9 @@ redisClient.on('error',function(err){
 
                 if((opCat === 'ATT_XFER_USER') && ardsCompany && ardsTenant && ardsClientUuid)
                 {
-                    //var callerOrigIdName = event.getHeader('Caller-Callee-ID-Number');
 
-                    redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + callerOrigIdName, function(err, objString)
+
+                    redisClient.get('EXTENSION_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + calleeNumber, function(err, objString)
                     {
 
                         var obj = JSON.parse(objString);
@@ -581,16 +582,34 @@ redisClient.on('error',function(err){
                 }
                 else
                 {
+                    //SET RESOURCE STATUS FOR CALL RECEIVING PARTY ARDS SET CALLS
                     if(ardsClientUuid)
                     {
                         redisClient.hset(ardsClientUuid, 'ARDS-Client-Uuid', ardsClientUuid, redisMessageHandler);
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound');
                     }
+                    else
+                    {
+                        //SET RESOURCE STATUS FOR CALL RECEIVING PARTY NORMAL CALLS
+                        if(direction === 'outbound' && companyId && tenantId && opCat === 'PRIVATE_USER' && dvpCallDirection === 'outbound')
+                        {
+                            redisClient.get('EXTENSION_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + calleeNumber, function(err, objString)
+                            {
+                                var obj = JSON.parse(objString);
+
+                                if(obj && obj.Context)
+                                {
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
+
+                                }
+
+                            })
+
+                        }
+                    }
 
                     if(direction === 'outbound' && companyId && tenantId)
                     {
-
-                        //var ii = evtObj;
 
                         redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                         {
@@ -705,9 +724,7 @@ redisClient.on('error',function(err){
 
                 if((opCat === 'ATT_XFER_USER') && ardsCompany && ardsTenant && ardsClientUuid)
                 {
-                    //var callerOrigIdName = event.getHeader('Caller-Callee-ID-Number');
-
-                    redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + callerOrigIdName, function(err, objString)
+                    redisClient.get('EXTENSION_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + calleeNumber, function(err, objString)
                     {
 
                         var obj = JSON.parse(objString);
@@ -724,6 +741,25 @@ redisClient.on('error',function(err){
                     if(ardsClientUuid)
                     {
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '', 'inbound');
+                    }
+                    else
+                    {
+                        //SET RESOURCE STATUS FOR CALL RECEIVING PARTY NORMAL CALLS
+                        if(direction === 'outbound' && companyId && tenantId && opCat === 'PRIVATE_USER' && dvpCallDirection === 'outbound')
+                        {
+                            redisClient.get('EXTENSION_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + calleeNumber, function(err, objString)
+                            {
+                                var obj = JSON.parse(objString);
+
+                                if(obj && obj.Context)
+                                {
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
+
+                                }
+
+                            })
+
+                        }
                     }
 
                     var varCallerIdNum = evtObj['variable_origination_caller_id_number'];
