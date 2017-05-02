@@ -276,7 +276,7 @@ redisClient.on('error',function(err){
 
                 }
 
-                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", "", "", uniqueId);
+                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", "", dvpCallDirection, uniqueId);
 
                 redisClient.publish('events', pubMessage);
 
@@ -676,7 +676,7 @@ redisClient.on('error',function(err){
 
                 }
 
-                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", "", uniqueId);
+                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", dvpCallDirection, uniqueId);
 
                 redisClient.publish('events', pubMessage);
                 //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
