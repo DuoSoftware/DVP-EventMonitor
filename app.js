@@ -97,7 +97,7 @@ redisClient.on('error',function(err){
         var resourceId = evtObj['variable_ARDS-Resource-Id'];
         var callerContext = evtObj['Caller-Context'];
         var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
-        var calleeNumber = evtObj.getHeader('Caller-Callee-ID-Number');
+        var calleeNumber = evtObj['Caller-Callee-ID-Number'];
 
         if(!callerOrigIdName)
         {
