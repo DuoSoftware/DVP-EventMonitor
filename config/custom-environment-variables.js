@@ -59,6 +59,15 @@ module.exports = {
         db: "SYS_REDIS_DB_PROCESSEDCDR"
     },
 
+    "RabbitMQ":
+    {
+        "ip": "SYS_RABBITMQ_HOST",
+        "port": "SYS_RABBITMQ_PORT",
+        "user": "SYS_RABBITMQ_USER",
+        "password": "SYS_RABBITMQ_PASSWORD"
+    },
+
     Token: "HOST_TOKEN",
-    billingEnabled: "SYS_BILLING_ENABLED"
+    billingEnabled: "SYS_BILLING_ENABLED",
+    evtConsumeType: "HOST_EVENT_CONSUME_TYPE"
 };

@@ -4,7 +4,7 @@
   "description": "DVP-EventMonitor\r ================",
   "main": "app.js",
   "dependencies": {
-    "amqp": "^0.2.4",
+    "amqp": "^0.2.6",
     "colors": "^0.6.2",
     "config": "^1.13.0",
     "dvp-common": "^0.1.3",
