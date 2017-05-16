@@ -48,6 +48,8 @@ console.log('EVENT CONSUME TYPE : ' + evtConsumeType);
 
 var rmqIp = config.RabbitMQ.ip;
 var rmqPort = config.RabbitMQ.port;
+var rmqUser = config.RabbitMQ.user;
+var rmqPassword = config.RabbitMQ.password;
 
 
 redisClient.on('error',function(err){
@@ -1645,7 +1647,7 @@ if(evtConsumeType)
     {
         var amqpConState = 'CLOSED';
 
-        var connection = amqp.createConnection({ host: rmqIp, port: rmqPort});
+        var connection = amqp.createConnection({ host: rmqIp, port: rmqPort, login: rmqUser, password: rmqPassword});
 
         connection.on('connect', function()
         {
