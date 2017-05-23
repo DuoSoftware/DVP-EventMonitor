@@ -1649,6 +1649,8 @@ if(evtConsumeType)
 
         var connection = amqp.createConnection({ host: rmqIp, port: rmqPort, login: rmqUser, password: rmqPassword});
 
+        logger.debug('[DVP-EventMonitor.handler] - [%s] - AMQP Creating connection ' + rmqIp + ' ' + rmqPort + ' ' + rmqUser + ' ' + rmqPassword);
+
         connection.on('connect', function()
         {
             amqpConState = 'CONNECTED';
