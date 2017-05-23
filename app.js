@@ -1652,11 +1652,14 @@ if(evtConsumeType)
         connection.on('connect', function()
         {
             amqpConState = 'CONNECTED';
+            logger.debug('[DVP-EventMonitor.handler] - [%s] - AMQP Connection CONNECTED');
         });
 
         connection.on('ready', function()
         {
             amqpConState = 'READY';
+
+            logger.debug('[DVP-EventMonitor.handler] - [%s] - AMQP Connection READY');
 
             connection.queue('FS_EVENTS', {durable: true, autoDelete: false}, function (q) {
                 q.bind('#');
@@ -1675,6 +1678,7 @@ if(evtConsumeType)
 
         connection.on('error', function(e)
         {
+            logger.error('[DVP-EventMonitor.handler] - [%s] - AMQP Connection ERROR');
             amqpConState = 'CLOSE';
         });
     }
