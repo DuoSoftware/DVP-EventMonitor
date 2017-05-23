@@ -509,18 +509,30 @@ redisClient.on('error',function(err){
 
                     if(channelHash)
                     {
-                        var hashResId = channelHash['Agent-Resource-Id'];
                         var hashCompany = channelHash['DVP-CompanyId'];
                         var hashTenant = channelHash['DVP-TenantId'];
-                        var hashArdsClientUuid = channelHash['ARDS-Client-Uuid'];
-                        var hashCallDirection = channelHash['DVP-Call-Direction'];
+                        var hashResId = channelHash['Caller-Caller-ID-Number'];
 
-                        if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                        redisClient.get('SIPUSER_RESOURCE_MAP:' + hashTenant + ':' + hashCompany + ':' + hashResId, function(err, objString)
                         {
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+                            var obj = JSON.parse(objString);
 
-                            redisClient.publish('events', pubMessage);
-                        }
+                            if(obj)
+                            {
+                                var hashResId = obj.ResourceId;
+                                var hashArdsClientUuid = channelUuid;
+                                var hashCallDirection = channelHash['DVP-Call-Direction'];
+
+                                if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                                {
+                                    var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+
+                                    redisClient.publish('events', pubMessage);
+                                }
+                            }
+                        });
+
+
 
                     }
 
@@ -535,18 +547,31 @@ redisClient.on('error',function(err){
 
                     if(channelHash)
                     {
-                        var hashResId = channelHash['Agent-Resource-Id'];
                         var hashCompany = channelHash['DVP-CompanyId'];
                         var hashTenant = channelHash['DVP-TenantId'];
-                        var hashArdsClientUuid = channelHash['ARDS-Client-Uuid'];
-                        var hashCallDirection = channelHash['DVP-Call-Direction'];
+                        var hashResId = channelHash['Caller-Caller-ID-Number'];
 
-                        if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                        redisClient.get('SIPUSER_RESOURCE_MAP:' + hashTenant + ':' + hashCompany + ':' + hashResId, function(err, objString)
                         {
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+                            var obj = JSON.parse(objString);
 
-                            redisClient.publish('events', pubMessage);
-                        }
+                            if(obj)
+                            {
+                                var hashResId = obj.ResourceId;
+                                var hashArdsClientUuid = channelUuid;
+                                var hashCallDirection = channelHash['DVP-Call-Direction'];
+
+                                if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                                {
+                                    var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+
+                                    redisClient.publish('events', pubMessage);
+                                }
+                            }
+                        });
+
+
+
 
                     }
 
