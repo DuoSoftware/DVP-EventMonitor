@@ -509,28 +509,45 @@ redisClient.on('error',function(err){
 
                     if(channelHash)
                     {
+
+                        var hashResId = channelHash['Agent-Resource-Id'];
+                        var hashArdsClientUuid = channelHash['ARDS-Client-Uuid'];
+                        var hashCallDirection = channelHash['DVP-Call-Direction'];
                         var hashCompany = channelHash['DVP-CompanyId'];
                         var hashTenant = channelHash['DVP-TenantId'];
-                        var hashResId = channelHash['Caller-Caller-ID-Number'];
 
-                        redisClient.get('SIPUSER_RESOURCE_MAP:' + hashTenant + ':' + hashCompany + ':' + hashResId, function(err, objString)
+                        if(hashArdsClientUuid && hashResId)
                         {
-                            var obj = JSON.parse(objString);
-
-                            if(obj)
+                            if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
                             {
-                                var hashResId = obj.ResourceId;
-                                var hashArdsClientUuid = channelUuid;
-                                var hashCallDirection = channelHash['DVP-Call-Direction'];
+                                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
 
-                                if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
-                                {
-                                    var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
-
-                                    redisClient.publish('events', pubMessage);
-                                }
+                                redisClient.publish('events', pubMessage);
                             }
-                        });
+                        }
+                        else
+                        {
+                            var callerIdNm = channelHash['Caller-Caller-ID-Number'];
+
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + hashTenant + ':' + hashCompany + ':' + callerIdNm, function(err, objString)
+                            {
+                                var obj = JSON.parse(objString);
+
+                                if(obj)
+                                {
+                                    hashResId = obj.ResourceId;
+                                    hashArdsClientUuid = channelUuid;
+
+                                    if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                                    {
+                                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+
+                                        redisClient.publish('events', pubMessage);
+                                    }
+                                }
+                            });
+                        }
+
 
 
 
@@ -547,28 +564,43 @@ redisClient.on('error',function(err){
 
                     if(channelHash)
                     {
+                        var hashResId = channelHash['Agent-Resource-Id'];
+                        var hashArdsClientUuid = channelHash['ARDS-Client-Uuid'];
+                        var hashCallDirection = channelHash['DVP-Call-Direction'];
                         var hashCompany = channelHash['DVP-CompanyId'];
                         var hashTenant = channelHash['DVP-TenantId'];
-                        var hashResId = channelHash['Caller-Caller-ID-Number'];
 
-                        redisClient.get('SIPUSER_RESOURCE_MAP:' + hashTenant + ':' + hashCompany + ':' + hashResId, function(err, objString)
+                        if(hashArdsClientUuid && hashResId)
                         {
-                            var obj = JSON.parse(objString);
-
-                            if(obj)
+                            if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
                             {
-                                var hashResId = obj.ResourceId;
-                                var hashArdsClientUuid = channelUuid;
-                                var hashCallDirection = channelHash['DVP-Call-Direction'];
+                                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
 
-                                if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
-                                {
-                                    var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
-
-                                    redisClient.publish('events', pubMessage);
-                                }
+                                redisClient.publish('events', pubMessage);
                             }
-                        });
+                        }
+                        else
+                        {
+                            var callerIdNm = channelHash['Caller-Caller-ID-Number'];
+
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + hashTenant + ':' + hashCompany + ':' + callerIdNm, function(err, objString)
+                            {
+                                var obj = JSON.parse(objString);
+
+                                if(obj)
+                                {
+                                    hashResId = obj.ResourceId;
+                                    hashArdsClientUuid = channelUuid;
+
+                                    if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                                    {
+                                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+
+                                        redisClient.publish('events', pubMessage);
+                                    }
+                                }
+                            });
+                        }
 
 
 
