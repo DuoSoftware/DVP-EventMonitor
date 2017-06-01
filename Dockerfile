@@ -8,7 +8,8 @@
 #EXPOSE 8806
 
 FROM node:5.10.0
-RUN git clone git://github.com/DuoSoftware/DVP-EventMonitor.git /usr/local/src/eventmonitor
+ARG VERSION_TAG
+RUN git clone -b $VERSION_TAG https://github.com/DuoSoftware/DVP-EventMonitor.git /usr/local/src/eventmonitor
 RUN cd /usr/local/src/eventmonitor;
 WORKDIR /usr/local/src/eventmonitor
 RUN npm install
