@@ -639,6 +639,10 @@ redisClient.on('error',function(err){
 
                     })
                 }
+                else if(opCat === 'FAX_INBOUND')
+                {
+                    extApiAccess.CreateEngagement(reqId, uniqueId, 'fax', 'inbound', callerIdNum, callerDestNum, companyId, tenantId);
+                }
                 else
                 {
                     //SET RESOURCE STATUS FOR CALL RECEIVING PARTY ARDS SET CALLS
