@@ -370,7 +370,7 @@ redisClient.on('error',function(err){
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - SENDING', reqId);
 
                             //for agent dialed outbound calls
-                            
+
                             if(actionCat === 'DIALER')
                             {
                                 extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', evtObj['Caller-Destination-Number'], evtObj['Caller-Caller-ID-Number'], companyId, tenantId);
@@ -384,11 +384,11 @@ redisClient.on('error',function(err){
                                     Callback: ''
                                 };
 
-                                nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + callerOrigIdName + '|' + callerOrigIdName + '|' + callerDestNum + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId;
+                                nsObj.Message = 'agent_found|' + uniqueId + '|INBOUND|' + callerOrigIdName + '|' + callerOrigIdName + '|' + callerDestNum + '|INBOUND|inbound|call|undefined|' + otherlegUniqueId;
 
-                                extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+                                extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
-                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT CONNECTED - Message : ', reqId, nsObj.Message);
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
                             }
                             else if(opCat === 'GATEWAY')
                             {
@@ -719,8 +719,15 @@ redisClient.on('error',function(err){
                                     Callback: ''
                                 };
 
+                                if(actionCat === 'DIALER')
+                                {
+                                    nsObj.Message = 'agent_connected|' + uniqueId + '|INBOUND|' + callerOrigIdName + '|' + callerOrigIdName + '|' + callerDestNum + '|INBOUND|inbound|call|undefined|' + otherlegUniqueId;
 
-                                if(opCat === 'GATEWAY')
+                                    extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT CONNECTED - Message : ', reqId, nsObj.Message);
+                                }
+                                else if(opCat === 'GATEWAY')
                                 {
                                     nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId;
 
@@ -906,7 +913,33 @@ redisClient.on('error',function(err){
                         })
                     }
 
-                    if(direction === 'inbound' && companyId && tenantId && opCat === 'GATEWAY' && dvpCallDirection === 'outbound')
+                    if(direction === 'outbound' && companyId && tenantId && actionCat === 'DIALER' && dvpCallDirection === 'outbound')
+                    {
+                        redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                        {
+                            var obj = JSON.parse(objString);
+                            if(obj && obj.Context)
+                            {
+                                var nsObj = {
+                                    Ref: uniqueId,
+                                    To: obj.Issuer,
+                                    Timeout: 1000,
+                                    Direction: 'STATELESS',
+                                    From: 'CALLSERVER',
+                                    Callback: '',
+                                    Message: 'agent_disconnected|' + uniqueId + '|INBOUND|' + callerOrigIdName + '|' + callerOrigIdName + '|' + callerDestNum + '|INBOUND|inbound|call|undefined|' + otherLegUniqueId
+                                };
+
+                                extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
+
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT DISCONNECTED - Message : ', reqId, nsObj.Message);
+
+
+                            }
+
+                        })
+                    }
+                    else if(direction === 'inbound' && companyId && tenantId && opCat === 'GATEWAY' && dvpCallDirection === 'outbound')
                     {
                         redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                         {
