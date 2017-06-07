@@ -373,7 +373,7 @@ redisClient.on('error',function(err){
 
                             if(actionCat === 'DIALER')
                             {
-                                extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', evtObj['Caller-Destination-Number'], evtObj['Caller-Caller-ID-Number'], companyId, tenantId);
+                                extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', evtObj['Caller-Caller-ID-Number'], evtObj['Caller-Destination-Number'], companyId, tenantId);
 
                                 var nsObj = {
                                     Ref: uniqueId,
