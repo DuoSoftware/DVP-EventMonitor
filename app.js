@@ -723,7 +723,7 @@ redisClient.on('error',function(err){
                         if(opCat === 'PRIVATE_USER')
                         {
                             //SET RESOURCE STATUS FOR CALL RECEIVING PARTY NORMAL CALLS
-                            redisClient.get('EXTENSION_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + calleeNumber, function(err, objString)
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + calleeNumber, function(err, objString)
                             {
                                 var obj = JSON.parse(objString);
 
@@ -934,7 +934,7 @@ redisClient.on('error',function(err){
                         if(opCat === 'PRIVATE_USER')
                         {
                             //SET RESOURCE STATUS FOR CALL RECEIVING PARTY NORMAL CALLS
-                            redisClient.get('EXTENSION_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + calleeNumber, function(err, objString)
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + calleeNumber, function(err, objString)
                             {
                                 var obj = JSON.parse(objString);
 
