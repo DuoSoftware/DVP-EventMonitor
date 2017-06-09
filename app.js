@@ -679,14 +679,50 @@ redisClient.on('error',function(err){
                     //SET RESOURCE STATUS FOR CALL RECEIVING PARTY ARDS SET CALLS
                     if(ardsClientUuid)
                     {
+                        //IF ARDSCLIIENTUUID IS SET NO NEED TO SEND NOTIFICATIONS
                         redisClient.hset(ardsClientUuid, 'ARDS-Client-Uuid', ardsClientUuid, redisMessageHandler);
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound');
-                    }
-                    else
-                    {
-                        //SET RESOURCE STATUS FOR CALL RECEIVING PARTY NORMAL CALLS
-                        if(direction === 'outbound' && companyId && tenantId && opCat === 'PRIVATE_USER' && dvpCallDirection === 'outbound')
+
+                        if (actionCat === 'DIALER')
                         {
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                            {
+                                var obj = JSON.parse(objString);
+
+                                if(obj && obj.Context)
+                                {
+                                    var nsObj = {
+                                        Ref: uniqueId,
+                                        To: obj.Issuer,
+                                        Timeout: 1000,
+                                        Direction: 'STATELESS',
+                                        From: 'CALLSERVER',
+                                        Callback: ''
+                                    };
+
+                                    nsObj.Message = 'agent_connected|' + uniqueId + '|INBOUND|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|INBOUND|inbound|call|undefined|' + otherlegUniqueId;
+
+                                    extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT CONNECTED - Message : ', reqId, nsObj.Message);
+
+
+                                }
+                                else
+                                {
+                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - CONTEXT NOT FOUND', reqId);
+                                }
+
+                            })
+
+                        }
+                    }
+                    else if(direction === 'outbound' && companyId && tenantId && dvpCallDirection === 'outbound')
+                    {
+
+                        if(opCat === 'PRIVATE_USER')
+                        {
+                            //SET RESOURCE STATUS FOR CALL RECEIVING PARTY NORMAL CALLS
                             redisClient.get('EXTENSION_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + calleeNumber, function(err, objString)
                             {
                                 var obj = JSON.parse(objString);
@@ -694,41 +730,29 @@ redisClient.on('error',function(err){
                                 if(obj && obj.Context)
                                 {
                                     ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
+
                                 }
 
                             })
 
-                        }
-                    }
-
-                    if(direction === 'outbound' && dvpCallDirection === 'outbound' && companyId && tenantId)
-                    {
-
-                        redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
-                        {
-                            var obj = JSON.parse(objString);
-
-                            if(obj && obj.Context)
+                            //SET RESOURCE STATUS FOR CALLING PARTY NORMAL CALLS
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                             {
-                                var nsObj = {
-                                    Ref: uniqueId,
-                                    To: obj.Issuer,
-                                    Timeout: 1000,
-                                    Direction: 'STATELESS',
-                                    From: 'CALLSERVER',
-                                    Callback: ''
-                                };
+                                var obj = JSON.parse(objString);
 
-                                if(actionCat === 'DIALER')
+                                if(obj && obj.Context)
                                 {
-                                    nsObj.Message = 'agent_connected|' + uniqueId + '|INBOUND|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|INBOUND|inbound|call|undefined|' + otherlegUniqueId;
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
 
-                                    extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+                                    var nsObj = {
+                                        Ref: uniqueId,
+                                        To: obj.Issuer,
+                                        Timeout: 1000,
+                                        Direction: 'STATELESS',
+                                        From: 'CALLSERVER',
+                                        Callback: ''
+                                    };
 
-                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT CONNECTED - Message : ', reqId, nsObj.Message);
-                                }
-                                else if(opCat === 'GATEWAY')
-                                {
                                     nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId;
 
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
@@ -736,16 +760,41 @@ redisClient.on('error',function(err){
                                     logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT CONNECTED - Message : ', reqId, nsObj.Message);
                                 }
 
-
-
-                            }
-                            else
+                            })
+                        }
+                        else if(opCat === 'GATEWAY')
+                        {
+                            //SET RESOURCE STATUS FOR CALLING PARTY GW CALLS
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                             {
-                                logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - CONTEXT NOT FOUND', reqId);
-                            }
+                                var obj = JSON.parse(objString);
 
-                        })
+                                if(obj && obj.Context)
+                                {
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
+
+                                    var nsObj = {
+                                        Ref: uniqueId,
+                                        To: obj.Issuer,
+                                        Timeout: 1000,
+                                        Direction: 'STATELESS',
+                                        From: 'CALLSERVER',
+                                        Callback: ''
+                                    };
+
+                                    nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId;
+
+                                    extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT CONNECTED - Message : ', reqId, nsObj.Message);
+                                }
+
+                            })
+                        }
+
+
                     }
+
                 }
 
 
