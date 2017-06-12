@@ -17,6 +17,7 @@ var moment = require('moment');
 var dbOp = require('./DbOperationsHandler.js');
 var ardsHandler = require('./ArdsResourceStateHandler.js');
 var redisHandler = require('./RedisHandler.js');
+var mongoAccessor = require('./MongoAccessor.js');
 
 var winston = require('winston');
 
@@ -384,7 +385,7 @@ redisClient.on('error',function(err){
                                     Callback: ''
                                 };
 
-                                nsObj.Message = 'agent_found|' + uniqueId + '|INBOUND|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|INBOUND|inbound|call|undefined|' + otherlegUniqueId;
+                                nsObj.Message = 'agent_found|' + uniqueId + '|INBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|INBOUND|inbound|call|undefined|' + otherlegUniqueId;
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
@@ -392,6 +393,8 @@ redisClient.on('error',function(err){
                             }
                             else if(opCat === 'GATEWAY')
                             {
+                                extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', callerOrigIdName, callerDestNum, obj.CompanyId, obj.TenantId);
+
                                 var nsObj = {
                                     Ref: uniqueId,
                                     To: obj.Issuer,
@@ -399,7 +402,7 @@ redisClient.on('error',function(err){
                                     Direction: 'STATELESS',
                                     From: 'CALLSERVER',
                                     Callback: '',
-                                    Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId
+                                    Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerOrigIdName + '|' + callerDestNum + '|' + callerDestNum + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId
                                 };
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
@@ -407,7 +410,7 @@ redisClient.on('error',function(err){
                                 logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
 
                                 ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
-                                extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', callerOrigIdName, callerDestNum, obj.CompanyId, obj.TenantId);
+
                             }
 
 
@@ -700,7 +703,7 @@ redisClient.on('error',function(err){
                                         Callback: ''
                                     };
 
-                                    nsObj.Message = 'agent_connected|' + uniqueId + '|INBOUND|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|INBOUND|inbound|call|undefined|' + otherlegUniqueId;
+                                    nsObj.Message = 'agent_connected|' + uniqueId + '|INBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|INBOUND|inbound|call|undefined|' + otherlegUniqueId;
 
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
@@ -759,7 +762,7 @@ redisClient.on('error',function(err){
                                         Callback: ''
                                     };
 
-                                    nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId;
+                                    nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + callerOrigIdName + '|' + callerDestNum + '|' + callerDestNum + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId;
 
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
@@ -883,7 +886,7 @@ redisClient.on('error',function(err){
                                         Direction: 'STATELESS',
                                         From: 'CALLSERVER',
                                         Callback: '',
-                                        Message: 'agent_disconnected|' + uniqueId + '|INBOUND|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|INBOUND|inbound|call|undefined|' + otherLegUniqueId
+                                        Message: 'agent_disconnected|' + uniqueId + '|INBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|INBOUND|inbound|call|undefined|' + otherLegUniqueId
                                     };
 
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
@@ -967,7 +970,7 @@ redisClient.on('error',function(err){
                                         Direction: 'STATELESS',
                                         From: 'CALLSERVER',
                                         Callback: '',
-                                        Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId
+                                        Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + callerOrigIdName + '|' + callerDestNum + '|' + callerDestNum + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId
                                     };
 
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
@@ -1442,6 +1445,38 @@ redisClient.on('error',function(err){
                                     }
 
                                     redisClient.set('SIPPRESENCE:' + realm + ':' + username, JSON.stringify(presObj), redisMessageHandler);
+
+                                    if(usr.GuRefId)
+                                    {
+                                        mongoAccessor.getUserData(usr.GuRefId, function(err, usrData)
+                                        {
+                                            if(usrData)
+                                            {
+                                                var key = 'SIPUSER_RESOURCE_MAP:' + usr.TenantId + ':' + usr.CompanyId + ':' + username;
+
+                                                var obj = {
+                                                    SipURI: username + '@' + realm,
+                                                    Context: usr.ContextId,
+                                                    Issuer : usrData.username,
+                                                    CompanyId : usr.CompanyId,
+                                                    TenantId : usr.TenantId,
+                                                    ResourceId: usrData.resourceid
+                                                };
+
+                                                redisClient.set(key, JSON.stringify(obj), redisMessageHandler);
+
+                                                if(usr.Extension && usr.Extension.Extension)
+                                                {
+                                                    var extkey = 'EXTENSION_RESOURCE_MAP:' + usr.TenantId + ':' + usr.CompanyId + ':' + usr.Extension.Extension;
+
+                                                    redisClient.set(extkey, JSON.stringify(obj), redisMessageHandler);
+                                                }
+                                            }
+                                        })
+                                    }
+
+
+
                                 });
 
 
