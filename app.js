@@ -402,7 +402,7 @@ redisClient.on('error',function(err){
                                     Direction: 'STATELESS',
                                     From: 'CALLSERVER',
                                     Callback: '',
-                                    Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerOrigIdName + '|' + callerDestNum + '|' + callerDestNum + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId
+                                    Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId
                                 };
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
@@ -762,7 +762,7 @@ redisClient.on('error',function(err){
                                         Callback: ''
                                     };
 
-                                    nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + callerOrigIdName + '|' + callerDestNum + '|' + callerDestNum + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId;
+                                    nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId;
 
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
@@ -970,7 +970,7 @@ redisClient.on('error',function(err){
                                         Direction: 'STATELESS',
                                         From: 'CALLSERVER',
                                         Callback: '',
-                                        Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + callerOrigIdName + '|' + callerDestNum + '|' + callerDestNum + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId
+                                        Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId
                                     };
 
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
