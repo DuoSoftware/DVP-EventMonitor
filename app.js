@@ -17,6 +17,7 @@ var moment = require('moment');
 var dbOp = require('./DbOperationsHandler.js');
 var ardsHandler = require('./ArdsResourceStateHandler.js');
 var redisHandler = require('./RedisHandler.js');
+var mongoAccessor = require('./MongoAccessor.js');
 
 var winston = require('winston');
 
@@ -96,6 +97,7 @@ redisClient.on('error',function(err){
         var callerOrigIdName = evtObj['Caller-Orig-Caller-ID-Name'];
         var callerOrigIdNumber = evtObj['Caller-Orig-Caller-ID-Number'];
         var opCat = evtObj['variable_DVP_OPERATION_CAT'];
+        var actionCat = evtObj['variable_DVP_ACTION_CAT'];
         var resourceId = evtObj['variable_ARDS-Resource-Id'];
         var callerContext = evtObj['Caller-Context'];
         var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
@@ -104,6 +106,11 @@ redisClient.on('error',function(err){
         if(!callerOrigIdName)
         {
             callerOrigIdName = evtObj['Other-Leg-Caller-ID-Number'];
+        }
+
+        if(actionCat === 'DIALER')
+        {
+            callerOrigIdName = callerDestNum;
         }
 
 
@@ -353,10 +360,8 @@ redisClient.on('error',function(err){
                 //Sending Resource Status For Agent Outbound Calls
 
 
-                if(direction === 'outbound' && companyId && tenantId)
+                if(direction === 'outbound' && dvpCallDirection === 'outbound' && companyId && tenantId)
                 {
-
-
                     redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                     {
                         var obj = JSON.parse(objString);
@@ -365,8 +370,31 @@ redisClient.on('error',function(err){
                         {
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - SENDING', reqId);
 
-                            if(dvpCallDirection === 'outbound' && opCat === 'GATEWAY')
+                            //for agent dialed outbound calls
+
+                            if(actionCat === 'DIALER')
                             {
+                                extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', evtObj['Caller-Orig-Caller-ID-Number'], evtObj['Caller-Caller-ID-Number'], companyId, tenantId);
+
+                                var nsObj = {
+                                    Ref: uniqueId,
+                                    To: obj.Issuer,
+                                    Timeout: 1000,
+                                    Direction: 'STATELESS',
+                                    From: 'CALLSERVER',
+                                    Callback: ''
+                                };
+
+                                nsObj.Message = 'agent_found|' + uniqueId + '|INBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|INBOUND|inbound|call|undefined|' + otherlegUniqueId;
+
+                                extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+                            }
+                            else if(opCat === 'GATEWAY')
+                            {
+                                extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', callerOrigIdName, callerDestNum, obj.CompanyId, obj.TenantId);
+
                                 var nsObj = {
                                     Ref: uniqueId,
                                     To: obj.Issuer,
@@ -380,9 +408,12 @@ redisClient.on('error',function(err){
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
                                 logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+
+                                ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
+
                             }
-                            ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
-                            extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', callerOrigIdName, callerDestNum, obj.CompanyId, obj.TenantId);
+
+
 
 
                         }
@@ -392,6 +423,9 @@ redisClient.on('error',function(err){
                         }
 
                     })
+
+
+
                 }
 
                 /*if(sipFromUri && direction === 'inbound')
@@ -509,18 +543,47 @@ redisClient.on('error',function(err){
 
                     if(channelHash)
                     {
+
                         var hashResId = channelHash['Agent-Resource-Id'];
-                        var hashCompany = channelHash['DVP-CompanyId'];
-                        var hashTenant = channelHash['DVP-TenantId'];
                         var hashArdsClientUuid = channelHash['ARDS-Client-Uuid'];
                         var hashCallDirection = channelHash['DVP-Call-Direction'];
+                        var hashCompany = channelHash['DVP-CompanyId'];
+                        var hashTenant = channelHash['DVP-TenantId'];
 
-                        if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                        if(hashArdsClientUuid && hashResId)
                         {
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+                            if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                            {
+                                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
 
-                            redisClient.publish('events', pubMessage);
+                                redisClient.publish('events', pubMessage);
+                            }
                         }
+                        else
+                        {
+                            var callerIdNm = channelHash['Caller-Caller-ID-Number'];
+
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + hashTenant + ':' + hashCompany + ':' + callerIdNm, function(err, objString)
+                            {
+                                var obj = JSON.parse(objString);
+
+                                if(obj)
+                                {
+                                    hashResId = obj.ResourceId;
+                                    hashArdsClientUuid = channelUuid;
+
+                                    if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                                    {
+                                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+
+                                        redisClient.publish('events', pubMessage);
+                                    }
+                                }
+                            });
+                        }
+
+
+
 
                     }
 
@@ -536,17 +599,45 @@ redisClient.on('error',function(err){
                     if(channelHash)
                     {
                         var hashResId = channelHash['Agent-Resource-Id'];
-                        var hashCompany = channelHash['DVP-CompanyId'];
-                        var hashTenant = channelHash['DVP-TenantId'];
                         var hashArdsClientUuid = channelHash['ARDS-Client-Uuid'];
                         var hashCallDirection = channelHash['DVP-Call-Direction'];
+                        var hashCompany = channelHash['DVP-CompanyId'];
+                        var hashTenant = channelHash['DVP-TenantId'];
 
-                        if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                        if(hashArdsClientUuid && hashResId)
                         {
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+                            if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                            {
+                                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
 
-                            redisClient.publish('events', pubMessage);
+                                redisClient.publish('events', pubMessage);
+                            }
                         }
+                        else
+                        {
+                            var callerIdNm = channelHash['Caller-Caller-ID-Number'];
+
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + hashTenant + ':' + hashCompany + ':' + callerIdNm, function(err, objString)
+                            {
+                                var obj = JSON.parse(objString);
+
+                                if(obj)
+                                {
+                                    hashResId = obj.ResourceId;
+                                    hashArdsClientUuid = channelUuid;
+
+                                    if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                                    {
+                                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+
+                                        redisClient.publish('events', pubMessage);
+                                    }
+                                }
+                            });
+                        }
+
+
+
 
                     }
 
@@ -582,20 +673,60 @@ redisClient.on('error',function(err){
 
                     })
                 }
+                else if(opCat === 'FAX_INBOUND')
+                {
+                    extApiAccess.CreateEngagement(reqId, uniqueId, 'fax', 'inbound', callerIdNum, callerDestNum, companyId, tenantId);
+                }
                 else
                 {
                     //SET RESOURCE STATUS FOR CALL RECEIVING PARTY ARDS SET CALLS
                     if(ardsClientUuid)
                     {
+                        //IF ARDSCLIIENTUUID IS SET NO NEED TO SEND NOTIFICATIONS
                         redisClient.hset(ardsClientUuid, 'ARDS-Client-Uuid', ardsClientUuid, redisMessageHandler);
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound');
-                    }
-                    else
-                    {
-                        //SET RESOURCE STATUS FOR CALL RECEIVING PARTY NORMAL CALLS
-                        if(direction === 'outbound' && companyId && tenantId && opCat === 'PRIVATE_USER' && dvpCallDirection === 'outbound')
+
+                        if (actionCat === 'DIALER')
                         {
-                            redisClient.get('EXTENSION_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + calleeNumber, function(err, objString)
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                            {
+                                var obj = JSON.parse(objString);
+
+                                if(obj && obj.Context)
+                                {
+                                    var nsObj = {
+                                        Ref: uniqueId,
+                                        To: obj.Issuer,
+                                        Timeout: 1000,
+                                        Direction: 'STATELESS',
+                                        From: 'CALLSERVER',
+                                        Callback: ''
+                                    };
+
+                                    nsObj.Message = 'agent_connected|' + uniqueId + '|INBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|INBOUND|inbound|call|undefined|' + otherlegUniqueId;
+
+                                    extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT CONNECTED - Message : ', reqId, nsObj.Message);
+
+
+                                }
+                                else
+                                {
+                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - CONTEXT NOT FOUND', reqId);
+                                }
+
+                            })
+
+                        }
+                    }
+                    else if(direction === 'outbound' && companyId && tenantId && dvpCallDirection === 'outbound')
+                    {
+
+                        if(opCat === 'PRIVATE_USER')
+                        {
+                            //SET RESOURCE STATUS FOR CALL RECEIVING PARTY NORMAL CALLS
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + calleeNumber, function(err, objString)
                             {
                                 var obj = JSON.parse(objString);
 
@@ -605,48 +736,45 @@ redisClient.on('error',function(err){
 
                                 }
 
-                            })
+                            });
+
+
 
                         }
-                    }
 
-                    if(direction === 'outbound' && companyId && tenantId)
-                    {
-
-                        redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                        //SET RESOURCE STATUS FOR CALLING PARTY NORMAL CALLS
+                        if(opCat === 'GATEWAY' || opCat === 'PRIVATE_USER')
                         {
-                            var obj = JSON.parse(objString);
-
-                            if(obj && obj.Context)
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                             {
+                                var obj = JSON.parse(objString);
 
-                                if(dvpCallDirection === 'outbound' && opCat === 'GATEWAY')
+                                if(obj && obj.Context)
                                 {
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
+
                                     var nsObj = {
                                         Ref: uniqueId,
                                         To: obj.Issuer,
                                         Timeout: 1000,
                                         Direction: 'STATELESS',
                                         From: 'CALLSERVER',
-                                        Callback: '',
-                                        Message: 'agent_connected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId
+                                        Callback: ''
                                     };
+
+                                    nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherlegUniqueId;
 
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
                                     logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT CONNECTED - Message : ', reqId, nsObj.Message);
                                 }
 
+                            })
+                        }
 
 
-                            }
-                            else
-                            {
-                                logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - CONTEXT NOT FOUND', reqId);
-                            }
-
-                        })
                     }
+
                 }
 
 
@@ -743,19 +871,28 @@ redisClient.on('error',function(err){
                     if(ardsClientUuid)
                     {
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '', 'inbound');
-                    }
-                    else
-                    {
-                        //SET RESOURCE STATUS FOR CALL RECEIVING PARTY NORMAL CALLS
-                        if(direction === 'outbound' && companyId && tenantId && opCat === 'PRIVATE_USER' && dvpCallDirection === 'outbound')
+
+                        if (actionCat === 'DIALER')
                         {
-                            redisClient.get('EXTENSION_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + calleeNumber, function(err, objString)
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                             {
                                 var obj = JSON.parse(objString);
-
                                 if(obj && obj.Context)
                                 {
-                                    ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
+                                    var nsObj = {
+                                        Ref: uniqueId,
+                                        To: obj.Issuer,
+                                        Timeout: 1000,
+                                        Direction: 'STATELESS',
+                                        From: 'CALLSERVER',
+                                        Callback: '',
+                                        Message: 'agent_disconnected|' + uniqueId + '|INBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|INBOUND|inbound|call|undefined|' + otherLegUniqueId
+                                    };
+
+                                    extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
+
+                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT DISCONNECTED - Message : ', reqId, nsObj.Message);
+
 
                                 }
 
@@ -763,26 +900,7 @@ redisClient.on('error',function(err){
 
                         }
                     }
-
-                    var varCallerIdNum = evtObj['variable_origination_caller_id_number'];
-                    var varOrigLegUuid = evtObj['variable_originating_leg_uuid'];
-
-                    if(!varOrigLegUuid)
-                    {
-                        varOrigLegUuid = uniqueId;
-                    }
-
-                    if(opCat === 'ATT_XFER_GATEWAY' && direction === 'outbound' && callerContext === 'PBXFeatures' && dvpCallDirection === 'outbound')
-                    {
-                        extApiAccess.BillEndCall(reqId, varOrigLegUuid, varCallerIdNum, callerDestNum, 'minute', companyId, tenantId);
-                    }
-
-                    if(opCat === 'GATEWAY' && direction === 'outbound' && dvpCallDirection === 'outbound' && otherLegUniqueId)
-                    {
-                        extApiAccess.BillEndCall(reqId, otherLegUniqueId, varCallerIdNum, callerDestNum, 'minute', companyId, tenantId);
-                    }
-
-                    if(evtObj['variable_DVP_CLICKTOCALL'] === 'C2C' && direction === 'outbound' && companyId && tenantId && opCat === 'GATEWAY' && dvpCallDirection === 'outbound')
+                    else if(evtObj['variable_DVP_CLICKTOCALL'] === 'C2C' && direction === 'outbound' && companyId && tenantId && opCat === 'GATEWAY' && dvpCallDirection === 'outbound')
                     {
                         callerOrigIdName = evtObj['Caller-Caller-ID-Number'];
 
@@ -813,16 +931,38 @@ redisClient.on('error',function(err){
 
                         })
                     }
-
-                    if(direction === 'inbound' && companyId && tenantId && opCat === 'GATEWAY' && dvpCallDirection === 'outbound')
+                    else if(direction === 'outbound' && companyId && tenantId && dvpCallDirection === 'outbound')
                     {
-                        redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                        //SET RESOURCE STATUS FOR CALL RECEIVING PARTY NORMAL CALLS
+                        if(opCat === 'PRIVATE_USER')
                         {
-                            var obj = JSON.parse(objString);
-                            if(obj && obj.Context)
+                            //SET RESOURCE STATUS FOR CALL RECEIVING PARTY NORMAL CALLS
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + calleeNumber, function(err, objString)
                             {
-                                if(dvpCallDirection === 'outbound' && opCat === 'GATEWAY')
+                                var obj = JSON.parse(objString);
+
+                                if(obj && obj.Context)
                                 {
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
+
+                                }
+
+                            })
+
+
+
+                        }
+
+                        //SET RESOURCE STATUS FOR CALLING PARTY NORMAL CALLS
+                        if(opCat === 'GATEWAY' || opCat === 'PRIVATE_USER')
+                        {
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                            {
+                                var obj = JSON.parse(objString);
+                                if(obj && obj.Context)
+                                {
+                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
+
                                     var nsObj = {
                                         Ref: uniqueId,
                                         To: obj.Issuer,
@@ -836,32 +976,32 @@ redisClient.on('error',function(err){
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
 
                                     logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT DISCONNECTED - Message : ', reqId, nsObj.Message);
+
+
                                 }
 
-
-                            }
-
-                        })
+                            })
+                        }
                     }
 
+                    var varCallerIdNum = evtObj['variable_origination_caller_id_number'];
+                    var varOrigLegUuid = evtObj['variable_originating_leg_uuid'];
 
-
-                    if(direction === 'outbound' && companyId && tenantId)
+                    if(!varOrigLegUuid)
                     {
-                        //var callerOrigIdName = evtObj['Caller-Orig-Caller-ID-Name'];
-
-                        redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
-                        {
-                            var obj = JSON.parse(objString);
-                            if(obj && obj.Context)
-                            {
-                                ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
-
-
-                            }
-
-                        })
+                        varOrigLegUuid = uniqueId;
                     }
+
+                    if(opCat === 'ATT_XFER_GATEWAY' && direction === 'outbound' && callerContext === 'PBXFeatures' && dvpCallDirection === 'outbound')
+                    {
+                        extApiAccess.BillEndCall(reqId, varOrigLegUuid, varCallerIdNum, callerDestNum, 'minute', companyId, tenantId);
+                    }
+
+                    if(opCat === 'GATEWAY' && direction === 'outbound' && dvpCallDirection === 'outbound' && otherLegUniqueId)
+                    {
+                        extApiAccess.BillEndCall(reqId, otherLegUniqueId, varCallerIdNum, callerDestNum, 'minute', companyId, tenantId);
+                    }
+
 
                 }
 
@@ -1305,6 +1445,38 @@ redisClient.on('error',function(err){
                                     }
 
                                     redisClient.set('SIPPRESENCE:' + realm + ':' + username, JSON.stringify(presObj), redisMessageHandler);
+
+                                    if(usr.GuRefId)
+                                    {
+                                        mongoAccessor.getUserData(usr.GuRefId, function(err, usrData)
+                                        {
+                                            if(usrData)
+                                            {
+                                                var key = 'SIPUSER_RESOURCE_MAP:' + usr.TenantId + ':' + usr.CompanyId + ':' + username;
+
+                                                var obj = {
+                                                    SipURI: username + '@' + realm,
+                                                    Context: usr.ContextId,
+                                                    Issuer : usrData.username,
+                                                    CompanyId : usr.CompanyId,
+                                                    TenantId : usr.TenantId,
+                                                    ResourceId: usrData.resourceid
+                                                };
+
+                                                redisClient.set(key, JSON.stringify(obj), redisMessageHandler);
+
+                                                if(usr.Extension && usr.Extension.Extension)
+                                                {
+                                                    var extkey = 'EXTENSION_RESOURCE_MAP:' + usr.TenantId + ':' + usr.CompanyId + ':' + usr.Extension.Extension;
+
+                                                    redisClient.set(extkey, JSON.stringify(obj), redisMessageHandler);
+                                                }
+                                            }
+                                        })
+                                    }
+
+
+
                                 });
 
 
@@ -1427,6 +1599,7 @@ redisClient.on('error',function(err){
                 evtObj['Caller-Orig-Caller-ID-Name'] = event.getHeader('Caller-Orig-Caller-ID-Name');
                 evtObj['Caller-Orig-Caller-ID-Number'] = event.getHeader('Caller-Orig-Caller-ID-Number');
                 evtObj['variable_DVP_OPERATION_CAT'] = event.getHeader('variable_DVP_OPERATION_CAT');
+                evtObj['variable_DVP_ACTION_CAT'] = event.getHeader('variable_DVP_ACTION_CAT');
                 evtObj['variable_ARDS-Resource-Id'] = event.getHeader('variable_ARDS-Resource-Id');
                 evtObj['Caller-Context'] = event.getHeader('Caller-Context');
                 evtObj['Channel-State'] = event.getHeader('Channel-State');
@@ -1649,14 +1822,19 @@ if(evtConsumeType)
 
         var connection = amqp.createConnection({ host: rmqIp, port: rmqPort, login: rmqUser, password: rmqPassword});
 
+        logger.debug('[DVP-EventMonitor.handler] - [%s] - AMQP Creating connection ' + rmqIp + ' ' + rmqPort + ' ' + rmqUser + ' ' + rmqPassword);
+
         connection.on('connect', function()
         {
             amqpConState = 'CONNECTED';
+            logger.debug('[DVP-EventMonitor.handler] - [%s] - AMQP Connection CONNECTED');
         });
 
         connection.on('ready', function()
         {
             amqpConState = 'READY';
+
+            logger.debug('[DVP-EventMonitor.handler] - [%s] - AMQP Connection READY');
 
             connection.queue('FS_EVENTS', {durable: true, autoDelete: false}, function (q) {
                 q.bind('#');
@@ -1675,6 +1853,7 @@ if(evtConsumeType)
 
         connection.on('error', function(e)
         {
+            logger.error('[DVP-EventMonitor.handler] - [%s] - AMQP Connection ERROR');
             amqpConState = 'CLOSE';
         });
     }
