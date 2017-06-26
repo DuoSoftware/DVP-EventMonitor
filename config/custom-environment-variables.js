@@ -67,6 +67,16 @@ module.exports = {
         "password": "SYS_RABBITMQ_PASSWORD"
     },
 
+    Mongo:
+    {
+        "ip":"SYS_MONGO_HOST",
+        "port":"SYS_MONGO_PORT",
+        "dbname":"SYS_MONGO_DB",
+        "password":"SYS_MONGO_PASSWORD",
+        "user":"SYS_MONGO_USER",
+        "replicaset" :"SYS_MONGO_REPLICASETNAME"
+    },
+
     Token: "HOST_TOKEN",
     billingEnabled: "SYS_BILLING_ENABLED",
     evtConsumeType: "HOST_EVENT_CONSUME_TYPE"
