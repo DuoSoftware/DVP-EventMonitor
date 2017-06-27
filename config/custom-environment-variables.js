@@ -64,7 +64,8 @@ module.exports = {
         "ip": "SYS_RABBITMQ_HOST",
         "port": "SYS_RABBITMQ_PORT",
         "user": "SYS_RABBITMQ_USER",
-        "password": "SYS_RABBITMQ_PASSWORD"
+        "password": "SYS_RABBITMQ_PASSWORD",
+        "vhost":"SYS_RABBITMQ_VHOST"
     },
 
     Mongo:

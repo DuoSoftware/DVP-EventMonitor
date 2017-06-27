@@ -1820,9 +1820,30 @@ if(evtConsumeType)
     {
         var amqpConState = 'CLOSED';
 
-        var connection = amqp.createConnection({ host: rmqIp, port: rmqPort, login: rmqUser, password: rmqPassword});
+       // var connection = amqp.createConnection({ host: rmqIp, port: rmqPort, login: rmqUser, password: rmqPassword});
 
-        logger.debug('[DVP-EventMonitor.handler] - [%s] - AMQP Creating connection ' + rmqIp + ' ' + rmqPort + ' ' + rmqUser + ' ' + rmqPassword);
+        if(config.RabbitMQ.ip) {
+            config.RabbitMQ.ip = config.RabbitMQ.ip.split(",");
+        }
+
+
+        var connection = amqp.createConnection({
+            //url: queueHost,
+            host: config.RabbitMQ.ip,
+            port: config.RabbitMQ.port,
+            login: config.RabbitMQ.user,
+            password: config.RabbitMQ.password,
+            vhost: config.RabbitMQ.vhost,
+            noDelay: true,
+            heartbeat:10
+        }, {
+            reconnect: true,
+            reconnectBackoffStrategy: 'linear',
+            reconnectExponentialLimit: 120000,
+            reconnectBackoffTime: 1000
+        });
+
+        //logger.debug('[DVP-EventMonitor.handler] - [%s] - AMQP Creating connection ' + rmqIp + ' ' + rmqPort + ' ' + rmqUser + ' ' + rmqPassword);
 
         connection.on('connect', function()
         {

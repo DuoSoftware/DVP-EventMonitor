@@ -59,7 +59,8 @@ module.exports = {
         "ip":"45.55.142.207",
         "port":"5672",
         "user": "admin",
-        "password": "admin"
+        "password": "admin",
+        "vhost":'/'
     },
 
     Mongo:
