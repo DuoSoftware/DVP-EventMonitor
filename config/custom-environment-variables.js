@@ -52,11 +52,20 @@ module.exports = {
         path: 'WEBAPI_PATH'
     },
 
-    Redis: {
-        ip: 'SYS_REDIS_HOST',
-        port: 'SYS_REDIS_PORT',
-        password: "SYS_REDIS_PASSWORD",
-        db: "SYS_REDIS_DB_PROCESSEDCDR"
+    "Redis":
+    {
+        "mode":"SYS_REDIS_MODE",
+        "ip": "SYS_REDIS_HOST",
+        "port": "SYS_REDIS_PORT",
+        "user": "SYS_REDIS_USER",
+        "password": "SYS_REDIS_PASSWORD",
+        "db": "SYS_REDIS_DB",
+        "sentinels":{
+            "hosts": "SYS_REDIS_SENTINEL_HOSTS",
+            "port":"SYS_REDIS_SENTINEL_PORT",
+            "name":"SYS_REDIS_SENTINEL_NAME"
+        }
+
     },
 
     "RabbitMQ":
