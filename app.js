@@ -854,7 +854,7 @@ redisClient.on('error',function(err){
 
                 if((opCat === 'ATT_XFER_USER') && ardsCompany && ardsTenant && ardsClientUuid)
                 {
-                    redisClient.get('EXTENSION_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + calleeNumber, function(err, objString)
+                    redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + evtObj['variable_sip_to_user'], function(err, objString)
                     {
 
                         var obj = JSON.parse(objString);
