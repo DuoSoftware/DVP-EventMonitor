@@ -48,18 +48,35 @@ module.exports = {
         path: '/CSReqWebApi/api/'
     },
 
-    Redis: {
-        ip: '45.55.142.207',
-        port: 6389,
-        password: "DuoS123",
-        db: 4
+    //Redis: {
+    //    ip: '45.55.142.207',
+    //    port: 6389,
+    //    password: "DuoS123",
+    //    db: 4
+    //},
+
+    "Redis":
+    {
+        "mode":"sentinel",//instance, cluster, sentinel
+        "ip": "45.55.142.207",
+        "port": 6389,
+        "user": "duo",
+        "password": "DuoS123",
+        "db": 4,
+        "sentinels":{
+            "hosts": "138.197.90.92,45.55.205.92,162.243.81.39",
+            "port":16389,
+            "name":"redis-cluster"
+        }
+
     },
 
     RabbitMQ: {
         "ip":"45.55.142.207",
         "port":"5672",
         "user": "admin",
-        "password": "admin"
+        "password": "admin",
+        "vhost":'/'
     },
 
     Mongo:
