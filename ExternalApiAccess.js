@@ -474,6 +474,63 @@ var SendNotificationInitiate = function(reqId, eventname, eventuuid, payload, co
     }
 };
 
+var SendNotificationBroadcast = function(reqId, eventname, eventuuid, payload, companyId, tenantId)
+{
+    try
+    {
+        var nsIp = config.NS.ip;
+        var nsPort = config.NS.port;
+        var nsVersion = config.NS.version;
+
+        var token = config.Token;
+
+        var httpUrl = util.format('http://%s/DVP/API/%s/NotificationService/Notification/Broadcast', nsIp, nsVersion);
+
+        if(validator.isIP(nsIp))
+        {
+            httpUrl = util.format('http://%s:%d/DVP/API/%s/NotificationService/Notification/Broadcast', nsIp, nsPort, nsVersion);
+        }
+
+
+
+        var jsonStr = JSON.stringify(payload);
+
+        var options = {
+            url: httpUrl,
+            method: 'POST',
+            headers: {
+                'authorization': 'bearer ' + token,
+                'content-type': 'application/json',
+                'eventname': eventname,
+                'eventuuid': eventuuid,
+                'companyinfo': tenantId + ':' + companyId
+            },
+            body: jsonStr
+        };
+
+        logger.debug('[DVP-EventMonitor.SendNotificationBroadcast] - [%s] - Creating Api Url : %s', reqId, httpUrl);
+
+
+        httpReq.post(options, function (error, response, body)
+        {
+            if (!error && response.statusCode >= 200 && response.statusCode <= 299)
+            {
+                logger.debug('[DVP-EventMonitor.SendNotificationBroadcast] - [%s] - Send Notification Success : %s', reqId, body);
+            }
+            else
+            {
+                logger.error('[DVP-EventMonitor.SendNotificationBroadcast] - [%s] - Send Notification Fail', reqId, error);
+            }
+        })
+
+    }
+    catch(ex)
+    {
+        logger.error('[DVP-EventMonitor.SendNotificationBroadcast] - [%s] - ERROR Occurred', reqId, ex);
+
+    }
+};
+
 var CreateEngagement = function(reqId, sessionId, channel, direction, from, to, companyId, tenantId)
 {
     try
@@ -543,6 +600,7 @@ module.exports.GetModCallCenterAgentCount = GetModCallCenterAgentCount;
 module.exports.SetMaxChanLimit = SetMaxChanLimit;
 module.exports.SendNotificationByKey = SendNotificationByKey;
 module.exports.SendNotificationInitiate = SendNotificationInitiate;
+module.exports.SendNotificationBroadcast = SendNotificationBroadcast;
 module.exports.CreateEngagement = CreateEngagement;
 module.exports.BillCall = BillCall;
 module.exports.BillEndCall = BillEndCall;
