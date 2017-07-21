@@ -1716,20 +1716,64 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         evtData.TenantId = ardsTenant;
                         evtData.EventParams = obj;
 
-                        var jsonStr = JSON.stringify(evtData);
 
-                        redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
 
                         if(action === 'agent-rejected')
                         {
-
                             ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Reject', 'Reject', reason, 'inbound');
-                        }
-                        else if(action === 'agent-routed')
-                        {
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", ardsTenant, ardsCompany, "ARDS", "AGENT", "ROUTED", "", "", ardsClientUuid);
 
-                            redisClient.publish('events', pubMessage);
+
+                            var evResource =  evtObj['ARDS-Resource-Name'];
+                            var eventParam = util.format("The call is rejected by %s", evResource);
+                            evtData.EventParams = eventParam;
+                            var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                        }
+                        else if(action === 'agent-connected')
+                        {
+                            var evResource =  evtObj['ARDS-Resource-Name'];
+                            var eventParam = util.format("The call is answered by %s", evResource);
+                            evtData.EventParams = eventParam;
+                            var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+
+                        }
+                        else if(action === 'agent-disconnected')
+                        {
+                            var evResource =  evtObj['ARDS-Resource-Name'];
+                            var eventParam = util.format("The call is disconnected by %s", evResource);
+                            evtData.EventParams = eventParam;
+                            var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+
+                        }
+                        else if(action === 'ards_added')
+                        {
+                            var evResource =  evtObj['ARDS-Call-Skill'];
+                            var eventParam = util.format("The call is added to %s", evResource);
+                            evtData.EventParams = eventParam;
+                            var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+
+                        }
+                        else if(action === 'client-left')
+                        {
+                            var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+
+                        }
+                        else if(action === 'agent-found')
+                        {
+                            var evResource =  evtObj['ARDS-Call-Skill'];
+                            var eventParam = util.format("%s is selected to route the call", evResource);
+                            evtData.EventParams = eventParam;
+                            var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+
+                        }else{
+
+                            var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
 
                         }
 
