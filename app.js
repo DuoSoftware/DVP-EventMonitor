@@ -2058,7 +2058,7 @@ if(evtConsumeType)
 
         connection.on('error', function(e)
         {
-            logger.error('[DVP-EventMonitor.handler] - [%s] - AMQP Connection ERROR');
+            logger.error('[DVP-EventMonitor.handler] - [%s] - AMQP Connection ERROR', e);
             amqpConState = 'CLOSE';
         });
     }
