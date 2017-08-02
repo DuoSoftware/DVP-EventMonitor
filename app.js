@@ -219,7 +219,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                             if(superuser.phoneNumber && superuser.phoneNumber.contact)
                             {
-                                sendMailSMS(reqId, superuser.company, superuser.tenant, null, evtObj['Gateway'] + ' Gateway is down', superuser.phoneNumber.contact);
+                                sendMailSMS(reqId, superuser.company, superuser.tenant, null, evtObj['Gateway'] + ' Gateway is DOWN at ' + evtObj['Event-Date-GMT'], superuser.phoneNumber.contact);
                             }
 
 
