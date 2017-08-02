@@ -214,7 +214,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         {
                             if(superuser.email && superuser.email.contact)
                             {
-                                sendMailSMS(reqId, superuser.company, superuser.tenant, superuser.email.contact, evtObj['Gateway'] + ' Gateway is down', null);
+                                sendMailSMS(reqId, superuser.company, superuser.tenant, superuser.email.contact, evtObj['Gateway'] + ' Gateway is DOWN at '  + evtObj['Event-Date-GMT'], null);
                             }
 
                             if(superuser.phoneNumber && superuser.phoneNumber.contact)
