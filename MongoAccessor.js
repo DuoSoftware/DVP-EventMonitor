@@ -90,4 +90,13 @@ var getUserData = function(id, callback)
     });
 };
 
+var getSuperUsers = function(callback)
+{
+    User.find({'user_meta.role': "superadmin"}).exec(function (err, userList)
+    {
+        callback(err, userList);
+    });
+};
+
 module.exports.getUserData = getUserData;
+module.exports.getSuperUsers = getSuperUsers;
