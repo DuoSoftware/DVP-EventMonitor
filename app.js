@@ -18,6 +18,8 @@ var dbOp = require('./DbOperationsHandler.js');
 var ardsHandler = require('./ArdsResourceStateHandler.js');
 var redisHandler = require('./RedisHandler.js');
 var mongoAccessor = require('./MongoAccessor.js');
+var _ = require('lodash');
+var mailSender = require('./MailSender.js').PublishToQueue;
 
 var winston = require('winston');
 
@@ -155,6 +157,84 @@ redisClient.on('error',function(err){
         {
             logger.error('[DVP-EventMonitor.handler] - REDIS ERROR', err);
         }
+    };
+
+var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber)
+{
+    var sendObj = {
+        "company": companyId,
+        "tenant": tenantId
+    };
+
+    sendObj.from = "facetone_gw_availability";
+    sendObj.subject = "Gateway Down";
+    sendObj.body = message;
+
+    if(email)
+    {
+        sendObj.to = email;
+        mailSender("EMAILOUT", sendObj);
+
+    }
+
+    if(smsnumber)
+    {
+        sendObj.to = smsnumber;
+        mailSender("SMSOUT", sendObj);
+
+    }
+
+
+};
+
+    var notifyGatewayStatus = function(reqId, status, evtObj)
+    {
+        mongoAccessor.getSuperUsers(function(err, usrData)
+        {
+            if(usrData && usrData.length > 0)
+            {
+                var issuers = _.map(usrData, 'username');
+                var nsObj = {
+                    Ref: evtObj['Gateway'],
+                    clients: issuers,
+                    Timeout: 1000,
+                    Direction: 'STATELESS',
+                    From: 'CALLSERVER',
+                    Callback: '',
+                    Message: JSON.stringify(evtObj)
+                };
+
+                extApiAccess.SendNotificationBroadcast(reqId, status, evtObj['Gateway'], nsObj, usrData[0].company, usrData[0].tenant);
+
+                if(status === 'gateway_state' && evtObj['Ping-Status'] === 'DOWN')
+                {
+                    usrData.forEach(function(superuser)
+                    {
+                        if(superuser.username)
+                        {
+                            if(superuser.email && superuser.email.contact)
+                            {
+                                sendMailSMS(reqId, superuser.company, superuser.tenant, superuser.email.contact, evtObj['Gateway'] + ' Gateway is DOWN at '  + evtObj['Event-Date-GMT'], null);
+                            }
+
+                            if(superuser.phoneNumber && superuser.phoneNumber.contact)
+                            {
+                                sendMailSMS(reqId, superuser.company, superuser.tenant, null, evtObj['Gateway'] + ' Gateway is DOWN at ' + evtObj['Event-Date-GMT'], superuser.phoneNumber.contact);
+                            }
+
+
+                        }
+
+                    });
+                }
+
+            }
+            else
+            {
+                logger.debug('[DVP-EventMonitor.handler] - [%s] - No superusers to broadcast message', reqId);
+            }
+
+        });
     };
 
     var eventHandler = function(reqId, evtObj)
@@ -1586,6 +1666,18 @@ redisClient.on('error',function(err){
 
 
                                 break;
+                            case 'sofia::gateway_add':
+                                redisClient.set('TRUNK_AVAILABILITY:' + evtObj['Gateway'], JSON.stringify(evtObj), redisMessageHandler);
+                                notifyGatewayStatus(reqId, 'gateway_add', evtObj);
+                                break;
+                            case 'sofia::gateway_delete':
+                                redisClient.del('TRUNK_AVAILABILITY:' + evtObj['Gateway'], redisMessageHandler);
+                                notifyGatewayStatus(reqId, 'gateway_delete', evtObj);
+                                break;
+                            case 'sofia::gateway_state':
+                                redisClient.set('TRUNK_AVAILABILITY:' + evtObj['Gateway'], JSON.stringify(evtObj), redisMessageHandler);
+                                notifyGatewayStatus(reqId, 'gateway_state', evtObj);
+                                break;
 
                         }
 
@@ -1624,20 +1716,64 @@ redisClient.on('error',function(err){
                         evtData.TenantId = ardsTenant;
                         evtData.EventParams = obj;
 
-                        var jsonStr = JSON.stringify(evtData);
 
-                        redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
 
                         if(action === 'agent-rejected')
                         {
-
                             ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Reject', 'Reject', reason, 'inbound');
-                        }
-                        else if(action === 'agent-routed')
-                        {
-                            var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", ardsTenant, ardsCompany, "ARDS", "AGENT", "ROUTED", "", "", ardsClientUuid);
 
-                            redisClient.publish('events', pubMessage);
+
+                            var evResource =  evtObj['ARDS-Resource-Name'];
+                            var eventParam = util.format("The call is rejected by %s", evResource);
+                            evtData.EventParams = eventParam;
+                            var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                        }
+                        else if(action === 'agent-connected')
+                        {
+                            var evResource =  evtObj['ARDS-Resource-Name'];
+                            var eventParam = util.format("The call is answered by %s", evResource);
+                            evtData.EventParams = eventParam;
+                            var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+
+                        }
+                        else if(action === 'agent-disconnected')
+                        {
+                            var evResource =  evtObj['ARDS-Resource-Name'];
+                            var eventParam = util.format("The call is disconnected by %s", evResource);
+                            evtData.EventParams = eventParam;
+                            var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+
+                        }
+                        else if(action === 'ards-added')
+                        {
+                            var evResource =  evtObj['ARDS-Call-Skill'];
+                            var eventParam = util.format("The call is added to %s", evResource);
+                            evtData.EventParams = eventParam;
+                            var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+
+                        }
+                        else if(action === 'client-left')
+                        {
+                            var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+
+                        }
+                        else if(action === 'agent-found')
+                        {
+                            var evResource =  evtObj['ARDS-Resource-Name'];
+                            var eventParam = util.format("%s is selected to route the call", evResource);
+                            evtData.EventParams = eventParam;
+                            var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+
+                        }else{
+
+                            var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
 
                         }
 
@@ -1966,7 +2102,7 @@ if(evtConsumeType)
 
         connection.on('error', function(e)
         {
-            logger.error('[DVP-EventMonitor.handler] - [%s] - AMQP Connection ERROR');
+            logger.error('[DVP-EventMonitor.handler] - [%s] - AMQP Connection ERROR', e);
             amqpConState = 'CLOSE';
         });
     }
