@@ -562,7 +562,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                 logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
                             }
-                            else if(opCat === 'GATEWAY')
+                            else if(opCat === 'GATEWAY' || opCat === 'PRIVATE_USER')
                             {
                                 extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', callerOrigIdName, callerDestNum, obj.CompanyId, obj.TenantId);
 
@@ -832,7 +832,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 {
 
 
-                    redisClient.get('EXTENSION_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + calleeNumber, function(err, objString)
+                    redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + calleeNumber, function(err, objString)
                     {
 
                         var obj = JSON.parse(objString);
@@ -922,7 +922,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                 if(obj && obj.Context)
                                 {
-                                    ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
+                                    //ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
 
                                     var nsObj = {
                                         Ref: uniqueId,
