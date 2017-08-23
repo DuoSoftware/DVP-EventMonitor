@@ -752,7 +752,7 @@ redisClient.on('error',function(err){
                 {
 
 
-                    redisClient.get('EXTENSION_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + calleeNumber, function(err, objString)
+                    redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + calleeNumber, function(err, objString)
                     {
 
                         var obj = JSON.parse(objString);
