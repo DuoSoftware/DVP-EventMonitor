@@ -451,7 +451,7 @@ var SendNotificationInitiate = function(reqId, eventname, eventuuid, payload, co
             body: jsonStr
         };
 
-        logger.debug('[DVP-EventMonitor.SendNotificationByKey] - [%s] - Creating Api Url : %s', reqId, httpUrl);
+        logger.debug('[DVP-EventMonitor.SendNotificationByKey] - [%s] - Creating Api Url : %s - Body : ', reqId, httpUrl, jsonStr);
 
 
         httpReq.post(options, function (error, response, body)
