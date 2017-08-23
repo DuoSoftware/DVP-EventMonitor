@@ -1176,6 +1176,36 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 }
 
+                //Sending Notification - Transfer Fail
+
+                if((opCat === 'ATT_XFER_USER' || opCat === 'ATT_XFER_GATEWAY') && evtObj['Caller-Context'] === 'PBXFeatures' && evtObj['Call-Direction'] === 'outbound' && evtObj['Hangup-Cause'] !== 'NORMAL_CLEARING' && evtObj['Other-Leg-Callee-ID-Number'])
+                {
+                    redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + evtObj['Other-Leg-Callee-ID-Number'], function(err, objString)
+                    {
+                        var obj = JSON.parse(objString);
+                        if(obj && obj.Context)
+                        {
+                            var transCallUuid = evtObj['variable_call_uuid'];
+                            var nsObj = {
+                                Ref: uniqueId,
+                                To: obj.Issuer,
+                                Timeout: 1000,
+                                Direction: 'STATELESS',
+                                From: 'CALLSERVER',
+                                Callback: '',
+                                Message: 'transfer_failed|' + uniqueId + '|OUTBOUND|' + evtObj['Other-Leg-Callee-ID-Number'] + '|' + evtObj['Caller-Destination-Number'] + '|OUTBOUND|outbound|call|undefined|' + transCallUuid
+                            };
+
+                            extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
+
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT TRANSFER FAILED - Message : ', reqId, nsObj.Message);
+
+
+                        }
+
+                    })
+                }
+
                 break;
 
             case 'CHANNEL_DESTROY':
