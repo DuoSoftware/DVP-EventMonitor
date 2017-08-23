@@ -482,7 +482,7 @@ redisClient.on('error',function(err){
 
                                 logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
                             }
-                            else if(opCat === 'GATEWAY')
+                            else if(opCat === 'GATEWAY' || opCat === 'PRIVATE_USER')
                             {
                                 extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', callerOrigIdName, callerDestNum, obj.CompanyId, obj.TenantId);
 
@@ -842,7 +842,7 @@ redisClient.on('error',function(err){
 
                                 if(obj && obj.Context)
                                 {
-                                    ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
+                                    //ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
 
                                     var nsObj = {
                                         Ref: uniqueId,
