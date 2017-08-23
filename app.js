@@ -1196,7 +1196,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                 Message: 'transfer_failed|' + uniqueId + '|OUTBOUND|' + evtObj['Other-Leg-Callee-ID-Number'] + '|' + evtObj['Caller-Destination-Number'] + '|OUTBOUND|outbound|call|undefined|' + transCallUuid
                             };
 
-                            extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
+                            extApiAccess.SendNotificationInitiate(reqId, 'transfer_failed', uniqueId, nsObj, companyId, tenantId);
 
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT TRANSFER FAILED - Message : ', reqId, nsObj.Message);
 
