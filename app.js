@@ -1204,7 +1204,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                             Direction: 'STATELESS',
                                             From: 'CALLSERVER',
                                             Callback: '',
-                                            Message: 'transfer_failed|' + uniqueId + '|OUTBOUND|' + nameSplit[0] + '|' + nameSplit[0] + '|OUTBOUND|outbound|call|undefined|' + transCallUuid
+                                            Message: 'transfer_failed|' + uniqueId + '|OUTBOUND|' + nameSplit[0] + '|' + evtObj['Caller-Destination-Number'] + '|OUTBOUND|outbound|call|undefined|' + transCallUuid
                                         };
 
                                         extApiAccess.SendNotificationInitiate(reqId, 'transfer_failed', uniqueId, nsObj, companyId, tenantId);
