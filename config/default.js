@@ -28,7 +28,7 @@ module.exports = {
 
     NS: {
         ip: 'notificationservice.app.veery.cloud',
-        port: 8765,
+        port: 8089,
         version: '1.0.0.0'
     },
 
