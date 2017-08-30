@@ -411,8 +411,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 redisClient.incr(callCountInstance, redisMessageHandler);
                 redisClient.incr(callCountCompany, redisMessageHandler);
 
-                console.log('CHAN_BRIDGE : ' + JSON.stringify(evtObj));
-
                 var resId = evtObj['variable_ards_resource_id'];
                 var skillAgent = evtObj['variable_ards_skill_display'];
                 var channelBridgeTimeStamp = evtObj['Caller-Channel-Bridged-Time'];
@@ -971,8 +969,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 redisClient.decr(callCountInstance);
                 redisClient.decr(callCountCompany);
 
-                console.log('CHAN_UNBRIDGE : ' + JSON.stringify(evtObj));
-
                 if(dvpCallDirection)
                 {
                     var callCountCompanyDir = 'DVP_CALL_COUNT_COMPANY_DIR:' + tenantId + ':' + companyId + ':' + dvpCallDirection;
@@ -1017,11 +1013,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 break;
             case 'CHANNEL_HANGUP':
-
-                if(opCat === 'ATT_XFER_USER' || opCat === 'ATT_XFER_GATEWAY')
-                {
-                    console.log("WEEEEEEEEEE : " + JSON.stringify(evtObj));
-                }
 
                 var ardsClientUuid = evtObj['variable_ards_client_uuid'];
                 var ardsCompany = evtObj['variable_companyid'];
@@ -1201,7 +1192,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             {
                                 redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + nameSplit[0], function(err, objString)
                                 {
-                                    var obj = JSON.parse(objString);
                                     if(obj && obj.Context)
                                     {
                                         var transCallUuid = evtObj['variable_call_uuid'];
