@@ -1192,6 +1192,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             {
                                 redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + nameSplit[0], function(err, objString)
                                 {
+                                    var obj = JSON.parse(objString);
+
                                     if(obj && obj.Context)
                                     {
                                         var transCallUuid = evtObj['variable_call_uuid'];
