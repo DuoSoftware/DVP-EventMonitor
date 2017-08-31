@@ -30,7 +30,7 @@ var redisSetting =  {
     port:redisport,
     host:redisip,
     family: 4,
-    db: redisdb,
+    db: 4,
     password: redispass,
     retryStrategy: function (times) {
         var delay = Math.min(times * 50, 2000);
