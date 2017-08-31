@@ -1178,7 +1178,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 //Sending Notification - Transfer Fail
 
-                if((opCat === 'ATT_XFER_USER' || opCat === 'ATT_XFER_GATEWAY') && evtObj['Caller-Context'] === 'PBXFeatures' && evtObj['Call-Direction'] === 'outbound' && evtObj['Hangup-Cause'] !== 'NORMAL_CLEARING' && evtObj['Other-Leg-Channel-Name'])
+                if((opCat === 'ATT_XFER_USER' || opCat === 'ATT_XFER_GATEWAY') && evtObj['Caller-Context'] === 'PBXFeatures' && evtObj['Call-Direction'] === 'outbound' && evtObj['Other-Leg-Channel-Name'])
                 {
                     var otherLegChanNameSplit = evtObj['Other-Leg-Channel-Name'].split('/');
 
