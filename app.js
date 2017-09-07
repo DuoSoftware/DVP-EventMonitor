@@ -463,7 +463,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     bridgeDashboardUid = evtObj['Bridge-B-Unique-ID'];
                 }
 
-                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", "", dvpCallDirection, bridgeDashboardUid);
+                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", "", dvpCallDirection, uniqueId);
 
                 redisClient.publish('events', pubMessage);
 
@@ -993,7 +993,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     unBridgeDashboardUid = evtObj['Bridge-B-Unique-ID'];
                 }
 
-                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", dvpCallDirection, unBridgeDashboardUid);
+                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", dvpCallDirection, uniqueId);
 
                 console.log('UNBRIDGE: ' + JSON.stringify(evtObj));
 
