@@ -28,7 +28,7 @@ module.exports = {
 
     NS: {
         ip: 'notificationservice.app.veery.cloud',
-        port: 8765,
+        port: 8089,
         version: '1.0.0.0'
     },
 
@@ -57,8 +57,8 @@ module.exports = {
 
     "Redis":
     {
-        "mode":"sentinel",//instance, cluster, sentinel
-        "ip": "45.55.142.207",
+        "mode":"instance",//instance, cluster, sentinel
+        "ip": "138.197.90.92",
         "port": 6389,
         "user": "duo",
         "password": "DuoS123",
