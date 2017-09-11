@@ -467,7 +467,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 redisClient.publish('events', pubMessage);
 
-                console.log('BRIDGE: ' + JSON.stringify(evtObj));
+                
 
                 evtData.EventCategory = "CHANNEL_BRIDGE";
 
@@ -995,7 +995,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", dvpCallDirection, unBridgeDashboardUid);
 
-                console.log('UNBRIDGE: ' + JSON.stringify(evtObj));
+               
 
                 redisClient.publish('events', pubMessage);
                 //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
