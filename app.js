@@ -284,7 +284,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
             callerOrigIdName = callerDestNum;
         }
 
-
         //loggerCust.debug('EVENT RECEIVED - [UUID : %s , TYPE : %s, CompanyId : %s', uniqueId, evtType, companyId);
 
 
@@ -1196,7 +1195,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 //Sending Notification - Transfer Fail
 
-                if((opCat === 'ATT_XFER_USER' || opCat === 'ATT_XFER_GATEWAY') && evtObj['Caller-Context'] === 'PBXFeatures' && evtObj['Call-Direction'] === 'outbound' && evtObj['Other-Leg-Channel-Name'])
+                /*if((opCat === 'ATT_XFER_USER' || opCat === 'ATT_XFER_GATEWAY') && evtObj['Caller-Context'] === 'PBXFeatures' && evtObj['Call-Direction'] === 'outbound' && evtObj['Other-Leg-Channel-Name'])
                 {
                     var otherLegChanNameSplit = evtObj['Other-Leg-Channel-Name'].split('/');
 
@@ -1238,7 +1237,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     }
 
 
-                }
+                }*/
 
                 break;
 
@@ -1362,6 +1361,40 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         dbOp.UpdatePresenceDB(uriSplit[0], userStatus);
                     }
                 }
+                break;
+
+            case 'TRANSFER_DISCONNECT':
+
+                var caller = evtObj['caller'];
+                var transCompanyId = evtObj['companyId'];
+                var transTenantId = evtObj['tenantId'];
+                var digits = evtObj['digits'];
+
+                redisClient.get('SIPUSER_RESOURCE_MAP:' + transTenantId + ':' + transCompanyId + ':' + caller, function(err, objString)
+                {
+                    var obj = JSON.parse(objString);
+
+                    if(obj && obj.Context)
+                    {
+                        var nsObj = {
+                            Ref: reqId,
+                            To: obj.Issuer,
+                            Timeout: 1000,
+                            Direction: 'STATELESS',
+                            From: 'CALLSERVER',
+                            Callback: '',
+                            Message: 'transfer_ended|' + reqId + '|OUTBOUND|' + caller + '|' + digits + '|OUTBOUND|outbound|call|undefined|' + reqId
+                        };
+
+                        extApiAccess.SendNotificationInitiate(reqId, 'transfer_ended', reqId, nsObj, transCompanyId, transTenantId);
+
+                        logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT TRANSFER FAILED - Message : ', reqId, nsObj.Message);
+
+
+                    }
+
+                });
+
                 break;
 
             case 'CUSTOM':
