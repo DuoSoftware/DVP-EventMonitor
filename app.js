@@ -273,6 +273,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
         var callerContext = evtObj['Caller-Context'];
         var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
         var calleeNumber = evtObj['Caller-Callee-ID-Number'];
+        var varArdsClientUuid = evtObj['variable_ards_client_uuid'];
 
         if(!callerOrigIdName)
         {
@@ -346,6 +347,11 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
         if(ardsClientUuid)
         {
             uniqueId = ardsClientUuid;
+        }
+
+        if(varArdsClientUuid)
+        {
+            uniqueId = varArdsClientUuid;
         }
 
         if(evtType === 'CHANNEL_BRIDGE' || evtType === 'CHANNEL_CREATE' || evtType === 'CHANNEL_ANSWER' || evtType === 'ARDS_EVENT' || evtType === 'CHANNEL_HOLD' || evtType === 'CHANNEL_UNHOLD' || evtType === 'CHANNEL_UNBRIDGE' || evtType === 'CHANNEL_DESTROY')
@@ -465,8 +471,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", "", dvpCallDirection, bridgeDashboardUid);
 
                 redisClient.publish('events', pubMessage);
-
-                console.log('BRIDGE: ' + JSON.stringify(evtObj));
 
                 evtData.EventCategory = "CHANNEL_BRIDGE";
 
@@ -993,8 +997,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 }
 
                 var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", dvpCallDirection, unBridgeDashboardUid);
-
-                console.log('UNBRIDGE: ' + JSON.stringify(evtObj));
 
                 redisClient.publish('events', pubMessage);
                 //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
