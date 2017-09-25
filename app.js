@@ -193,6 +193,7 @@ redisClient.on('error',function(err){
         var callerContext = evtObj['Caller-Context'];
         var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
         var calleeNumber = evtObj['Caller-Callee-ID-Number'];
+        var varArdsClientUuid = evtObj['variable_ards_client_uuid'];
 
         if(!callerOrigIdName)
         {
@@ -267,6 +268,11 @@ redisClient.on('error',function(err){
         if(ardsClientUuid)
         {
             uniqueId = ardsClientUuid;
+        }
+
+        if(varArdsClientUuid)
+        {
+            uniqueId = varArdsClientUuid;
         }
 
         if(evtType === 'CHANNEL_BRIDGE' || evtType === 'CHANNEL_CREATE' || evtType === 'CHANNEL_ANSWER' || evtType === 'ARDS_EVENT' || evtType === 'CHANNEL_HOLD' || evtType === 'CHANNEL_UNHOLD' || evtType === 'CHANNEL_UNBRIDGE' || evtType === 'CHANNEL_DESTROY')
@@ -1754,6 +1760,7 @@ redisClient.on('error',function(err){
                 evtObj['ARDS-Resource-Id'] = event.getHeader('ARDS-Resource-Id');
                 evtObj['ARDS-Reason'] = event.getHeader('ARDS-Reason');
                 evtObj['ARDS-Call-Skill'] = event.getHeader('ARDS-Call-Skill');
+                evtObj['variable_ards_client_uuid'] = event.getHeader('variable_ards_client_uuid');
 
 
                 eventHandler(reqId, evtObj);
