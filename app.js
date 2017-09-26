@@ -1750,7 +1750,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         else if(action === 'ards-added')
                         {
                             var evResource =  evtObj['ARDS-Call-Skill'];
-                            var eventParam = util.format("The call is added to %s", evResource);
+                            var eventParam = util.format("The call is added to %s queue", evResource);
                             evtData.EventParams = eventParam;
                             var jsonStr = JSON.stringify(evtData);
                             redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
@@ -1765,7 +1765,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         else if(action === 'agent-found')
                         {
                             var evResource =  evtObj['ARDS-Resource-Name'];
-                            var eventParam = util.format("%s is selected to route the call", evResource);
+                            var eventParam = util.format("%s is selected to route the request", evResource);
                             evtData.EventParams = eventParam;
                             var jsonStr = JSON.stringify(evtData);
                             redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
