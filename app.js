@@ -193,7 +193,7 @@ redisClient.on('error',function(err){
         var callerContext = evtObj['Caller-Context'];
         var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
         var calleeNumber = evtObj['Caller-Callee-ID-Number'];
-        var varArdsClientUuid = evtObj['variable_ards_client_uuid'];
+        //var varArdsClientUuid = evtObj['variable_ards_client_uuid'];
 
         if(!callerOrigIdName)
         {
@@ -270,10 +270,10 @@ redisClient.on('error',function(err){
             uniqueId = ardsClientUuid;
         }
 
-        if(varArdsClientUuid)
+        /*if(varArdsClientUuid)
         {
             uniqueId = varArdsClientUuid;
-        }
+        }*/
 
         if(evtType === 'CHANNEL_BRIDGE' || evtType === 'CHANNEL_CREATE' || evtType === 'CHANNEL_ANSWER' || evtType === 'ARDS_EVENT' || evtType === 'CHANNEL_HOLD' || evtType === 'CHANNEL_UNHOLD' || evtType === 'CHANNEL_UNBRIDGE' || evtType === 'CHANNEL_DESTROY')
         {
