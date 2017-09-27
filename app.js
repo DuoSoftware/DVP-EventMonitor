@@ -193,7 +193,6 @@ redisClient.on('error',function(err){
         var callerContext = evtObj['Caller-Context'];
         var otherlegUniqueId = evtObj["Other-Leg-Unique-ID"];
         var calleeNumber = evtObj['Caller-Callee-ID-Number'];
-        //var varArdsClientUuid = evtObj['variable_ards_client_uuid'];
 
         if(!callerOrigIdName)
         {
@@ -306,6 +305,7 @@ redisClient.on('error',function(err){
             TenantId: tenantId
         };
 
+
         switch (evtType)
         {
             case 'ARDS_EVENT':
@@ -388,17 +388,23 @@ redisClient.on('error',function(err){
 
                 evtData.EventCategory = "CHANNEL_BRIDGE";
 
-                var jsonStr = JSON.stringify(evtData);
+                var jsonStr = '';
 
                 if(dvpCustPubId)
                 {
+                    if(!ardsClientUuid && evtObj['variable_ards_client_uuid'])
+                    {
+                        evtData.SessionId = evtObj['variable_ards_client_uuid'];
+                    }
+
+                    jsonStr = JSON.stringify(evtData);
+
                     redisClient.publish(dvpCustPubId, jsonStr);
-                    //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
                 }
                 else
                 {
+                    jsonStr = JSON.stringify(evtData);
                     redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
-                    //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                 }
 
                 redisClient.hset(uniqueId, 'Bridge-State', 'Bridged', redisMessageHandler);
@@ -548,16 +554,24 @@ redisClient.on('error',function(err){
 
                 evtData.EventCategory = "CHANNEL_CREATE";
 
-                var jsonStr = JSON.stringify(evtData);
+                var jsonStr = '';
                 if(dvpCustPubId)
                 {
+                    if(!ardsClientUuid && evtObj['variable_ards_client_uuid'])
+                    {
+                        evtData.SessionId = evtObj['variable_ards_client_uuid'];
+                    }
+
+                    jsonStr = JSON.stringify(evtData);
+
                     redisClient.publish(dvpCustPubId, jsonStr);
-                    //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM : CHANNEL : %s , DATA : %s', reqId, dvpCustPubId, jsonStr);
+
                 }
                 else
                 {
+                    jsonStr = JSON.stringify(evtData);
                     redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
-                    //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
+
                 }
 
                 var channelSetName = "CHANNELS:" + tenantId + ":" + companyId;
@@ -877,14 +891,21 @@ redisClient.on('error',function(err){
 
                 evtData.EventCategory = "CHANNEL_ANSWER";
 
-                var jsonStr = JSON.stringify(evtData);
-                //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH');
+                var jsonStr = '';
                 if(dvpCustPubId)
                 {
+                    if(!ardsClientUuid && evtObj['variable_ards_client_uuid'])
+                    {
+                        evtData.SessionId = evtObj['variable_ards_client_uuid'];
+                    }
+
+                    jsonStr = JSON.stringify(evtData);
+
                     redisClient.publish(dvpCustPubId, jsonStr);
                 }
                 else
                 {
+                    jsonStr = JSON.stringify(evtData);
                     redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
                 }
 
@@ -1184,16 +1205,22 @@ redisClient.on('error',function(err){
                 evtData.EventCategory = "CHANNEL_DESTROY";
                 evtData.DisconnectReason = evtObj['Hangup-Cause'];
 
-                var jsonStr = JSON.stringify(evtData);
+                var jsonStr = '';
                 if(dvpCustPubId)
                 {
+                    if(!ardsClientUuid && evtObj['variable_ards_client_uuid'])
+                    {
+                        evtData.SessionId = evtObj['variable_ards_client_uuid'];
+                    }
+
+                    jsonStr = JSON.stringify(evtData);
+
                     redisClient.publish(dvpCustPubId, jsonStr);
-                    //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
                 }
                 else
                 {
+                    jsonStr = JSON.stringify(evtData);
                     redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
-                    //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                 }
 
                 //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH');
