@@ -907,6 +907,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                         }
                     }
+                    //Direction is outbound - This is for processing LEG B of an outbound call
                     else if(direction === 'outbound' && companyId && tenantId && dvpCallDirection === 'outbound')
                     {
 
@@ -925,11 +926,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                             });
 
-
-
                         }
 
-                        //SET NOTIFICATION STATUS FOR CALLING PARTY NORMAL CALLS
+                        //<editor-fold desc="SET NOTIFICATION STATUS AND UPDATE OUTBOUND ANSWERED COUNT DASHBOARD FOR CALLING PARTY NORMAL CALLS">
                         if(opCat === 'GATEWAY' || opCat === 'PRIVATE_USER')
                         {
                             redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
@@ -938,8 +937,15 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                 if(obj && obj.Context)
                                 {
-                                    //ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
+                                    //<editor-fold desc="UPDATE OUTBOUND ANSWER COUNT ON DASHBOARD FOR CALLER">
 
+                                    var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "ANSWER", obj.ResourceId, 'outbound', obj.ResourceId);
+
+                                    redisClient.publish('events', pubMessage);
+
+                                    //</editor-fold>
+
+                                    //<editor-fold desc="SEND NOTIFICATION FOR CALLING PARTY">
                                     var nsObj = {
                                         Ref: uniqueId,
                                         To: obj.Issuer,
@@ -954,10 +960,15 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
                                     logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT CONNECTED - Message : ', reqId, nsObj.Message);
+
+                                    //</editor-fold>
+
                                 }
 
                             })
                         }
+
+                        //</editor-fold>
 
 
                     }
