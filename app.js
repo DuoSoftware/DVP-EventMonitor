@@ -1267,7 +1267,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 //Adding call discon record to redis set for cdr summary
 
-                if(direction === 'inbound'){
+                if(direction === 'inbound' || (direction === 'outbound' && actionCat === 'DIALER')){
 
                     var utcMoment = moment(eventTime).utc();
                     var year = utcMoment.year();
