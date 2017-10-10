@@ -1285,6 +1285,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 redisClient.del(uniqueId + '_dev', redisMessageHandler);
                 redisClient.del(uniqueId + '_command', redisMessageHandler);
 
+
                 var channelSetName = "CHANNELS:" + tenantId + ":" + companyId;
 
                 if(companyId && tenantId)
@@ -1412,6 +1413,40 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         };
 
                         extApiAccess.SendNotificationInitiate(reqId, 'transfer_ended', reqId, nsObj, transCompanyId, transTenantId);
+
+                        logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT TRANSFER FAILED - Message : ', reqId, nsObj.Message);
+
+
+                    }
+
+                });
+
+                break;
+
+            case 'TRANSFER_TRYING':
+
+                var caller = evtObj['caller'];
+                var transCompanyId = evtObj['companyId'];
+                var transTenantId = evtObj['tenantId'];
+                var digits = evtObj['digits'];
+
+                redisClient.get('SIPUSER_RESOURCE_MAP:' + transTenantId + ':' + transCompanyId + ':' + caller, function(err, objString)
+                {
+                    var obj = JSON.parse(objString);
+
+                    if(obj && obj.Context)
+                    {
+                        var nsObj = {
+                            Ref: reqId,
+                            To: obj.Issuer,
+                            Timeout: 1000,
+                            Direction: 'STATELESS',
+                            From: 'CALLSERVER',
+                            Callback: '',
+                            Message: 'transfer_trying|' + reqId + '|OUTBOUND|' + caller + '|' + digits + '|OUTBOUND|outbound|call|undefined|' + reqId
+                        };
+
+                        extApiAccess.SendNotificationInitiate(reqId, 'transfer_trying', reqId, nsObj, transCompanyId, transTenantId);
 
                         logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT TRANSFER FAILED - Message : ', reqId, nsObj.Message);
 
