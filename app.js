@@ -1430,7 +1430,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 var transTenantId = evtObj['tenantId'];
                 var digits = evtObj['digits'];
 
-                redisClient.get('SIPUSER_RESOURCE_MAP:' + transTenantId + ':' + transCompanyId + ':' + caller, function(err, objString)
+                redisClient.get('SIPUSER_RESOURCE_MAP:' + transTenantId + ':' + transCompanyId + ':' + digits, function(err, objString)
                 {
                     var obj = JSON.parse(objString);
 
@@ -1448,7 +1448,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                         extApiAccess.SendNotificationInitiate(reqId, 'transfer_trying', reqId, nsObj, transCompanyId, transTenantId);
 
-                        logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT TRANSFER FAILED - Message : ', reqId, nsObj.Message);
+                        logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT TRANSFER TRYING - Message : ', reqId, nsObj.Message);
 
 
                     }
