@@ -1429,6 +1429,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 var transCompanyId = evtObj['companyId'];
                 var transTenantId = evtObj['tenantId'];
                 var digits = evtObj['digits'];
+                var origCaller = evtObj['origCaller'];
 
                 redisClient.get('SIPUSER_RESOURCE_MAP:' + transTenantId + ':' + transCompanyId + ':' + digits, function(err, objString)
                 {
@@ -1443,7 +1444,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             Direction: 'STATELESS',
                             From: 'CALLSERVER',
                             Callback: '',
-                            Message: 'transfer_trying|' + reqId + '|OUTBOUND|' + caller + '|' + digits + '|OUTBOUND|outbound|call|undefined|' + reqId
+                            Message: 'transfer_trying|' + reqId + '|OUTBOUND|' + caller + '|' + digits + '|OUTBOUND|outbound|call|' + origCaller + '|' + reqId
                         };
 
                         extApiAccess.SendNotificationInitiate(reqId, 'transfer_trying', reqId, nsObj, transCompanyId, transTenantId);
