@@ -885,21 +885,28 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 logger.debug('[DVP-EventMonitor.handler] - [%s] - CHANNEL ANSWER ARDS DATA - EVENT_TYPE : ' + evtType + ', SESSION_ID : ' + uniqueId + 'SWITCH NAME : ' + switchName + 'ards_client_uuid : %s, companyid : %s, tenantid : %s, ards_resource_id : %s, ards_servertype : %s, ards_requesttype : %s', reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsResourceId, ardsServerType, ardsReqType);
 
 
-                if((opCat === 'ATT_XFER_USER') && ardsCompany && ardsTenant && ardsClientUuid)
+                if(opCat === 'ATT_XFER_USER')
                 {
-
-
-                    redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + calleeNumber, function(err, objString)
+                    if(!ardsClientUuid)
                     {
+                        ardsClientUuid = uniqueId;
+                    }
 
-                        var obj = JSON.parse(objString);
-
-                        if(obj && obj.Context)
+                    if(ardsCompany && ardsTenant && ardsClientUuid)
+                    {
+                        redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + calleeNumber, function(err, objString)
                         {
-                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
-                        }
 
-                    })
+                            var obj = JSON.parse(objString);
+
+                            if(obj && obj.Context)
+                            {
+                                ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
+                            }
+
+                        })
+                    }
+
                 }
                 else if(opCat === 'FAX_INBOUND')
                 {
@@ -1103,19 +1110,28 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 logger.debug('[DVP-EventMonitor.handler] - [%s] - CHANNEL ANSWER ARDS DATA - EVENT_TYPE : ' + evtType + ', SESSION_ID : ' + uniqueId + 'SWITCH NAME : ' + switchName + 'ards_client_uuid : %s, companyid : %s, tenantid : %s, ards_resource_id : %s, ards_servertype : %s, ards_requesttype : %s', reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsResourceId, ardsServerType, ardsReqType);
 
-                if((opCat === 'ATT_XFER_USER') && ardsCompany && ardsTenant && ardsClientUuid)
+                if(opCat === 'ATT_XFER_USER')
                 {
-                    redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + evtObj['variable_sip_to_user'], function(err, objString)
+                    if(!ardsClientUuid)
                     {
+                        ardsClientUuid = uniqueId;
+                    }
 
-                        var obj = JSON.parse(objString);
-
-                        if(obj && obj.Context)
+                    if(ardsCompany && ardsTenant && ardsClientUuid)
+                    {
+                        redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + evtObj['variable_sip_to_user'], function(err, objString)
                         {
-                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
-                        }
 
-                    })
+                            var obj = JSON.parse(objString);
+
+                            if(obj && obj.Context)
+                            {
+                                ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
+                            }
+
+                        })
+                    }
+
                 }
                 else
                 {
