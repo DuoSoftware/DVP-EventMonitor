@@ -1111,9 +1111,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 if(opCat === 'ATT_XFER_USER' && ardsCompany && ardsTenant)
                 {
-                    if(!ardsClientUuid && evtObj['Caller-Username'])
+                    if(!ardsClientUuid && evtObj['variable_user_id'])
                     {
-                        redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + evtObj['Caller-Username'], function(err, objString)
+                        redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + evtObj['variable_user_id'], function(err, objString)
                         {
 
                             var obj = JSON.parse(objString);
