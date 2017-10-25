@@ -1238,7 +1238,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                 var obj = JSON.parse(objString);
                                 if(obj && obj.Context)
                                 {
-                                    ardsHandler.SendResourceStatus(reqId, uniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
+                                    ardsHandler.SendResourceStatus(reqId, otherLegUniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
 
                                     var nsObj = {
                                         Ref: uniqueId,
