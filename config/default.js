@@ -33,7 +33,7 @@ module.exports = {
     },
 
     Services : {
-        interactionServiceHost: "192.168.0.132",
+        interactionServiceHost: "interactions.app.veery.cloud",
         interactionServicePort: "3637",
         interactionServiceVersion: "1.0.0.0",
         dccaclientHost: "127.0.0.1",
