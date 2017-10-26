@@ -456,7 +456,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 var bridgeDashboardUid = uniqueId;
 
-                if(dvpCallDirection === 'outbound' && evtObj['Bridge-B-Unique-ID'])
+                if(evtObj['Bridge-B-Unique-ID'])
                 {
                     bridgeDashboardUid = evtObj['Bridge-B-Unique-ID'];
                 }
@@ -464,6 +464,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", "", dvpCallDirection, bridgeDashboardUid);
 
                 redisClient.publish('events', pubMessage);
+
+                console.log('================================= : ' + pubMessage + ' - ' + JSON.stringify(evtObj));
 
                 evtData.EventCategory = "CHANNEL_BRIDGE";
 
@@ -1058,13 +1060,14 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 var unBridgeDashboardUid = uniqueId;
 
-                if(dvpCallDirection === 'outbound' && evtObj['Bridge-B-Unique-ID'])
+                if(evtObj['Bridge-B-Unique-ID'])
                 {
                     unBridgeDashboardUid = evtObj['Bridge-B-Unique-ID'];
                 }
 
                 var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", dvpCallDirection, unBridgeDashboardUid);
 
+                console.log('================================= : ' + pubMessage + ' - ' + JSON.stringify(evtObj));
                 redisClient.publish('events', pubMessage);
                 //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
                 break;
