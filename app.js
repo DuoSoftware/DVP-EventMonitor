@@ -456,7 +456,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 var bridgeDashboardUid = uniqueId;
 
-                if(evtObj['Bridge-B-Unique-ID'])
+                if(dvpCallDirection === 'outbound' && evtObj['Bridge-B-Unique-ID'])
                 {
                     bridgeDashboardUid = evtObj['Bridge-B-Unique-ID'];
                 }
@@ -1058,7 +1058,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 var unBridgeDashboardUid = uniqueId;
 
-                if(evtObj['Bridge-B-Unique-ID'])
+                if(dvpCallDirection === 'outbound' && evtObj['Bridge-B-Unique-ID'])
                 {
                     unBridgeDashboardUid = evtObj['Bridge-B-Unique-ID'];
                 }
