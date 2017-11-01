@@ -885,6 +885,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 logger.debug('[DVP-EventMonitor.handler] - [%s] - CHANNEL ANSWER ARDS DATA - EVENT_TYPE : ' + evtType + ', SESSION_ID : ' + uniqueId + 'SWITCH NAME : ' + switchName + 'ards_client_uuid : %s, companyid : %s, tenantid : %s, ards_resource_id : %s, ards_servertype : %s, ards_requesttype : %s', reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsResourceId, ardsServerType, ardsReqType);
 
+                console.log('============================ANSWER================================= ' + JSON.stringify(evtObj));
+
 
                 if(opCat === 'ATT_XFER_USER')
                 {
