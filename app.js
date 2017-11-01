@@ -1115,8 +1115,25 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 console.log('============================== HANGUP ============================== : ' + JSON.stringify(evtObj));
 
                 //Handle Resource Status Change
-                if(!ardsClientUuid && ardsCompany && ardsTenant && opCat && evtObj['variable_user_id'])
+
+                if(ardsClientUuid && ardsServerType && ardsReqType && ardsResourceId)
                 {
+                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '', 'inbound');
+                }
+                else if(ardsCompany && ardsTenant && opCat && evtObj['variable_user_id'])
+                {
+                    var tempDirection = 'outbound';
+                    var tempUuid = uniqueId;
+
+                    if(ardsClientUuid)
+                    {
+                        tempUuid = ardsClientUuid;
+                    }
+
+                    if(dvpCallDirection === 'inbound')
+                    {
+                        tempDirection = 'inbound';
+                    }
                     redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + evtObj['variable_user_id'], function(err, objString)
                     {
 
@@ -1124,7 +1141,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                         if(obj && obj.Context)
                         {
-                            ardsHandler.SendResourceStatus(reqId, uniqueId, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', 'outbound');
+                            ardsHandler.SendResourceStatus(reqId, tempUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', tempDirection);
                         }
 
                     })
@@ -1132,8 +1149,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 if(ardsClientUuid)
                 {
-                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '', 'inbound');
-
                     if (actionCat === 'DIALER')
                     {
                         redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
