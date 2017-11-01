@@ -1110,6 +1110,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 var ardsReqType = evtObj['variable_ards_requesttype'];
                 var ardsResourceId = evtObj['variable_ards_resource_id'];
 
+                console.log('============================== HANGUP ============================== : ' + JSON.stringify(evtObj));
+
                 logger.debug('[DVP-EventMonitor.handler] - [%s] - CHANNEL ANSWER ARDS DATA - EVENT_TYPE : ' + evtType + ', SESSION_ID : ' + uniqueId + 'SWITCH NAME : ' + switchName + 'ards_client_uuid : %s, companyid : %s, tenantid : %s, ards_resource_id : %s, ards_servertype : %s, ards_requesttype : %s', reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsResourceId, ardsServerType, ardsReqType);
 
                 if((opCat === 'ATT_XFER_USER' || opCat === 'ATT_XFER_GATEWAY') && ardsCompany && ardsTenant)
