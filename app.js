@@ -465,7 +465,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 redisClient.publish('events', pubMessage);
 
-                console.log('================================= : ' + pubMessage + ' - ' + JSON.stringify(evtObj));
 
                 evtData.EventCategory = "CHANNEL_BRIDGE";
 
@@ -640,7 +639,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                             if(opCat === 'GATEWAY' || opCat === 'PRIVATE_USER')
                             {
-                                console.log('================RESERVED : ' + otherLegUniqueId + ' : ' + callerOrigIdName);
                                 ardsHandler.SendResourceStatus(reqId, otherLegUniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Reserved', '', '', 'outbound');
                             }
 
@@ -682,7 +680,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             }
 
                             //for agent dialed outbound calls
-                            console.log('================RESERVED : ' + tempUuid + ' : ' + evtObj['variable_dialed_user']);
                             ardsHandler.SendResourceStatus(reqId, tempUuid, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Reserved', '', '', 'outbound');
 
                         }
@@ -927,8 +924,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 logger.debug('[DVP-EventMonitor.handler] - [%s] - CHANNEL ANSWER ARDS DATA - EVENT_TYPE : ' + evtType + ', SESSION_ID : ' + uniqueId + 'SWITCH NAME : ' + switchName + 'ards_client_uuid : %s, companyid : %s, tenantid : %s, ards_resource_id : %s, ards_servertype : %s, ards_requesttype : %s', reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsResourceId, ardsServerType, ardsReqType);
 
-                console.log('============================ANSWER================================= ' + JSON.stringify(evtObj));
-
 
                 if(opCat === 'ATT_XFER_USER')
                 {
@@ -1077,8 +1072,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     tempUsr = evtObj['variable_dialed_user'];
                 }
 
-                console.log('================CONNECTED : ' + uniqueId + ' : ' + tempUsr);
-
                 if(!ardsResourceId && tempUsr && companyId && tenantId && dvpCallDirection === 'outbound')
                 {
                     if(opCat === 'GATEWAY' || opCat === 'PRIVATE_USER')
@@ -1142,7 +1135,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", dvpCallDirection, unBridgeDashboardUid);
 
-                console.log('================================= : ' + pubMessage + ' - ' + JSON.stringify(evtObj));
                 redisClient.publish('events', pubMessage);
                 //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
                 break;
@@ -1184,8 +1176,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 var ardsServerType = evtObj['variable_ards_servertype'];
                 var ardsReqType = evtObj['variable_ards_requesttype'];
                 var ardsResourceId = evtObj['variable_ards_resource_id'];
-
-                console.log('============================== HANGUP ============================== : ' + JSON.stringify(evtObj));
 
                 //Handle Resource Status Change
 
