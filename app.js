@@ -539,7 +539,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 var variableLoopbackApp = evtObj["variable_loopback_app"];
                 var variableSipAuthRealm = evtObj["variable_sip_auth_realm"];
 
-                //Handle Trasfer channel create
+                //<editor-fold desc="HANDLING INCOMING TRANSFER CALL NOTIFICATION WITH SYSTEM USERNAME NOTIFICATIONS">
 
                 if(direction === 'outbound' && companyId && tenantId && opCat === 'ATT_XFER_USER')
                 {
@@ -559,20 +559,31 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                         if(obj && obj.Context)
                         {
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + caller, function(err, objString)
+                            {
+                                var tmpObj = JSON.parse(objString);
 
-                            var nsObj = {
-                                Ref: uniqueId,
-                                To: obj.Issuer,
-                                Timeout: 1000,
-                                Direction: 'STATELESS',
-                                From: 'CALLSERVER',
-                                Callback: '',
-                                Message: 'agent_found|' + transCallUuid + '|INBOUND|' + origCaller + '|' + digits + '|' + digits + '|INBOUND|inbound|call|' + caller + '|' + uniqueId + '|TRANSFER'
-                            };
+                                if(tmpObj && tmpObj.Issuer)
+                                {
+                                    caller = tmpObj.Issuer;
+                                }
 
-                            extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+                                var nsObj = {
+                                    Ref: uniqueId,
+                                    To: obj.Issuer,
+                                    Timeout: 1000,
+                                    Direction: 'STATELESS',
+                                    From: 'CALLSERVER',
+                                    Callback: '',
+                                    Message: 'agent_found|' + transCallUuid + '|INBOUND|' + origCaller + '|' + obj.Issuer + '|' + obj.Issuer + '|INBOUND|inbound|call|' + caller + '|' + uniqueId + '|TRANSFER'
+                                };
 
-                            logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+                                extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+                            });
+
+
 
 
                         }
@@ -582,8 +593,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 }
 
+                //</editor-fold>
 
-                //Sending Resource Status For Agent Outbound Calls Calling Party
 
                 if(direction === 'outbound' && dvpCallDirection === 'outbound' && companyId && tenantId)
                 {
@@ -595,7 +606,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         {
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - SENDING', reqId);
 
-                            //for agent dialed outbound calls
+                            //<editor-fold desc="HANDLING AGENT DIALED CALLS">
 
                             if(actionCat === 'DIALER')
                             {
@@ -616,8 +627,64 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                 logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
                             }
-                            else if(opCat === 'GATEWAY' || opCat === 'PRIVATE_USER')
+                            else if(opCat === 'PRIVATE_USER')
                             {
+                                //<editor-fold desc="AGENT TO AGNET CALL SPECIFIC NOTIFICATION HANDLING WITH SYSTEM USERNAME">
+
+                                extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', callerOrigIdName, callerDestNum, obj.CompanyId, obj.TenantId);
+
+                                redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerDestNum, function(err, objString)
+                                {
+                                    var objTmp = JSON.parse(objString);
+
+                                    if (objTmp && objTmp.Context)
+                                    {
+                                        //<editor-fold desc="SEND NOTIFICATION TO CALLING PARTY - AGENT_AGENT CALL">
+                                        var nsObj = {
+                                            Ref: uniqueId,
+                                            To: obj.Issuer,
+                                            Timeout: 1000,
+                                            Direction: 'STATELESS',
+                                            From: 'CALLSERVER',
+                                            Callback: '',
+                                            Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId
+                                        };
+
+                                        extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                                        logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+
+                                        //</editor-fold>
+
+                                        //<editor-fold desc="SEND NOTIFICATION TO CALL RECEIVING PARTY - AGENT_AGENT CALL">
+
+                                        var nsObjRec = {
+                                            Ref: uniqueId,
+                                            To: objTmp.Issuer,
+                                            Timeout: 1000,
+                                            Direction: 'STATELESS',
+                                            From: 'CALLSERVER',
+                                            Callback: '',
+                                            Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId + '|AGENT_AGENT'
+                                        };
+
+                                        extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObjRec, objTmp.CompanyId, objTmp.TenantId);
+
+                                        logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObjRec.Message);
+
+                                        //</editor-fold>
+
+                                    }
+                                });
+
+                                //</editor-fold>
+
+
+                            }
+                            else if(opCat === 'GATEWAY')
+                            {
+                                //<editor-fold desc="AGENT TO GATEWAY CALL SPECIFIC NOTIFICATION HANDLING WITH SYSTEM USERNAME">
+
                                 extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', callerOrigIdName, callerDestNum, obj.CompanyId, obj.TenantId);
 
                                 var nsObj = {
@@ -627,13 +694,14 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                     Direction: 'STATELESS',
                                     From: 'CALLSERVER',
                                     Callback: '',
-                                    Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId
+                                    Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId
                                 };
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
                                 logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
 
+                                //</editor-fold>
 
                             }
 
@@ -641,6 +709,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             {
                                 ardsHandler.SendResourceStatus(reqId, otherLegUniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Reserved', '', '', 'outbound');
                             }
+
+                            //</editor-fold>
 
                         }
                         else
@@ -703,7 +773,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                  }
                  })
                  }*/
-
 
 
                 if(companyId && tenantId)
