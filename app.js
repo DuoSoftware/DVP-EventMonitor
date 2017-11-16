@@ -2034,7 +2034,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                 break;
                             case 'sofia::gateway_state':
                                 redisClient.set('TRUNK_AVAILABILITY:' + evtObj['Gateway'], JSON.stringify(evtObj), redisMessageHandler);
-                                notifyGatewayStatus(reqId, 'gateway_state', evtObj);
+                                //notifyGatewayStatus(reqId, 'gateway_state', evtObj);
                                 break;
 
                         }
