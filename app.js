@@ -389,7 +389,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 if(dvpCustPubId)
                 {
                     redisClient.publish(dvpCustPubId, jsonStr);
-                    //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+                    logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
                 }
                 else
                 {
@@ -478,6 +478,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     }
 
                     jsonStr = JSON.stringify(evtData);
+
+                    logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
 
                     redisClient.publish(dvpCustPubId, jsonStr);
                 }
@@ -813,6 +815,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         evtData.SessionId = evtObj['variable_ards_client_uuid'];
                     }
                     jsonStr = JSON.stringify(evtData);
+
+                    logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+
                     redisClient.publish(dvpCustPubId, jsonStr);
                 }
                 else
@@ -1195,6 +1200,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         evtData.SessionId = evtObj['variable_ards_client_uuid'];
                     }
                     jsonStr = JSON.stringify(evtData);
+
+                    logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+
                     redisClient.publish(dvpCustPubId, jsonStr);
                 }
                 else
@@ -1551,6 +1559,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         evtData.SessionId = evtObj['variable_ards_client_uuid'];
                     }
                     jsonStr = JSON.stringify(evtData);
+
+                    logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
 
                     redisClient.publish(dvpCustPubId, jsonStr);
                 }
