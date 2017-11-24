@@ -10,6 +10,7 @@ var amqpClient = null;
 if(config.UseDashboardAMQP && config.UseDashboardAMQP == 'true')
 {
     //Create AMQP Connection
+    console.log('Creating AMQP Dashboard Connection');
     var ips = [];
     if(config.RabbitMQ.ip) {
         ips = config.RabbitMQ.ip.split(",");
@@ -44,6 +45,7 @@ if(config.UseDashboardAMQP && config.UseDashboardAMQP == 'true')
 }
 else
 {
+    console.log('Creating Redis Dashboard Connection');
     var redisip = config.Redis.ip;
     var redisport = config.Redis.port;
     var redispass = config.Redis.password;
