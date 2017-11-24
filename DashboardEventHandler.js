@@ -141,24 +141,39 @@ var PublishDashboardMessage = function(tenantId, companyId, eventClass, eventTyp
     }
     else if(amqpClient)
     {
-        var sendObj =
+        var tenantInt = 0;
+        var companyInt = 0;
+
+        try
         {
-            Tenent: tenantId,
-            Company: companyId,
-            EventClass: eventClass,
-            EventType: eventType,
-            EventCategory: eventCategory,
-            SessionID: sessionId,
-            TimeStamp: timestamp,
-            Parameter1: param1,
-            Parameter2: param2
-        };
+            tenantInt = parseInt(tenantId);
+            companyInt = parseInt(companyId);
 
-        amqpClient.publish('DashboardEvents', sendObj, {
-            contentType: 'application/json'
-        });
+            var sendObj =
+            {
+                Tenent: tenantInt,
+                Company: companyInt,
+                EventClass: eventClass,
+                EventType: eventType,
+                EventCategory: eventCategory,
+                SessionID: sessionId,
+                TimeStamp: timestamp,
+                Parameter1: param1,
+                Parameter2: param2
+            };
 
-        logger.debug("DASHBOARD PUBLISH : MESSAGE : " + JSON.stringify(sendObj));
+            amqpClient.publish('DashboardEvents', sendObj, {
+                contentType: 'application/json'
+            });
+
+            logger.debug("DASHBOARD PUBLISH : MESSAGE : " + JSON.stringify(sendObj));
+        }
+        catch(ex)
+        {
+            logger.error('Error sending message : ', ex);
+
+        }
+
 
     }
 
