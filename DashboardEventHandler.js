@@ -10,7 +10,7 @@ var amqpClient = null;
 if(config.UseDashboardAMQP && config.UseDashboardAMQP == 'true')
 {
     //Create AMQP Connection
-    console.log('Creating AMQP Dashboard Connection');
+    console.log('=================== CREATING AMQP DASHBOARD CONNECTION ====================');
     var ips = [];
     if(config.RabbitMQ.ip) {
         ips = config.RabbitMQ.ip.split(",");
@@ -35,17 +35,17 @@ if(config.UseDashboardAMQP && config.UseDashboardAMQP == 'true')
 
     amqpClient.on('ready', function () {
 
-        logger.info("Conection with the queue is OK");
+        logger.info("DASHBOARD - AMQP CONNECTION READY");
     });
 
     amqpClient.on('error', function (error) {
 
-        logger.info("There is an error" + error);
+        logger.info("DASHBOARD - AMQP CONNECTION - ERROR : " + error);
     });
 }
 else
 {
-    console.log('Creating Redis Dashboard Connection');
+    console.log('=================== CREATING REDIS DASHBOARD CONNECTION ====================');
     var redisip = config.Redis.ip;
     var redisport = config.Redis.port;
     var redispass = config.Redis.password;
@@ -87,7 +87,7 @@ else
 
             }else{
 
-                console.log("No enough sentinel servers found .........");
+                console.log("No enough sentinel servers found - DASHBOARD REDIS");
             }
 
         }
@@ -136,6 +136,8 @@ var PublishDashboardMessage = function(tenantId, companyId, eventClass, eventTyp
 
         redisClient.publish('events', pubMessage);
 
+        logger.debug("DASHBOARD PUBLISH : MESSAGE : " + pubMessage);
+
     }
     else if(amqpClient)
     {
@@ -152,9 +154,11 @@ var PublishDashboardMessage = function(tenantId, companyId, eventClass, eventTyp
             Parameter2: param2
         };
 
-        queueConnection.publish('DashboardEvents', sendObj, {
+        amqpClient.publish('DashboardEvents', sendObj, {
             contentType: 'application/json'
         });
+
+        logger.debug("DASHBOARD PUBLISH : MESSAGE : " + JSON.stringify(sendObj));
 
     }
 
