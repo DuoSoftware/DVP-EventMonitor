@@ -21,6 +21,7 @@ var mongoAccessor = require('./MongoAccessor.js');
 var _ = require('lodash');
 var mailSender = require('./MailSender.js').PublishToQueue;
 var dashboardEvtHandler = require('./DashboardEventHandler.js');
+var dvpEventHandler = require('./DVPEventPublisher.js');
 
 var winston = require('winston');
 
@@ -394,7 +395,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 }
                 else
                 {
-                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                    dvpEventHandler.PublishDVPEventsMessage(evtData);
+                    //redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
                     //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                 }
 
@@ -489,8 +491,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 }
                 else
                 {
-                    jsonStr = JSON.stringify(evtData);
-                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                    dvpEventHandler.PublishDVPEventsMessage(evtData);
+                    /*jsonStr = JSON.stringify(evtData);
+                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
                 }
 
                 redisClient.hset(uniqueId, 'Bridge-State', 'Bridged', redisMessageHandler);
@@ -826,8 +829,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 }
                 else
                 {
-                    jsonStr = JSON.stringify(evtData);
-                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                    dvpEventHandler.PublishDVPEventsMessage(evtData);
+                    /*jsonStr = JSON.stringify(evtData);
+                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
                 }
 
                 var channelSetName = "CHANNELS:" + tenantId + ":" + companyId;
@@ -1223,8 +1227,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 }
                 else
                 {
-                    jsonStr = JSON.stringify(evtData);
-                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                    dvpEventHandler.PublishDVPEventsMessage(evtData);
+                    /*jsonStr = JSON.stringify(evtData);
+                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
                 }
 
                 break;
@@ -1585,8 +1590,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 }
                 else
                 {
-                    jsonStr = JSON.stringify(evtData);
-                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                    dvpEventHandler.PublishDVPEventsMessage(evtData);
+                    /*jsonStr = JSON.stringify(evtData);
+                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
                 }
 
                 var channelSetNameApp = 'CHANNELS_APP:' + dvpAppId;
@@ -2113,16 +2119,18 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             var evResource =  evtObj['ARDS-Resource-Name'];
                             var eventParam = util.format("The call is rejected by %s", evResource);
                             evtData.EventParams = eventParam;
-                            var jsonStr = JSON.stringify(evtData);
-                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
                         }
                         else if(action === 'agent-connected')
                         {
                             var evResource =  evtObj['ARDS-Resource-Name'];
                             var eventParam = util.format("The call is answered by %s", evResource);
                             evtData.EventParams = eventParam;
-                            var jsonStr = JSON.stringify(evtData);
-                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
 
                         }
                         else if(action === 'agent-disconnected')
@@ -2130,8 +2138,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             var evResource =  evtObj['ARDS-Resource-Name'];
                             var eventParam = util.format("The call is disconnected by %s", evResource);
                             evtData.EventParams = eventParam;
-                            var jsonStr = JSON.stringify(evtData);
-                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
 
                         }
                         else if(action === 'ards-added')
@@ -2139,14 +2148,16 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             var evResource =  evtObj['ARDS-Call-Skill'];
                             var eventParam = util.format("The call is added to %s queue", evResource);
                             evtData.EventParams = eventParam;
-                            var jsonStr = JSON.stringify(evtData);
-                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
 
                         }
                         else if(action === 'client-left')
                         {
-                            var jsonStr = JSON.stringify(evtData);
-                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
 
                         }
                         else if(action === 'agent-found')
@@ -2154,13 +2165,15 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             var evResource =  evtObj['ARDS-Resource-Name'];
                             var eventParam = util.format("%s is selected to route the request", evResource);
                             evtData.EventParams = eventParam;
-                            var jsonStr = JSON.stringify(evtData);
-                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
 
                         }else{
 
-                            var jsonStr = JSON.stringify(evtData);
-                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
 
                         }
 

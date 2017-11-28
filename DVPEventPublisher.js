@@ -7,10 +7,10 @@ var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 var redisClient = null;
 var amqpClient = null;
 
-if(config.UseDashboardAMQP && config.UseDashboardAMQP == 'true')
+if(config.EventPublishMethod === 'amqp')
 {
     //Create AMQP Connection
-    console.log('=================== CREATING AMQP DASHBOARD CONNECTION ====================');
+    console.log('=================== CREATING AMQP EVENT CONNECTION ====================');
     var ips = [];
     if(config.RabbitMQ.ip) {
         ips = config.RabbitMQ.ip.split(",");
@@ -35,17 +35,17 @@ if(config.UseDashboardAMQP && config.UseDashboardAMQP == 'true')
 
     amqpClient.on('ready', function () {
 
-        logger.info("DASHBOARD - AMQP CONNECTION READY");
+        logger.info("EVENT - AMQP CONNECTION READY");
     });
 
     amqpClient.on('error', function (error) {
 
-        logger.info("DASHBOARD - AMQP CONNECTION - ERROR : " + error);
+        logger.info("EVENT - AMQP CONNECTION - ERROR : " + error);
     });
 }
 else
 {
-    console.log('=================== CREATING REDIS DASHBOARD CONNECTION ====================');
+    console.log('=================== CREATING REDIS EVENT CONNECTION ====================');
     var redisip = config.Redis.ip;
     var redisport = config.Redis.port;
     var redispass = config.Redis.password;
@@ -87,7 +87,7 @@ else
 
             }else{
 
-                console.log("No enough sentinel servers found - DASHBOARD REDIS");
+                console.log("No enough sentinel servers found - EVENT REDIS");
             }
 
         }
@@ -128,45 +128,25 @@ else
 }
 
 
-var PublishDashboardMessage = function(tenantId, companyId, eventClass, eventType, eventCategory, sessionId, param1, param2, timestamp)
+var PublishDVPEventsMessage = function(obj)
 {
     if(redisClient)
     {
-        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, eventClass, eventType, eventCategory, param1, param2, sessionId);
+        var msg = JSON.stringify(obj);
+        redisClient.publish('SYS:MONITORING:DVPEVENTS', msg);
 
-        redisClient.publish('events', pubMessage);
-
-        logger.debug("DASHBOARD PUBLISH : MESSAGE : " + pubMessage);
+        logger.debug("DVP EVENTS PUBLISH : MESSAGE : " + msg);
 
     }
     else if(amqpClient)
     {
-        var tenantInt = 0;
-        var companyInt = 0;
-
         try
         {
-            tenantInt = parseInt(tenantId);
-            companyInt = parseInt(companyId);
-
-            var sendObj =
-            {
-                Tenant: tenantInt,
-                Company: companyInt,
-                EventClass: eventClass,
-                EventType: eventType,
-                EventCategory: eventCategory,
-                SessionID: sessionId,
-                TimeStamp: timestamp,
-                Parameter1: param1,
-                Parameter2: param2
-            };
-
-            amqpClient.publish('DashboardEvents', sendObj, {
+            amqpClient.publish('DVPEVENTS', obj, {
                 contentType: 'application/json'
             });
 
-            logger.debug("DASHBOARD PUBLISH : MESSAGE : " + JSON.stringify(sendObj));
+            logger.debug("DASHBOARD PUBLISH : MESSAGE : " + JSON.stringify(obj));
         }
         catch(ex)
         {
@@ -174,9 +154,8 @@ var PublishDashboardMessage = function(tenantId, companyId, eventClass, eventTyp
 
         }
 
-
     }
 
 };
 
-module.exports.PublishDashboardMessage= PublishDashboardMessage;
+module.exports.PublishDVPEventsMessage= PublishDVPEventsMessage;
