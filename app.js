@@ -349,9 +349,11 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
             uniqueId = ardsClientUuid;
         }
 
-        if(evtType === 'CHANNEL_BRIDGE' || evtType === 'CHANNEL_CREATE' || evtType === 'CHANNEL_ANSWER' || evtType === 'ARDS_EVENT' || evtType === 'CHANNEL_HOLD' || evtType === 'CHANNEL_UNHOLD' || evtType === 'CHANNEL_UNBRIDGE' || evtType === 'CHANNEL_DESTROY')
+        if(evtType === 'CHANNEL_BRIDGE' || evtType === 'CHANNEL_CREATE' || evtType === 'CHANNEL_ANSWER' || evtType === 'ARDS_EVENT' || evtType === 'CHANNEL_HOLD' || evtType === 'CHANNEL_UNHOLD' || evtType === 'CHANNEL_UNBRIDGE' || evtType === 'CHANNEL_DESTROY' || evtType === 'CHANNEL_HANGUP')
         {
             logger.debug('[DVP-EventMonitor.handler] - [%s] - Event Data - EVENT_TYPE : ' + evtType + ', CHANNEL_STATE : ' + evtObj['Channel-State'] + ', SESSION_ID : ' + uniqueId + ', CALLER_UUID : ' + evtObj['Caller-Unique-ID'] + 'SWITCH NAME : ' + switchName, reqId);
+
+            logger.debug('[DVP-EventMonitor.handler] - [%s] - RAW EVENT JSON TYPE %s : %s', reqId, evtType, JSON.stringify(evtObj));
         }
 
         if (variableEvtTime)
