@@ -248,6 +248,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
         var campaignId = evtObj['variable_CampaignId'];
         var companyId = evtObj['variable_companyid'];
         var tenantId = evtObj['variable_tenantid'];
+        var bUnit = evtObj['variable_business_unit'];
         var operator = evtObj['variable_veeryoperator'];
         var variableEvtTime = evtObj["Event-Date-Timestamp"];
         var switchName = evtObj['FreeSWITCH-Switchname'];
@@ -317,6 +318,13 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 });
             }
 
+            if(bUnit)
+            {
+                redisClient.hset(uniqueId, 'DVP-Business-Unit', bUnit, function (err, reply){
+                    redisClient.expire(uniqueId, 86400, redisMessageHandler);
+                });
+            }
+
             if(resourceId)
             {
                 redisClient.hset(uniqueId, 'Agent-Resource-Id', resourceId, function (err, reply){
@@ -377,7 +385,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
             CallerDestNum: callerDestNum,
             EventParams: "",
             CompanyId: companyId,
-            TenantId: tenantId
+            TenantId: tenantId,
+            BusinessUnit: bUnit
         };
 
         switch (evtType)
@@ -427,7 +436,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 if((opCat === 'ATT_XFER_USER' || opCat === 'ATT_XFER_GATEWAY') && tenantId && companyId && resId && varArdsClientUuid && otherLegDir === 'outbound')
                 {
-                    dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, "CALLSERVER", "CALL", "TRANSFER", varArdsClientUuid, resId, '', eventTime);
+                    dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, bUnit, "CALLSERVER", "CALL", "TRANSFER", varArdsClientUuid, resId, '', eventTime);
                     /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "TRANSFER", resId, '', varArdsClientUuid);
 
                     redisClient.publish('events', pubMessage);*/
@@ -465,7 +474,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     bridgeDashboardUid = evtObj['Bridge-B-Unique-ID'];
                 }
 
-                dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", bridgeDashboardUid, '', dvpCallDirection, eventTime);
+                dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, bUnit, "CALLSERVER", "CALL", "BRIDGE", bridgeDashboardUid, '', dvpCallDirection, eventTime);
 
                 /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", "", dvpCallDirection, bridgeDashboardUid);
 
@@ -840,7 +849,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 {
                     redisClient.sadd(channelSetName, uniqueId, redisMessageHandler);
 
-                    dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, "CALLSERVER", "CHANNEL", "CREATE", uniqueId, '', '', eventTime);
+                    dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, bUnit, "CALLSERVER", "CHANNEL", "CREATE", uniqueId, '', '', eventTime);
 
                     /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "CREATE", "", "", uniqueId);
 
@@ -922,12 +931,13 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         var hashCallDirection = channelHash['DVP-Call-Direction'];
                         var hashCompany = channelHash['DVP-CompanyId'];
                         var hashTenant = channelHash['DVP-TenantId'];
+                        var hashBUnit = channelHash['DVP-Business-Unit'];
 
                         if(hashArdsClientUuid && hashResId)
                         {
                             if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
                             {
-                                dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
+                                dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "HOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
 
                                 /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
 
@@ -949,7 +959,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                     if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
                                     {
-                                        dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
+                                        dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "HOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
 
                                         /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
 
@@ -980,12 +990,13 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         var hashCallDirection = channelHash['DVP-Call-Direction'];
                         var hashCompany = channelHash['DVP-CompanyId'];
                         var hashTenant = channelHash['DVP-TenantId'];
+                        var hashBUnit = channelHash['DVP-Business-Unit'];
 
                         if(hashArdsClientUuid && hashResId)
                         {
                             if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
                             {
-                                dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
+                                dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
 
                                 /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
 
@@ -1007,7 +1018,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                     if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
                                     {
-                                        dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
+                                        dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
 
                                         /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
 
@@ -1142,7 +1153,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                 {
                                     //<editor-fold desc="UPDATE OUTBOUND ANSWER COUNT ON DASHBOARD FOR CALLER">
 
-                                    dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, "CALLSERVER", "CALL", "ANSWER", obj.ResourceId, obj.ResourceId, 'outbound', eventTime);
+                                    dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, bUnit, "CALLSERVER", "CALL", "ANSWER", obj.ResourceId, obj.ResourceId, 'outbound', eventTime);
 
                                     /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "ANSWER", obj.ResourceId, 'outbound', obj.ResourceId);
 
@@ -1254,7 +1265,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     unBridgeDashboardUid = evtObj['Bridge-B-Unique-ID'];
                 }
 
-                dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", unBridgeDashboardUid, '', dvpCallDirection, eventTime);
+                dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, bUnit, "CALLSERVER", "CALL", "UNBRIDGE", unBridgeDashboardUid, '', dvpCallDirection, eventTime);
 
                 /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", dvpCallDirection, unBridgeDashboardUid);
 
@@ -1522,7 +1533,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 {
                     redisClient.del('CHANNELMAP:' + uniqueId, redisMessageHandler);
 
-                    dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, "CALLSERVER", "CHANNEL", "DESTROY", uniqueId, '', '', eventTime);
+                    dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, bUnit, "CALLSERVER", "CHANNEL", "DESTROY", uniqueId, '', '', eventTime);
 
                     /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "DESTROY", "", "", uniqueId);
 
@@ -2207,6 +2218,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 evtObj['variable_DVP_CUSTOM_PUBID'] = event.getHeader('variable_DVP_CUSTOM_PUBID');
                 evtObj['variable_CampaignId'] = event.getHeader('variable_CampaignId');
                 evtObj['variable_companyid'] = event.getHeader('variable_companyid');
+                evtObj['variable_business_unit'] = event.getHeader('variable_business_unit');
                 evtObj['variable_tenantid'] = event.getHeader('variable_tenantid');
                 evtObj['variable_veeryoperator'] = event.getHeader('variable_veeryoperator');
                 evtObj['Event-Date-Timestamp'] = event.getHeader("Event-Date-Timestamp");
