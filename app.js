@@ -249,6 +249,11 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
         var companyId = evtObj['variable_companyid'];
         var tenantId = evtObj['variable_tenantid'];
         var bUnit = evtObj['variable_business_unit'];
+
+        if(!bUnit)
+        {
+            bUnit = 'default';
+        }
         var operator = evtObj['variable_veeryoperator'];
         var variableEvtTime = evtObj["Event-Date-Timestamp"];
         var switchName = evtObj['FreeSWITCH-Switchname'];
