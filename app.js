@@ -366,7 +366,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
         {
             logger.debug('[DVP-EventMonitor.handler] - [%s] - Event Data - EVENT_TYPE : ' + evtType + ', CHANNEL_STATE : ' + evtObj['Channel-State'] + ', SESSION_ID : ' + uniqueId + ', CALLER_UUID : ' + evtObj['Caller-Unique-ID'] + 'SWITCH NAME : ' + switchName, reqId);
 
-            logger.debug('[DVP-EventMonitor.handler] - [%s] - RAW EVENT JSON TYPE %s : %s', reqId, evtType, JSON.stringify(evtObj));
+            //logger.debug('[DVP-EventMonitor.handler] - [%s] - RAW EVENT JSON TYPE %s : %s', reqId, evtType, JSON.stringify(evtObj));
         }
 
         if (variableEvtTime)
