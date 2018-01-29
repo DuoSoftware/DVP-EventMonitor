@@ -1217,6 +1217,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                             if(obj && obj.Context)
                             {
+                                console.log('======================ANSWER====================' + direction);
                                 ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
 
                             }
@@ -2030,7 +2031,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                     if(usr.GuRefId)
                                     {
-                                        mongoAccessor.getUserData(usr.GuRefId, function(err, usrData)
+                                        mongoAccessor.getUserAccountData(usr.CompanyId, usr.TenantId, usr.GuRefId, function(err, usrData)
                                         {
                                             if(usrData)
                                             {
@@ -2039,10 +2040,10 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                                 var obj = {
                                                     SipURI: username + '@' + realm,
                                                     Context: usr.ContextId,
-                                                    Issuer : usrData.username,
+                                                    Issuer : usrData.user,
                                                     CompanyId : usr.CompanyId,
                                                     TenantId : usr.TenantId,
-                                                    ResourceId: usrData.resourceid
+                                                    ResourceId: usrData.resource_id
                                                 };
 
                                                 redisClient.set(key, JSON.stringify(obj), redisMessageHandler);
