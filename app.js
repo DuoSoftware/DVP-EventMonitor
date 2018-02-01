@@ -280,6 +280,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
         var resourceId = evtObj['variable_ARDS-Resource-Id'];
         var callerContext = evtObj['Caller-Context'];
         var calleeNumber = evtObj['Caller-Callee-ID-Number'];
+        var isDialerIVR = evtObj['variable_is_dialer_ivr'];
 
         if(!callerOrigIdName)
         {
@@ -617,6 +618,51 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
 
                 }
+
+                //</editor-fold>
+
+
+                //<editor-fold desc="HANDLING IVR AGENT TRANSFER FOR DIALER">
+
+                /*if(isDialerIVR)
+                {
+                    redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + evtObj['Caller-Callee-ID-Number'], function(err, objString)
+                    {
+                        var obj = JSON.parse(objString);
+
+                        if(obj && obj.Context)
+                        {
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - SENDING', reqId);
+
+                            //<editor-fold desc="HANDLING AGENT DIALED CALLS">
+
+                            extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', evtObj['Caller-Orig-Caller-ID-Number'], evtObj['Caller-Callee-ID-Number'], companyId, tenantId);
+
+                            var nsObj = {
+                                Ref: uniqueId,
+                                To: obj.Issuer,
+                                Timeout: 1000,
+                                Direction: 'STATELESS',
+                                From: 'CALLSERVER',
+                                Callback: ''
+                            };
+
+                            nsObj.Message = 'agent_found|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined' + otherLegUniqueId + '|DIALER';
+
+                            extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+
+                            //</editor-fold>
+
+                        }
+                        else
+                        {
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - CONTEXT NOT FOUND', reqId);
+                        }
+
+                    });
+                }*/
 
                 //</editor-fold>
 
@@ -2029,7 +2075,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                     redisClient.set('SIPPRESENCE:' + realm + ':' + username, JSON.stringify(presObj), redisMessageHandler);
 
-                                    if(usr.GuRefId)
+                                    if(usr && usr.GuRefId)
                                     {
                                         mongoAccessor.getUserAccountData(usr.CompanyId, usr.TenantId, usr.GuRefId, function(err, usrData)
                                         {
