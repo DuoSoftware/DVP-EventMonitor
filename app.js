@@ -1472,6 +1472,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                         {
                             var obj = JSON.parse(objString);
+
+                            var hangupCause = evtObj['Hangup-Cause'];
                             if(obj && obj.Context)
                             {
                                 var nsObj = {
@@ -1481,7 +1483,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                     Direction: 'STATELESS',
                                     From: 'CALLSERVER',
                                     Callback: '',
-                                    Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId
+                                    Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|' + hangupCause + '|' + otherLegUniqueId
                                 };
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
