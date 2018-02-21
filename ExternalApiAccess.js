@@ -43,7 +43,7 @@ var BillCall = function(reqId, uuid, from, to, type, provider, companyId, tenant
             body: jsonStr
         };
 
-        logger.debug('[DVP-EventMonitor.BillCall] - [%s] - Creating Api Url : %s', reqId, httpUrl);
+        logger.debug('[DVP-EventMonitor.BillCall] - [%s] - Creating Api Url : %s , DATA : %s', reqId, httpUrl, jsonStr);
 
         httpReq.post(options, function (error, response, body)
         {
@@ -95,7 +95,7 @@ var BillEndCall = function(reqId, uuid, from, to, type, companyId, tenantId)
             body: jsonStr
         };
 
-        logger.debug('[DVP-EventMonitor.BillEndCall] - [%s] - Creating Api Url : %s', reqId, httpUrl);
+        logger.debug('[DVP-EventMonitor.BillEndCall] - [%s] - Creating Api Url : %s , DATA : %s', reqId, httpUrl, jsonStr);
 
         httpReq.post(options, function (error, response, body)
         {
