@@ -17,6 +17,7 @@ var connectionstring = '';
 mongoip = mongoip.split(',');
 
 var User = require('dvp-mongomodels/model/User');
+var UserAccount = require('dvp-mongomodels/model/UserAccount');
 
 if(util.isArray(mongoip)){
 
@@ -90,6 +91,14 @@ var getUserData = function(id, callback)
     });
 };
 
+var getUserAccountData = function(companyId, tenantId, refId, callback)
+{
+    UserAccount.findOne({company: companyId, tenant: tenantId, userref: refId}).exec(function (err, user)
+    {
+        callback(err, user);
+    });
+};
+
 var getSuperUsers = function(callback)
 {
     User.find({'user_meta.role': "superadmin"}).exec(function (err, userList)
@@ -100,3 +109,4 @@ var getSuperUsers = function(callback)
 
 module.exports.getUserData = getUserData;
 module.exports.getSuperUsers = getSuperUsers;
+module.exports.getUserAccountData = getUserAccountData;

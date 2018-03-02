@@ -89,5 +89,7 @@ module.exports = {
 
     Token: "HOST_TOKEN",
     billingEnabled: "SYS_BILLING_ENABLED",
-    evtConsumeType: "HOST_EVENT_CONSUME_TYPE"
+    evtConsumeType: "HOST_EVENT_CONSUME_TYPE",
+    UseDashboardAMQP: "HOST_USE_DASHBOARD_MSG_QUEUE",
+    EventPublishMethod: 'HOST_DVPEVENTS_TYPE'
 };

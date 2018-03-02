@@ -20,6 +20,8 @@ var redisHandler = require('./RedisHandler.js');
 var mongoAccessor = require('./MongoAccessor.js');
 var _ = require('lodash');
 var mailSender = require('./MailSender.js').PublishToQueue;
+var dashboardEvtHandler = require('./DashboardEventHandler.js');
+var dvpEventHandler = require('./DVPEventPublisher.js');
 
 var winston = require('winston');
 
@@ -246,6 +248,12 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
         var campaignId = evtObj['variable_CampaignId'];
         var companyId = evtObj['variable_companyid'];
         var tenantId = evtObj['variable_tenantid'];
+        var bUnit = evtObj['variable_business_unit'];
+
+        if(!bUnit)
+        {
+            bUnit = 'default';
+        }
         var operator = evtObj['variable_veeryoperator'];
         var variableEvtTime = evtObj["Event-Date-Timestamp"];
         var switchName = evtObj['FreeSWITCH-Switchname'];
@@ -272,6 +280,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
         var resourceId = evtObj['variable_ARDS-Resource-Id'];
         var callerContext = evtObj['Caller-Context'];
         var calleeNumber = evtObj['Caller-Callee-ID-Number'];
+        var isDialerIVR = evtObj['variable_is_dialer_ivr'];
 
         if(!callerOrigIdName)
         {
@@ -315,6 +324,13 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 });
             }
 
+            if(bUnit)
+            {
+                redisClient.hset(uniqueId, 'DVP-Business-Unit', bUnit, function (err, reply){
+                    redisClient.expire(uniqueId, 86400, redisMessageHandler);
+                });
+            }
+
             if(resourceId)
             {
                 redisClient.hset(uniqueId, 'Agent-Resource-Id', resourceId, function (err, reply){
@@ -347,9 +363,11 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
             uniqueId = ardsClientUuid;
         }
 
-        if(evtType === 'CHANNEL_BRIDGE' || evtType === 'CHANNEL_CREATE' || evtType === 'CHANNEL_ANSWER' || evtType === 'ARDS_EVENT' || evtType === 'CHANNEL_HOLD' || evtType === 'CHANNEL_UNHOLD' || evtType === 'CHANNEL_UNBRIDGE' || evtType === 'CHANNEL_DESTROY')
+        if(evtType === 'CHANNEL_BRIDGE' || evtType === 'CHANNEL_CREATE' || evtType === 'CHANNEL_ANSWER' || evtType === 'ARDS_EVENT' || evtType === 'CHANNEL_HOLD' || evtType === 'CHANNEL_UNHOLD' || evtType === 'CHANNEL_UNBRIDGE' || evtType === 'CHANNEL_DESTROY' || evtType === 'CHANNEL_HANGUP')
         {
             logger.debug('[DVP-EventMonitor.handler] - [%s] - Event Data - EVENT_TYPE : ' + evtType + ', CHANNEL_STATE : ' + evtObj['Channel-State'] + ', SESSION_ID : ' + uniqueId + ', CALLER_UUID : ' + evtObj['Caller-Unique-ID'] + 'SWITCH NAME : ' + switchName, reqId);
+
+            //logger.debug('[DVP-EventMonitor.handler] - [%s] - RAW EVENT JSON TYPE %s : %s', reqId, evtType, JSON.stringify(evtObj));
         }
 
         if (variableEvtTime)
@@ -375,7 +393,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
             CallerDestNum: callerDestNum,
             EventParams: "",
             CompanyId: companyId,
-            TenantId: tenantId
+            TenantId: tenantId,
+            BusinessUnit: bUnit
         };
 
         switch (evtType)
@@ -389,11 +408,12 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 if(dvpCustPubId)
                 {
                     redisClient.publish(dvpCustPubId, jsonStr);
-                    //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+                    logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
                 }
                 else
                 {
-                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                    dvpEventHandler.PublishDVPEventsMessage(evtData);
+                    //redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
                     //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DVPEVENTS: %s', reqId, jsonStr);
                 }
 
@@ -424,9 +444,10 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 if((opCat === 'ATT_XFER_USER' || opCat === 'ATT_XFER_GATEWAY') && tenantId && companyId && resId && varArdsClientUuid && otherLegDir === 'outbound')
                 {
-                    var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "TRANSFER", resId, '', varArdsClientUuid);
+                    dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, bUnit, "CALLSERVER", "CALL", "TRANSFER", varArdsClientUuid, resId, '', eventTime);
+                    /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "TRANSFER", resId, '', varArdsClientUuid);
 
-                    redisClient.publish('events', pubMessage);
+                    redisClient.publish('events', pubMessage);*/
                 }
 
 
@@ -461,9 +482,11 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     bridgeDashboardUid = evtObj['Bridge-B-Unique-ID'];
                 }
 
-                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", "", dvpCallDirection, bridgeDashboardUid);
+                dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, bUnit, "CALLSERVER", "CALL", "BRIDGE", bridgeDashboardUid, '', dvpCallDirection, eventTime);
 
-                redisClient.publish('events', pubMessage);
+                /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "BRIDGE", "", dvpCallDirection, bridgeDashboardUid);
+
+                redisClient.publish('events', pubMessage);*/
 
 
                 evtData.EventCategory = "CHANNEL_BRIDGE";
@@ -479,12 +502,15 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                     jsonStr = JSON.stringify(evtData);
 
+                    logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+
                     redisClient.publish(dvpCustPubId, jsonStr);
                 }
                 else
                 {
-                    jsonStr = JSON.stringify(evtData);
-                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                    dvpEventHandler.PublishDVPEventsMessage(evtData);
+                    /*jsonStr = JSON.stringify(evtData);
+                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
                 }
 
                 redisClient.hset(uniqueId, 'Bridge-State', 'Bridged', redisMessageHandler);
@@ -539,7 +565,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 var variableLoopbackApp = evtObj["variable_loopback_app"];
                 var variableSipAuthRealm = evtObj["variable_sip_auth_realm"];
 
-                //Handle Trasfer channel create
+                //<editor-fold desc="HANDLING INCOMING TRANSFER CALL NOTIFICATION WITH SYSTEM USERNAME NOTIFICATIONS">
 
                 if(direction === 'outbound' && companyId && tenantId && opCat === 'ATT_XFER_USER')
                 {
@@ -559,20 +585,31 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                         if(obj && obj.Context)
                         {
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + caller, function(err, objString)
+                            {
+                                var tmpObj = JSON.parse(objString);
 
-                            var nsObj = {
-                                Ref: uniqueId,
-                                To: obj.Issuer,
-                                Timeout: 1000,
-                                Direction: 'STATELESS',
-                                From: 'CALLSERVER',
-                                Callback: '',
-                                Message: 'agent_found|' + transCallUuid + '|INBOUND|' + origCaller + '|' + digits + '|' + digits + '|INBOUND|inbound|call|' + caller + '|' + uniqueId + '|TRANSFER'
-                            };
+                                if(tmpObj && tmpObj.Issuer)
+                                {
+                                    caller = tmpObj.Issuer;
+                                }
 
-                            extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+                                var nsObj = {
+                                    Ref: uniqueId,
+                                    To: obj.Issuer,
+                                    Timeout: 1000,
+                                    Direction: 'STATELESS',
+                                    From: 'CALLSERVER',
+                                    Callback: '',
+                                    Message: 'agent_found|' + transCallUuid + '|INBOUND|' + origCaller + '|' + obj.Issuer + '|' + obj.Issuer + '|INBOUND|inbound|call|' + caller + '|' + uniqueId + '|TRANSFER'
+                                };
 
-                            logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+                                extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+                            });
+
+
 
 
                         }
@@ -582,12 +619,14 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 }
 
+                //</editor-fold>
 
-                //Sending Resource Status For Agent Outbound Calls Calling Party
 
-                if(direction === 'outbound' && dvpCallDirection === 'outbound' && companyId && tenantId)
+                //<editor-fold desc="HANDLING IVR AGENT TRANSFER FOR DIALER">
+
+                /*if(isDialerIVR)
                 {
-                    redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                    redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + evtObj['Caller-Callee-ID-Number'], function(err, objString)
                     {
                         var obj = JSON.parse(objString);
 
@@ -595,10 +634,53 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         {
                             logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - SENDING', reqId);
 
-                            //for agent dialed outbound calls
+                            //<editor-fold desc="HANDLING AGENT DIALED CALLS">
 
-                            if(actionCat === 'DIALER')
+                            extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', evtObj['Caller-Orig-Caller-ID-Number'], evtObj['Caller-Callee-ID-Number'], companyId, tenantId);
+
+                            var nsObj = {
+                                Ref: uniqueId,
+                                To: obj.Issuer,
+                                Timeout: 1000,
+                                Direction: 'STATELESS',
+                                From: 'CALLSERVER',
+                                Callback: ''
+                            };
+
+                            nsObj.Message = 'agent_found|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined' + otherLegUniqueId + '|DIALER';
+
+                            extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+
+                            //</editor-fold>
+
+                        }
+                        else
+                        {
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - CONTEXT NOT FOUND', reqId);
+                        }
+
+                    });
+                }*/
+
+                //</editor-fold>
+
+
+                if(direction === 'outbound' && dvpCallDirection === 'outbound' && companyId && tenantId)
+                {
+                    if(actionCat === 'DIALER')
+                    {
+                        redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                        {
+                            var obj = JSON.parse(objString);
+
+                            if(obj && obj.Context)
                             {
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - SENDING', reqId);
+
+                                //<editor-fold desc="HANDLING AGENT DIALED CALLS">
+
                                 extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', evtObj['Caller-Orig-Caller-ID-Number'], evtObj['Caller-Caller-ID-Number'], companyId, tenantId);
 
                                 var nsObj = {
@@ -610,47 +692,127 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                     Callback: ''
                                 };
 
-                                nsObj.Message = 'agent_found|' + uniqueId + '|INBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|INBOUND|inbound|call|undefined|' + otherLegUniqueId;
-
-                                extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
-
-                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
-                            }
-                            else if(opCat === 'GATEWAY' || opCat === 'PRIVATE_USER')
-                            {
-                                extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', callerOrigIdName, callerDestNum, obj.CompanyId, obj.TenantId);
-
-                                var nsObj = {
-                                    Ref: uniqueId,
-                                    To: obj.Issuer,
-                                    Timeout: 1000,
-                                    Direction: 'STATELESS',
-                                    From: 'CALLSERVER',
-                                    Callback: '',
-                                    Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId
-                                };
+                                nsObj.Message = 'agent_found|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined' + otherLegUniqueId + '|DIALER';
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
                                 logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
 
+                                //</editor-fold>
 
                             }
-
-                            if(opCat === 'GATEWAY' || opCat === 'PRIVATE_USER')
+                            else
                             {
-                                ardsHandler.SendResourceStatus(reqId, otherLegUniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Reserved', '', '', 'outbound');
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - CONTEXT NOT FOUND', reqId);
                             }
 
-                        }
-                        else
+                        });
+                    }
+                    else
+                    {
+                        redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                         {
-                            logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - CONTEXT NOT FOUND', reqId);
-                        }
+                            var obj = JSON.parse(objString);
 
-                    });
+                            if(obj && obj.Context)
+                            {
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - SENDING', reqId);
+
+                                //<editor-fold desc="HANDLING AGENT DIALED CALLS">
+
+                                if(opCat === 'PRIVATE_USER')
+                                {
+                                    //<editor-fold desc="AGENT TO AGNET CALL SPECIFIC NOTIFICATION HANDLING WITH SYSTEM USERNAME">
+
+                                    extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', callerOrigIdName, callerDestNum, obj.CompanyId, obj.TenantId);
+
+                                    redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerDestNum, function(err, objString)
+                                    {
+                                        var objTmp = JSON.parse(objString);
+
+                                        if (objTmp && objTmp.Context)
+                                        {
+                                            //<editor-fold desc="SEND NOTIFICATION TO CALLING PARTY - AGENT_AGENT CALL">
+                                            var nsObj = {
+                                                Ref: uniqueId,
+                                                To: obj.Issuer,
+                                                Timeout: 1000,
+                                                Direction: 'STATELESS',
+                                                From: 'CALLSERVER',
+                                                Callback: '',
+                                                Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId
+                                            };
+
+                                            extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                                            logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+
+                                            //</editor-fold>
+
+                                            //<editor-fold desc="SEND NOTIFICATION TO CALL RECEIVING PARTY - AGENT_AGENT CALL">
+
+                                            var nsObjRec = {
+                                                Ref: uniqueId,
+                                                To: objTmp.Issuer,
+                                                Timeout: 1000,
+                                                Direction: 'STATELESS',
+                                                From: 'CALLSERVER',
+                                                Callback: '',
+                                                Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId + '|AGENT_AGENT'
+                                            };
+
+                                            extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObjRec, objTmp.CompanyId, objTmp.TenantId);
+
+                                            logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObjRec.Message);
+
+                                            //</editor-fold>
+
+                                        }
+                                    });
+
+                                    //</editor-fold>
 
 
+                                }
+                                else if(opCat === 'GATEWAY')
+                                {
+                                    //<editor-fold desc="AGENT TO GATEWAY CALL SPECIFIC NOTIFICATION HANDLING WITH SYSTEM USERNAME">
+
+                                    extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', callerOrigIdName, callerDestNum, obj.CompanyId, obj.TenantId);
+
+                                    var nsObj = {
+                                        Ref: uniqueId,
+                                        To: obj.Issuer,
+                                        Timeout: 1000,
+                                        Direction: 'STATELESS',
+                                        From: 'CALLSERVER',
+                                        Callback: '',
+                                        Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId
+                                    };
+
+                                    extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+
+                                    //</editor-fold>
+
+                                }
+
+                                if(opCat === 'GATEWAY' || opCat === 'PRIVATE_USER')
+                                {
+                                    ardsHandler.SendResourceStatus(reqId, otherLegUniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Reserved', '', '', 'outbound');
+                                }
+
+                                //</editor-fold>
+
+                            }
+                            else
+                            {
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - CONTEXT NOT FOUND', reqId);
+                            }
+
+                        });
+                    }
 
                 }
 
@@ -705,7 +867,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                  }*/
 
 
-
                 if(companyId && tenantId)
                 {
                     redisClient.incr(chanCountCompany, redisMessageHandler);
@@ -723,12 +884,16 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         evtData.SessionId = evtObj['variable_ards_client_uuid'];
                     }
                     jsonStr = JSON.stringify(evtData);
+
+                    logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+
                     redisClient.publish(dvpCustPubId, jsonStr);
                 }
                 else
                 {
-                    jsonStr = JSON.stringify(evtData);
-                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                    dvpEventHandler.PublishDVPEventsMessage(evtData);
+                    /*jsonStr = JSON.stringify(evtData);
+                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
                 }
 
                 var channelSetName = "CHANNELS:" + tenantId + ":" + companyId;
@@ -737,9 +902,11 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 {
                     redisClient.sadd(channelSetName, uniqueId, redisMessageHandler);
 
-                    var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "CREATE", "", "", uniqueId);
+                    dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, bUnit, "CALLSERVER", "CHANNEL", "CREATE", uniqueId, '', '', eventTime);
 
-                    redisClient.publish('events', pubMessage);
+                    /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "CREATE", "", "", uniqueId);
+
+                    redisClient.publish('events', pubMessage);*/
 
                     logger.debug('=========================== ADD TO SET : [%s] - [%s] ==========================', channelSetName, uniqueId);
                 }
@@ -817,14 +984,17 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         var hashCallDirection = channelHash['DVP-Call-Direction'];
                         var hashCompany = channelHash['DVP-CompanyId'];
                         var hashTenant = channelHash['DVP-TenantId'];
+                        var hashBUnit = channelHash['DVP-Business-Unit'];
 
                         if(hashArdsClientUuid && hashResId)
                         {
                             if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
                             {
-                                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+                                dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "HOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
 
-                                redisClient.publish('events', pubMessage);
+                                /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+
+                                redisClient.publish('events', pubMessage);*/
                             }
                         }
                         else
@@ -842,9 +1012,11 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                     if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
                                     {
-                                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+                                        dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "HOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
 
-                                        redisClient.publish('events', pubMessage);
+                                        /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+
+                                        redisClient.publish('events', pubMessage);*/
                                     }
                                 }
                             });
@@ -871,14 +1043,17 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         var hashCallDirection = channelHash['DVP-Call-Direction'];
                         var hashCompany = channelHash['DVP-CompanyId'];
                         var hashTenant = channelHash['DVP-TenantId'];
+                        var hashBUnit = channelHash['DVP-Business-Unit'];
 
                         if(hashArdsClientUuid && hashResId)
                         {
                             if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
                             {
-                                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+                                dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
 
-                                redisClient.publish('events', pubMessage);
+                                /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+
+                                redisClient.publish('events', pubMessage);*/
                             }
                         }
                         else
@@ -896,9 +1071,11 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                     if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
                                     {
-                                        var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+                                        dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
 
-                                        redisClient.publish('events', pubMessage);
+                                        /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
+
+                                        redisClient.publish('events', pubMessage);*/
                                     }
                                 }
                             });
@@ -923,6 +1100,40 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
 
                 logger.debug('[DVP-EventMonitor.handler] - [%s] - CHANNEL ANSWER ARDS DATA - EVENT_TYPE : ' + evtType + ', SESSION_ID : ' + uniqueId + 'SWITCH NAME : ' + switchName + 'ards_client_uuid : %s, companyid : %s, tenantid : %s, ards_resource_id : %s, ards_servertype : %s, ards_requesttype : %s', reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsResourceId, ardsServerType, ardsReqType);
+
+                if (actionCat === 'DIALER')
+                {
+                    redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                    {
+                        var obj = JSON.parse(objString);
+
+                        if(obj && obj.Context)
+                        {
+                            var nsObj = {
+                                Ref: uniqueId,
+                                To: obj.Issuer,
+                                Timeout: 1000,
+                                Direction: 'STATELESS',
+                                From: 'CALLSERVER',
+                                Callback: ''
+                            };
+
+                            nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined|' + otherLegUniqueId;
+
+                            extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT CONNECTED - Message : ', reqId, nsObj.Message);
+
+
+                        }
+                        else
+                        {
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - CONTEXT NOT FOUND', reqId);
+                        }
+
+                    })
+
+                }
 
 
                 if(opCat === 'ATT_XFER_USER')
@@ -961,39 +1172,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         redisClient.hset(ardsClientUuid, 'ARDS-Client-Uuid', ardsClientUuid, redisMessageHandler);
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound');
 
-                        if (actionCat === 'DIALER')
-                        {
-                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
-                            {
-                                var obj = JSON.parse(objString);
 
-                                if(obj && obj.Context)
-                                {
-                                    var nsObj = {
-                                        Ref: uniqueId,
-                                        To: obj.Issuer,
-                                        Timeout: 1000,
-                                        Direction: 'STATELESS',
-                                        From: 'CALLSERVER',
-                                        Callback: ''
-                                    };
-
-                                    nsObj.Message = 'agent_connected|' + uniqueId + '|INBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|INBOUND|inbound|call|undefined|' + otherLegUniqueId;
-
-                                    extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
-
-                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT CONNECTED - Message : ', reqId, nsObj.Message);
-
-
-                                }
-                                else
-                                {
-                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - CONTEXT NOT FOUND', reqId);
-                                }
-
-                            })
-
-                        }
                     }
                     //Direction is outbound - This is for processing LEG B of an outbound call
                     else if(direction === 'outbound' && companyId && tenantId && dvpCallDirection === 'outbound')
@@ -1027,9 +1206,11 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                 {
                                     //<editor-fold desc="UPDATE OUTBOUND ANSWER COUNT ON DASHBOARD FOR CALLER">
 
-                                    var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "ANSWER", obj.ResourceId, 'outbound', obj.ResourceId);
+                                    dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, bUnit, "CALLSERVER", "CALL", "ANSWER", obj.ResourceId, obj.ResourceId, 'outbound', eventTime);
 
-                                    redisClient.publish('events', pubMessage);
+                                    /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "ANSWER", obj.ResourceId, 'outbound', obj.ResourceId);
+
+                                    redisClient.publish('events', pubMessage);*/
 
                                     //</editor-fold>
 
@@ -1082,6 +1263,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                             if(obj && obj.Context)
                             {
+                                console.log('======================ANSWER====================' + direction);
                                 ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
 
                             }
@@ -1103,12 +1285,16 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         evtData.SessionId = evtObj['variable_ards_client_uuid'];
                     }
                     jsonStr = JSON.stringify(evtData);
+
+                    logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+
                     redisClient.publish(dvpCustPubId, jsonStr);
                 }
                 else
                 {
-                    jsonStr = JSON.stringify(evtData);
-                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                    dvpEventHandler.PublishDVPEventsMessage(evtData);
+                    /*jsonStr = JSON.stringify(evtData);
+                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
                 }
 
                 break;
@@ -1133,9 +1319,11 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     unBridgeDashboardUid = evtObj['Bridge-B-Unique-ID'];
                 }
 
-                var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", dvpCallDirection, unBridgeDashboardUid);
+                dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, bUnit, "CALLSERVER", "CALL", "UNBRIDGE", unBridgeDashboardUid, '', dvpCallDirection, eventTime);
 
-                redisClient.publish('events', pubMessage);
+                /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CALL", "UNBRIDGE", "", dvpCallDirection, unBridgeDashboardUid);
+
+                redisClient.publish('events', pubMessage);*/
                 //logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS DECREMENT');
                 break;
 
@@ -1231,7 +1419,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                     Direction: 'STATELESS',
                                     From: 'CALLSERVER',
                                     Callback: '',
-                                    Message: 'agent_disconnected|' + uniqueId + '|INBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|INBOUND|inbound|call|undefined|' + otherLegUniqueId
+                                    Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined|' + otherLegUniqueId
                                 };
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
@@ -1284,6 +1472,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
                         {
                             var obj = JSON.parse(objString);
+
+                            var hangupCause = evtObj['Hangup-Cause'];
                             if(obj && obj.Context)
                             {
                                 var nsObj = {
@@ -1293,7 +1483,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                     Direction: 'STATELESS',
                                     From: 'CALLSERVER',
                                     Callback: '',
-                                    Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId
+                                    Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|' + hangupCause + '|' + otherLegUniqueId
                                 };
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
@@ -1399,10 +1589,11 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 {
                     redisClient.del('CHANNELMAP:' + uniqueId, redisMessageHandler);
 
+                    dashboardEvtHandler.PublishDashboardMessage(tenantId, companyId, bUnit, "CALLSERVER", "CHANNEL", "DESTROY", uniqueId, '', '', eventTime);
 
-                    var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "DESTROY", "", "", uniqueId);
+                    /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", tenantId, companyId, "CALLSERVER", "CHANNEL", "DESTROY", "", "", uniqueId);
 
-                    redisClient.publish('events', pubMessage);
+                    redisClient.publish('events', pubMessage);*/
 
                     redisClient.sismember(channelSetName, uniqueId, function(err, setContains)
                     {
@@ -1460,12 +1651,15 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     }
                     jsonStr = JSON.stringify(evtData);
 
+                    logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH CUSTOM: %s', reqId, jsonStr);
+
                     redisClient.publish(dvpCustPubId, jsonStr);
                 }
                 else
                 {
-                    jsonStr = JSON.stringify(evtData);
-                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                    dvpEventHandler.PublishDVPEventsMessage(evtData);
+                    /*jsonStr = JSON.stringify(evtData);
+                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
                 }
 
                 var channelSetNameApp = 'CHANNELS_APP:' + dvpAppId;
@@ -1502,6 +1696,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 var transCompanyId = evtObj['companyId'];
                 var transTenantId = evtObj['tenantId'];
                 var digits = evtObj['digits'];
+                var transReason = evtObj['reason'];
 
                 redisClient.get('SIPUSER_RESOURCE_MAP:' + transTenantId + ':' + transCompanyId + ':' + caller, function(err, objString)
                 {
@@ -1516,7 +1711,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             Direction: 'STATELESS',
                             From: 'CALLSERVER',
                             Callback: '',
-                            Message: 'transfer_ended|' + reqId + '|OUTBOUND|' + caller + '|' + digits + '|OUTBOUND|outbound|call|undefined|' + reqId
+                            Message: 'transfer_ended|' + reqId + '|OUTBOUND|' + caller + '|' + digits + '|OUTBOUND|outbound|call|undefined|' + reqId + '|' + transReason
                         };
 
                         extApiAccess.SendNotificationInitiate(reqId, 'transfer_ended', reqId, nsObj, transCompanyId, transTenantId);
@@ -1882,9 +2077,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                     redisClient.set('SIPPRESENCE:' + realm + ':' + username, JSON.stringify(presObj), redisMessageHandler);
 
-                                    if(usr.GuRefId)
+                                    if(usr && usr.GuRefId)
                                     {
-                                        mongoAccessor.getUserData(usr.GuRefId, function(err, usrData)
+                                        mongoAccessor.getUserAccountData(usr.CompanyId, usr.TenantId, usr.GuRefId, function(err, usrData)
                                         {
                                             if(usrData)
                                             {
@@ -1893,10 +2088,10 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                                 var obj = {
                                                     SipURI: username + '@' + realm,
                                                     Context: usr.ContextId,
-                                                    Issuer : usrData.username,
+                                                    Issuer : usrData.user,
                                                     CompanyId : usr.CompanyId,
                                                     TenantId : usr.TenantId,
-                                                    ResourceId: usrData.resourceid
+                                                    ResourceId: usrData.resource_id
                                                 };
 
                                                 redisClient.set(key, JSON.stringify(obj), redisMessageHandler);
@@ -1941,7 +2136,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                 break;
                             case 'sofia::gateway_state':
                                 redisClient.set('TRUNK_AVAILABILITY:' + evtObj['Gateway'], JSON.stringify(evtObj), redisMessageHandler);
-                                notifyGatewayStatus(reqId, 'gateway_state', evtObj);
+                                //notifyGatewayStatus(reqId, 'gateway_state', evtObj);
                                 break;
 
                         }
@@ -1991,16 +2186,18 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             var evResource =  evtObj['ARDS-Resource-Name'];
                             var eventParam = util.format("The call is rejected by %s", evResource);
                             evtData.EventParams = eventParam;
-                            var jsonStr = JSON.stringify(evtData);
-                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
                         }
                         else if(action === 'agent-connected')
                         {
                             var evResource =  evtObj['ARDS-Resource-Name'];
                             var eventParam = util.format("The call is answered by %s", evResource);
                             evtData.EventParams = eventParam;
-                            var jsonStr = JSON.stringify(evtData);
-                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
 
                         }
                         else if(action === 'agent-disconnected')
@@ -2008,8 +2205,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             var evResource =  evtObj['ARDS-Resource-Name'];
                             var eventParam = util.format("The call is disconnected by %s", evResource);
                             evtData.EventParams = eventParam;
-                            var jsonStr = JSON.stringify(evtData);
-                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
 
                         }
                         else if(action === 'ards-added')
@@ -2017,14 +2215,16 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             var evResource =  evtObj['ARDS-Call-Skill'];
                             var eventParam = util.format("The call is added to %s queue", evResource);
                             evtData.EventParams = eventParam;
-                            var jsonStr = JSON.stringify(evtData);
-                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
 
                         }
                         else if(action === 'client-left')
                         {
-                            var jsonStr = JSON.stringify(evtData);
-                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
 
                         }
                         else if(action === 'agent-found')
@@ -2032,13 +2232,15 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             var evResource =  evtObj['ARDS-Resource-Name'];
                             var eventParam = util.format("%s is selected to route the request", evResource);
                             evtData.EventParams = eventParam;
-                            var jsonStr = JSON.stringify(evtData);
-                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
 
                         }else{
 
-                            var jsonStr = JSON.stringify(evtData);
-                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
 
                         }
 
@@ -2072,6 +2274,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 evtObj['variable_DVP_CUSTOM_PUBID'] = event.getHeader('variable_DVP_CUSTOM_PUBID');
                 evtObj['variable_CampaignId'] = event.getHeader('variable_CampaignId');
                 evtObj['variable_companyid'] = event.getHeader('variable_companyid');
+                evtObj['variable_business_unit'] = event.getHeader('variable_business_unit');
                 evtObj['variable_tenantid'] = event.getHeader('variable_tenantid');
                 evtObj['variable_veeryoperator'] = event.getHeader('variable_veeryoperator');
                 evtObj['Event-Date-Timestamp'] = event.getHeader("Event-Date-Timestamp");
