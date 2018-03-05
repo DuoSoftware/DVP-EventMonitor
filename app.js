@@ -281,6 +281,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
         var callerContext = evtObj['Caller-Context'];
         var calleeNumber = evtObj['Caller-Callee-ID-Number'];
         var isDialerIVR = evtObj['variable_is_dialer_ivr'];
+        var transCallSkill = evtObj['variable_transfer_call_skill'];
 
         if(!callerOrigIdName)
         {
@@ -594,6 +595,13 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                     caller = tmpObj.Issuer;
                                 }
 
+                                var tempSkill = 'INBOUND';
+
+                                if(transCallSkill)
+                                {
+                                    tempSkill = transCallSkill;
+                                }
+
                                 var nsObj = {
                                     Ref: uniqueId,
                                     To: obj.Issuer,
@@ -601,7 +609,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                     Direction: 'STATELESS',
                                     From: 'CALLSERVER',
                                     Callback: '',
-                                    Message: 'agent_found|' + transCallUuid + '|INBOUND|' + origCaller + '|' + obj.Issuer + '|' + obj.Issuer + '|INBOUND|inbound|call|' + caller + '|' + uniqueId + '|TRANSFER'
+                                    Message: 'agent_found|' + transCallUuid + '|INBOUND|' + origCaller + '|' + obj.Issuer + '|' + obj.Issuer + '|' + tempSkill + '|inbound|call|' + caller + '|' + uniqueId + '|TRANSFER'
                                 };
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
