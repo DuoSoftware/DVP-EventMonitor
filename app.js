@@ -324,6 +324,14 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 });
             }
 
+            console.log('BUSINESS_UNIT : ' + evtObj['variable_business_unit']);
+            console.log('BUSINESS_UNIT2 : ' + evtObj['business_unit']);
+
+            if(evtType === 'CHANNEL_BRIDGE')
+            {
+                console.log('FULLOBJ : ' + JSON.stringify(evtObj));
+            }
+
             if(bUnit)
             {
                 redisClient.hset(uniqueId, 'DVP-Business-Unit', bUnit, function (err, reply){
