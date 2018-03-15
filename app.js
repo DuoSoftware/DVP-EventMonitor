@@ -324,7 +324,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 });
             }
 
-            if(evtType === 'CHANNEL_BRIDGE')
+            if(evtType === 'CHANNEL_ANSWER')
             {
                 if(bUnit)
                 {
