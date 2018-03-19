@@ -15,7 +15,7 @@ var billingEnabled = config.billingEnabled;
 
 var BillCall = function(reqId, uuid, from, to, type, provider, companyId, tenantId)
 {
-    if(billingEnabled)
+    if(billingEnabled && billingEnabled === 'true')
     {
         logger.debug('[DVP-EventMonitor.BillCall] - [%s] -  bill call', reqId);
 
@@ -67,7 +67,7 @@ var BillCall = function(reqId, uuid, from, to, type, provider, companyId, tenant
 
 var BillEndCall = function(reqId, uuid, from, to, type, companyId, tenantId)
 {
-    if(billingEnabled)
+    if(billingEnabled && billingEnabled === 'true')
     {
         logger.debug('[DVP-EventMonitor.BillEndCall] - [%s] -  end call', reqId);
 
