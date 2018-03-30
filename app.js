@@ -1163,7 +1163,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                             if(obj && obj.Context)
                             {
-                                ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'inbound');
+                                ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
                             }
 
                         })
@@ -1275,7 +1275,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             if(obj && obj.Context)
                             {
                                 console.log('======================ANSWER====================' + direction);
-                                ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'inbound');
+                                ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
 
                             }
 
@@ -1389,7 +1389,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     {
                         tempUser = evtObj['variable_dialed_user'];
                     }
-                    var tempDirection = 'inbound';
+                    var tempDirection = 'outbound';
                     var tempUuid = uniqueId;
 
                     if(ardsClientUuid)
@@ -1397,10 +1397,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         tempUuid = ardsClientUuid;
                     }
 
-                    //if(dvpCallDirection === 'inbound')
-                    if(direction === 'inbound')
+                    if(dvpCallDirection === 'inbound')
                     {
-                        tempDirection = 'outbound';
+                        tempDirection = 'inbound';
                     }
                     redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + tempUser, function(err, objString)
                     {
@@ -2595,34 +2594,5 @@ else
 {
     CreateESLWithTimeout();
 }
-
-
-setInterval(function(){
-
-    var uid = nodeUuid.v1();
-
-    var d = new Date(0);
-
-    var evtsData =
-    {
-        SessionId: uid,
-        EventClass: "CALL",
-        EventType: "CHANNEL",
-        EventTime: d.toISOString(),
-        EventName: "ddd",
-        EventData: uid,
-        AuthData: '1:103',
-        SwitchName: '1',
-        CampaignId: null,
-        CallerDestNum: '3333',
-        EventParams: "",
-        CompanyId: 103,
-        TenantId: 1,
-        BusinessUnit: 'SSS'
-    };
-
-    dvpEventHandler.PublishDVPEventsMessage(evtsData);
-}, 25);
-
 
 process.stdin.resume();
