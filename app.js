@@ -853,7 +853,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             }
 
                             //for agent dialed outbound calls
-                            ardsHandler.SendResourceStatus(reqId, tempUuid, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Reserved', '', '', 'outbound');
+                            ardsHandler.SendResourceStatus(reqId, tempUuid, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Reserved', '', '', 'inbound');
 
                         }
                         else
@@ -1274,8 +1274,13 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                             if(obj && obj.Context)
                             {
+                                var tempDir = 'outbound';
+                                if(direction === 'outbound')
+                                {
+                                    tempDir = 'inbound';
+                                }
                                 console.log('======================ANSWER====================' + direction);
-                                ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'inbound');
+                                ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', tempDir);
 
                             }
 
@@ -1389,7 +1394,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     {
                         tempUser = evtObj['variable_dialed_user'];
                     }
-                    var tempDirection = 'inbound';
+                    var tempDirection = 'outbound';
                     var tempUuid = uniqueId;
 
                     if(ardsClientUuid)
@@ -1397,10 +1402,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         tempUuid = ardsClientUuid;
                     }
 
-                    //if(dvpCallDirection === 'inbound')
-                    if(direction === 'inbound')
+                    if(direction === 'outbound')
                     {
-                        tempDirection = 'outbound';
+                        tempDirection = 'inbound';
                     }
                     redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + tempUser, function(err, objString)
                     {
