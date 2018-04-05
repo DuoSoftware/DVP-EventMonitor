@@ -1163,7 +1163,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                             if(obj && obj.Context)
                             {
-                                ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
+                                ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'inbound');
                             }
 
                         })
@@ -1275,7 +1275,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             if(obj && obj.Context)
                             {
                                 console.log('======================ANSWER====================' + direction);
-                                ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
+                                ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'inbound');
 
                             }
 
@@ -1389,7 +1389,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     {
                         tempUser = evtObj['variable_dialed_user'];
                     }
-                    var tempDirection = 'outbound';
+                    var tempDirection = 'inbound';
                     var tempUuid = uniqueId;
 
                     if(ardsClientUuid)
@@ -1397,9 +1397,10 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         tempUuid = ardsClientUuid;
                     }
 
-                    if(dvpCallDirection === 'inbound')
+                    //if(dvpCallDirection === 'inbound')
+                    if(direction === 'inbound')
                     {
-                        tempDirection = 'inbound';
+                        tempDirection = 'outbound';
                     }
                     redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + tempUser, function(err, objString)
                     {
