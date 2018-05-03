@@ -798,7 +798,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                         Direction: 'STATELESS',
                                         From: 'CALLSERVER',
                                         Callback: '',
-                                        Message: 'agent_found|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + uniqueId
+                                        Message: 'agent_found|' + otherLegUniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + uniqueId
                                     };
 
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_found', otherLegUniqueId, nsObj, obj.CompanyId, obj.TenantId);
