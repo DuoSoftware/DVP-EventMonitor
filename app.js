@@ -1575,17 +1575,20 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 //Adding call discon record to redis set for cdr summary
 
-                if(direction === 'inbound' || (direction === 'outbound' && actionCat === 'DIALER')){
+                if(config.UseCDRGen && config.UseCDRGen == 'true')
+                {
+                    if(direction === 'inbound' || (direction === 'outbound' && actionCat === 'DIALER')){
 
-                    var utcMoment = moment(eventTime).utc();
-                    var year = utcMoment.year();
-                    var month = utcMoment.month() + 1;
-                    var day = utcMoment.date();
-                    var hr = utcMoment.hour();
+                        var utcMoment = moment(eventTime).utc();
+                        var year = utcMoment.year();
+                        var month = utcMoment.month() + 1;
+                        var day = utcMoment.date();
+                        var hr = utcMoment.hour();
 
-                    var setName = 'CDRDISCON:' + year + ':' + month + ':' + day + ':' + hr;
+                        var setName = 'CDRDISCON:' + year + ':' + month + ':' + day + ':' + hr;
 
-                    redisHandler.addToSet(setName, uniqueId, redisMessageHandler);
+                        redisHandler.addToSet(setName, uniqueId, redisMessageHandler);
+                    }
                 }
 
 
