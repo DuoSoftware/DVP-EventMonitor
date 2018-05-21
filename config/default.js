@@ -94,5 +94,5 @@ module.exports = {
     evtConsumeType: 'amqp',
     UseDashboardAMQP: 'true',
     EventPublishMethod: 'amqp',
-    UseCDRGen: true
+    UseCDRGen: false
 };
