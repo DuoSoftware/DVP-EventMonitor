@@ -93,5 +93,6 @@ module.exports = {
     billingEnabled: false,
     evtConsumeType: 'amqp',
     UseDashboardAMQP: 'true',
-    EventPublishMethod: 'amqp'
+    EventPublishMethod: 'amqp',
+    UseCDRGen: false
 };
