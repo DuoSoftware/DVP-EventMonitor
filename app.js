@@ -257,6 +257,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
         var operator = evtObj['variable_veeryoperator'];
         var variableEvtTime = evtObj["Event-Date-Timestamp"];
         var switchName = evtObj['FreeSWITCH-Switchname'];
+        var freeswitchHostname = evtObj['FreeSWITCH-Hostname'];
         var chanCountInstance = 'DVP_CHANNEL_COUNT_INSTANCE:' + switchName;
         var callCountInstance = 'DVP_CALL_COUNT_INSTANCE:' + switchName;
         var callCountCompany = 'DVP_CALL_COUNT_COMPANY:' + tenantId + ':' + companyId;
@@ -369,7 +370,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
         if(evtType === 'CHANNEL_BRIDGE' || evtType === 'CHANNEL_CREATE' || evtType === 'CHANNEL_ANSWER' || evtType === 'ARDS_EVENT' || evtType === 'CHANNEL_HOLD' || evtType === 'CHANNEL_UNHOLD' || evtType === 'CHANNEL_UNBRIDGE' || evtType === 'CHANNEL_DESTROY' || evtType === 'CHANNEL_HANGUP')
         {
-            logger.debug('[DVP-EventMonitor.handler] - [%s] - Event Data - EVENT_TYPE : ' + evtType + ', CHANNEL_STATE : ' + evtObj['Channel-State'] + ', SESSION_ID : ' + uniqueId + ', CALLER_UUID : ' + evtObj['Caller-Unique-ID'] + 'SWITCH NAME : ' + switchName, reqId);
+            logger.debug('[DVP-EventMonitor.handler] - [%s] - Event Data - EVENT_TYPE : ' + evtType + ', CHANNEL_STATE : ' + evtObj['Channel-State'] + ', SESSION_ID : ' + uniqueId + ', CALLER_UUID : ' + evtObj['Caller-Unique-ID'] + 'SWITCH HOST NAME : ' + freeswitchHostname, reqId);
 
             //logger.debug('[DVP-EventMonitor.handler] - [%s] - RAW EVENT JSON TYPE %s : %s', reqId, evtType, JSON.stringify(evtObj));
         }
@@ -393,6 +394,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
             EventData: uniqueId,
             AuthData: customCompanyStr,
             SwitchName: switchName,
+            FSHostName: freeswitchHostname,
             CampaignId: campaignId,
             CallerDestNum: callerDestNum,
             EventParams: "",
@@ -934,6 +936,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     });
                     redisClient.hset(uniqueId, 'Channel-State', channelState, redisMessageHandler);
                     redisClient.hset(uniqueId, 'FreeSWITCH-Switchname', switchName, redisMessageHandler);
+                    redisClient.hset(uniqueId, 'FreeSWITCH-Hostname', freeswitchHostname, redisMessageHandler);
                     redisClient.hset(uniqueId, 'Channel-Name', channelName, redisMessageHandler);
                     redisClient.hset(uniqueId, 'Call-Direction', direction, redisMessageHandler);
                     redisClient.hset(uniqueId, 'Caller-Destination-Number', callerDestNum, redisMessageHandler);
