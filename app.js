@@ -2100,6 +2100,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                         {
                                             if(usrData)
                                             {
+                                                logger.debug('USER DATA FOUND ON MONGO');
                                                 var key = 'SIPUSER_RESOURCE_MAP:' + usr.TenantId + ':' + usr.CompanyId + ':' + username;
 
                                                 var obj = {
@@ -2119,6 +2120,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                                     redisClient.set(extkey, JSON.stringify(obj), redisMessageHandler);
                                                 }
+                                            }
+                                            else {
+                                                logger.debug('USER DATA NOT FOUND ON MONGO');
                                             }
                                         })
                                     }
