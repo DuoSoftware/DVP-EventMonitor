@@ -2096,6 +2096,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                     if(usr && usr.GuRefId)
                                     {
+                                        logger.debug('USER REF ID FOUND');
                                         mongoAccessor.getUserAccountData(usr.CompanyId, usr.TenantId, usr.GuRefId, function(err, usrData)
                                         {
                                             if(usrData)
