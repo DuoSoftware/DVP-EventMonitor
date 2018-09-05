@@ -1417,6 +1417,34 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     })
                 }
 
+                if(evtObj['variable_dvp_trans_caller'] && evtObj['variable_dvp_trans_party'])
+                {
+                    redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + evtObj['variable_dvp_trans_caller'], function(err, objString)
+                    {
+                        var obj = JSON.parse(objString);
+
+                        if(obj && obj.Context)
+                        {
+                            var nsObj = {
+                                Ref: reqId,
+                                To: obj.Issuer,
+                                Timeout: 1000,
+                                Direction: 'STATELESS',
+                                From: 'CALLSERVER',
+                                Callback: '',
+                                Message: 'transfer_ended|' + reqId + '|OUTBOUND|' + evtObj['variable_dvp_trans_caller'] + '|' + evtObj['variable_dvp_trans_party'] + '|OUTBOUND|outbound|call|undefined|' + reqId + '|' + evtObj['Hangup-Cause']
+                            };
+
+                            extApiAccess.SendNotificationInitiate(reqId, 'transfer_ended', reqId, nsObj, ardsCompany, ardsTenant);
+
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT TRANSFER ENDED - Message : ', reqId, nsObj.Message);
+
+
+                        }
+
+                    })
+                }
+
                 if(ardsClientUuid)
                 {
                     if (actionCat === 'DIALER')
@@ -1709,7 +1737,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
             case 'TRANSFER_DISCONNECT':
 
-                var caller = evtObj['caller'];
+                /*var caller = evtObj['caller'];
                 var transCompanyId = evtObj['companyId'];
                 var transTenantId = evtObj['tenantId'];
                 var digits = evtObj['digits'];
@@ -1738,7 +1766,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                     }
 
-                });
+                });*/
 
                 break;
 
