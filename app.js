@@ -1105,7 +1105,10 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 break;
             case 'CHANNEL_ANSWER':
 
-                var ardsClientUuid = evtObj['variable_ards_client_uuid'];
+                if(!ardsClientUuid)
+                {
+                    ardsClientUuid = evtObj['variable_ards_client_uuid'];
+                }
                 var ardsCompany = evtObj['variable_companyid'];
                 var ardsTenant = evtObj['variable_tenantid'];
                 var ardsServerType = evtObj['variable_ards_servertype'];
@@ -1294,9 +1297,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 var jsonStr = '';
                 if(dvpCustPubId)
                 {
-                    if(!ardsClientUuid && evtObj['variable_ards_client_uuid'])
+                    if(ardsClientUuid)
                     {
-                        evtData.SessionId = evtObj['variable_ards_client_uuid'];
+                        evtData.SessionId = ardsClientUuid;
                     }
                     jsonStr = JSON.stringify(evtData);
 
