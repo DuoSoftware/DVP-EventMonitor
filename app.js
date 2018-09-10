@@ -1105,7 +1105,10 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 break;
             case 'CHANNEL_ANSWER':
 
-                var ardsClientUuid = evtObj['variable_ards_client_uuid'];
+                if(!ardsClientUuid)
+                {
+                    ardsClientUuid = evtObj['variable_ards_client_uuid'];
+                }
                 var ardsCompany = evtObj['variable_companyid'];
                 var ardsTenant = evtObj['variable_tenantid'];
                 var ardsServerType = evtObj['variable_ards_servertype'];
@@ -1294,9 +1297,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 var jsonStr = '';
                 if(dvpCustPubId)
                 {
-                    if(!ardsClientUuid && evtObj['variable_ards_client_uuid'])
+                    if(ardsClientUuid)
                     {
-                        evtData.SessionId = evtObj['variable_ards_client_uuid'];
+                        evtData.SessionId = ardsClientUuid;
                     }
                     jsonStr = JSON.stringify(evtData);
 
@@ -1412,6 +1415,34 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                         if(obj && obj.Context)
                         {
                             ardsHandler.SendResourceStatus(reqId, tempUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', tempDirection);
+                        }
+
+                    })
+                }
+
+                if(evtObj['variable_dvp_trans_caller'] && evtObj['variable_dvp_trans_party'])
+                {
+                    redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + evtObj['variable_dvp_trans_caller'], function(err, objString)
+                    {
+                        var obj = JSON.parse(objString);
+
+                        if(obj && obj.Context)
+                        {
+                            var nsObj = {
+                                Ref: reqId,
+                                To: obj.Issuer,
+                                Timeout: 1000,
+                                Direction: 'STATELESS',
+                                From: 'CALLSERVER',
+                                Callback: '',
+                                Message: 'transfer_ended|' + reqId + '|OUTBOUND|' + evtObj['variable_dvp_trans_caller'] + '|' + evtObj['variable_dvp_trans_party'] + '|OUTBOUND|outbound|call|undefined|' + reqId + '|' + evtObj['Hangup-Cause']
+                            };
+
+                            extApiAccess.SendNotificationInitiate(reqId, 'transfer_ended', reqId, nsObj, ardsCompany, ardsTenant);
+
+                            logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT TRANSFER ENDED - Message : ', reqId, nsObj.Message);
+
+
                         }
 
                     })
@@ -1709,7 +1740,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
             case 'TRANSFER_DISCONNECT':
 
-                var caller = evtObj['caller'];
+                /*var caller = evtObj['caller'];
                 var transCompanyId = evtObj['companyId'];
                 var transTenantId = evtObj['tenantId'];
                 var digits = evtObj['digits'];
@@ -1738,7 +1769,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                     }
 
-                });
+                });*/
 
                 break;
 
@@ -2096,10 +2127,12 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                     if(usr && usr.GuRefId)
                                     {
+                                        logger.debug('USER REF ID FOUND');
                                         mongoAccessor.getUserAccountData(usr.CompanyId, usr.TenantId, usr.GuRefId, function(err, usrData)
                                         {
                                             if(usrData)
                                             {
+                                                logger.debug('USER DATA FOUND ON MONGO');
                                                 var key = 'SIPUSER_RESOURCE_MAP:' + usr.TenantId + ':' + usr.CompanyId + ':' + username;
 
                                                 var obj = {
@@ -2119,6 +2152,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                                     redisClient.set(extkey, JSON.stringify(obj), redisMessageHandler);
                                                 }
+                                            }
+                                            else {
+                                                logger.debug('USER DATA NOT FOUND ON MONGO');
                                             }
                                         })
                                     }
