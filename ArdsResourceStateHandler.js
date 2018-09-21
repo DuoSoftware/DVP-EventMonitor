@@ -13,7 +13,7 @@ var token = config.Token;
 
 loggerCust.add(winston.transports.File, {filename: '/logs/ards_logger.log', level: level, maxsize:1242880, maxFiles:10});
 
-var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, state, otherInfo, reason, direction)
+var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, state, otherInfo, reason, direction, bUnit)
 {
     try
     {
@@ -39,8 +39,7 @@ var SendResourceStatus = function(reqId, ardsClientUuid, ardsCompany, ardsTenant
                     httpUrl = util.format('http://%s:%d/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s?direction=%s', ardsIp, ardsPort, ardsVersion, ardsResourceId, ardsClientUuid, direction);
                 }
 
-
-                var jsonObj = { ServerType: ardsServerType, RequestType: ardsReqType, State: state, OtherInfo: otherInfo, Reason: reason, Company: ardsCompany, Tenant: ardsTenant };
+                var jsonObj = { ServerType: ardsServerType, RequestType: ardsReqType, State: state, OtherInfo: otherInfo, Reason: reason, Company: ardsCompany, Tenant: ardsTenant, BusinessUnit: bUnit };
 
                 var jsonStr = JSON.stringify(jsonObj);
 

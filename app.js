@@ -813,7 +813,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                 if(opCat === 'GATEWAY' || opCat === 'PRIVATE_USER')
                                 {
-                                    ardsHandler.SendResourceStatus(reqId, otherLegUniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Reserved', '', '', 'outbound');
+                                    ardsHandler.SendResourceStatus(reqId, otherLegUniqueId, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Reserved', '', '', 'outbound', bUnit);
                                 }
 
                                 //</editor-fold>
@@ -855,7 +855,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             }
 
                             //for agent dialed outbound calls
-                            ardsHandler.SendResourceStatus(reqId, tempUuid, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Reserved', '', '', 'outbound');
+                            ardsHandler.SendResourceStatus(reqId, tempUuid, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Reserved', '', '', 'outbound', bUnit);
 
                         }
                         else
@@ -1169,7 +1169,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                             if(obj && obj.Context)
                             {
-                                ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
+                                ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound', bUnit);
                             }
 
                         })
@@ -1187,7 +1187,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                     {
                         //IF ARDSCLIIENTUUID IS SET NO NEED TO SEND NOTIFICATIONS
                         redisClient.hset(ardsClientUuid, 'ARDS-Client-Uuid', ardsClientUuid, redisMessageHandler);
-                        ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound');
+                        ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound', bUnit);
 
 
                     }
@@ -1281,7 +1281,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             if(obj && obj.Context)
                             {
                                 console.log('======================ANSWER====================' + direction);
-                                ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound');
+                                ardsHandler.SendResourceStatus(reqId, uniqueId, companyId, tenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Connected', '', '', 'outbound', bUnit);
 
                             }
 
@@ -1386,7 +1386,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 if(ardsClientUuid && ardsServerType && ardsReqType && ardsResourceId)
                 {
-                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '', 'inbound');
+                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '', 'inbound', bUnit);
                 }
                 else if(ardsCompany && ardsTenant && opCat && (evtObj['variable_user_id'] || evtObj['variable_dialed_user']))
                 {
@@ -1414,7 +1414,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                         if(obj && obj.Context)
                         {
-                            ardsHandler.SendResourceStatus(reqId, tempUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', tempDirection);
+                            ardsHandler.SendResourceStatus(reqId, tempUuid, ardsCompany, ardsTenant, 'CALLSERVER', 'CALL', obj.ResourceId, 'Completed', '', '', tempDirection, bUnit);
                         }
 
                     })
@@ -2233,7 +2233,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                         if(action === 'agent-rejected')
                         {
-                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Reject', 'Reject', reason, 'inbound');
+                            ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Reject', 'Reject', reason, 'inbound', 'default');
 
 
                             var evResource =  evtObj['ARDS-Resource-Name'];
