@@ -628,11 +628,11 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                     Direction: 'STATELESS',
                                     From: 'CALLSERVER',
                                     Callback: '',
-                                    Message: 'transfer_created|' + transCallUuid + '|INBOUND|' + origCaller + '|' + obj.Issuer
+                                    Message: 'transfer_created|' + reqId + '|INBOUND|' + origCaller + '|' + obj.Issuer
                                     + '|' + obj.Issuer + '|' + tempSkill + '|inbound|call|' + caller + '|' + uniqueId + '|TRANSFER'
                                 };
 
-                                extApiAccess.SendNotificationInitiate(transCallUuid, 'transfer_create', transCallUuid, nsObjAgent, obj.CompanyId, obj.TenantId);
+                                extApiAccess.SendNotificationInitiate(reqId, 'transfer_create', uniqueId, nsObjAgent, obj.CompanyId, obj.TenantId);
 
                                 logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
                             });
