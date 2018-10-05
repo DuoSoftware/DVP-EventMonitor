@@ -1432,6 +1432,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                 Ref: reqId,
                                 To: obj.Issuer,
                                 Timeout: 1000,
+                                SessionId: evtObj['SessionId'],
                                 Direction: 'STATELESS',
                                 From: 'CALLSERVER',
                                 Callback: '',
