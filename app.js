@@ -671,7 +671,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                     + '|' + digits + '|' + tempSkill + '|inbound|call|' + caller + '|' + uniqueId + '|TRANSFER'
                                 };
 
-                                extApiAccess.SendNotificationInitiate(reqId, 'transfer_create', uniqueId, nsObjAgent, obj.CompanyId, obj.TenantId);
+                                extApiAccess.SendNotificationInitiate(reqId, 'transfer_create', uniqueId, nsObjAgent, companyId, tenantId);
                             });
 
                         }
@@ -754,7 +754,9 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                     Callback: ''
                                 };
 
-                                nsObj.Message = 'agent_found|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined' + otherLegUniqueId + '|DIALER';
+                                nsObj.Message = 'agent_found|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|'
+                                    + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display']
+                                    + '|outbound|call|undefined' + otherLegUniqueId + '|DIALER';
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
@@ -802,7 +804,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                                 Direction: 'STATELESS',
                                                 From: 'CALLSERVER',
                                                 Callback: '',
-                                                Message: 'agent_found|' + otherLegUniqueId + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + uniqueId
+                                                Message: 'agent_found|' + otherLegUniqueId + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer
+                                                + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + uniqueId
                                             };
 
                                             extApiAccess.SendNotificationInitiate(reqId, 'agent_found', otherLegUniqueId, nsObj, obj.CompanyId, obj.TenantId);
@@ -820,7 +823,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                                 Direction: 'STATELESS',
                                                 From: 'CALLSERVER',
                                                 Callback: '',
-                                                Message: 'agent_found|' + otherLegUniqueId + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + uniqueId + '|AGENT_AGENT'
+                                                Message: 'agent_found|' + otherLegUniqueId + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer
+                                                + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + uniqueId + '|AGENT_AGENT'
                                             };
 
                                             extApiAccess.SendNotificationInitiate(reqId, 'agent_found', otherLegUniqueId, nsObjRec, objTmp.CompanyId, objTmp.TenantId);
@@ -849,7 +853,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                         Direction: 'STATELESS',
                                         From: 'CALLSERVER',
                                         Callback: '',
-                                        Message: 'agent_found|' + otherLegUniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + uniqueId
+                                        Message: 'agent_found|' + otherLegUniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + obj.Issuer
+                                        + '|OUTBOUND|outbound|call|undefined|' + uniqueId
                                     };
 
                                     extApiAccess.SendNotificationInitiate(reqId, 'agent_found', otherLegUniqueId, nsObj, obj.CompanyId, obj.TenantId);
@@ -1430,6 +1435,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 var ardsServerType = evtObj['variable_ards_servertype'];
                 var ardsReqType = evtObj['variable_ards_requesttype'];
                 var ardsResourceId = evtObj['variable_ards_resource_id'];
+                var channelCallUUID =evtObj['Channel-Call-UUID'];
 
                 //Handle Resource Status Change
 
@@ -1481,12 +1487,11 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                 Ref: reqId,
                                 To: obj.Issuer,
                                 Timeout: 1000,
-                                SessionId: evtObj['SessionId'],
                                 Direction: 'STATELESS',
                                 From: 'CALLSERVER',
                                 Callback: '',
                                 Message: 'transfer_ended|' + uniqueId + '|OUTBOUND|' + evtObj['variable_dvp_trans_caller'] +
-                                '|' + evtObj['variable_dvp_trans_party'] + '|OUTBOUND|outbound|call|undefined|' + uniqueId + '|' + evtObj['Hangup-Cause']
+                                '|' + evtObj['variable_dvp_trans_party'] + '|OUTBOUND|outbound|call|undefined|' + channelCallUUID + '|' + evtObj['Hangup-Cause']
                             };
 
                             extApiAccess.SendNotificationInitiate(reqId, 'transfer_ended', reqId, nsObj, ardsCompany, ardsTenant);
