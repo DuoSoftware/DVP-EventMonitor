@@ -573,7 +573,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 //<editor-fold desc="HANDLING INCOMING TRANSFER CALL NOTIFICATION WITH SYSTEM USERNAME NOTIFICATIONS">
 
-                if(direction === 'outbound' && companyId && tenantId && opCat === 'ATT_XFER_USER')
+                if(direction === 'outbound' && companyId && tenantId)
                 {
                     var caller = evtObj['variable_dvp_trans_caller'];
                     var digits = evtObj['variable_dvp_trans_party'];
@@ -607,20 +607,22 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                     tempSkill = transCallSkill;
                                 }
 
-                                var nsObj = {
-                                    Ref: reqId,
-                                    To: obj.Issuer,
-                                    Timeout: 1000,
-                                    Direction: 'STATELESS',
-                                    From: 'CALLSERVER',
-                                    Callback: '',
-                                    Message: 'agent_found|' + transCallUuid + '|INBOUND|' + origCaller + '|' + obj.Issuer
-                                    + '|' + obj.Issuer + '|' + tempSkill + '|inbound|call|' + caller + '|' + uniqueId + '|TRANSFER'
-                                };
+                                if(opCat === 'ATT_XFER_USER') {
+                                    var nsObj = {
+                                        Ref: reqId,
+                                        To: obj.Issuer,
+                                        Timeout: 1000,
+                                        Direction: 'STATELESS',
+                                        From: 'CALLSERVER',
+                                        Callback: '',
+                                        Message: 'agent_found|' + transCallUuid + '|INBOUND|' + origCaller + '|' + obj.Issuer
+                                        + '|' + obj.Issuer + '|' + tempSkill + '|inbound|call|' + caller + '|' + uniqueId + '|TRANSFER'
+                                    };
 
-                                extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
+                                    extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
-                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+                                    logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+                                }
 
 
 
