@@ -608,7 +608,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                 }
 
                                 var nsObj = {
-                                    Ref: uniqueId,
+                                    Ref: reqId,
                                     To: obj.Issuer,
                                     Timeout: 1000,
                                     Direction: 'STATELESS',
@@ -620,25 +620,57 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+
+
 
                                 var nsObjAgent = {
-                                    Ref: uniqueId,
+                                    Ref: reqId,
                                     To: caller,
                                     Timeout: 1000,
                                     Direction: 'STATELESS',
                                     From: 'CALLSERVER',
                                     Callback: '',
-                                    Message: 'transfer_created|' + reqId + '|INBOUND|' + origCaller + '|' + obj.Issuer
+                                    Message: 'transfer_created|' + transCallUuid + '|INBOUND|' + origCaller + '|' + obj.Issuer
                                     + '|' + obj.Issuer + '|' + tempSkill + '|inbound|call|' + caller + '|' + uniqueId + '|TRANSFER'
                                 };
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'transfer_create', uniqueId, nsObjAgent, obj.CompanyId, obj.TenantId);
 
-                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - TRANSFER CREATED - Message : ', reqId, nsObjAgent.Message);
+
                             });
 
+                        }else{
 
 
+                            redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + caller, function(err, objString) {
+                                var tmpObj = JSON.parse(objString);
+
+                                if (tmpObj && tmpObj.Issuer) {
+                                    caller = tmpObj.Issuer;
+                                }
+
+                                var tempSkill = 'INBOUND';
+
+                                if (transCallSkill) {
+                                    tempSkill = transCallSkill;
+                                }
+
+                                var nsObjAgent = {
+                                    Ref: reqId,
+                                    To: caller,
+                                    Timeout: 1000,
+                                    Direction: 'STATELESS',
+                                    From: 'CALLSERVER',
+                                    Callback: '',
+                                    Message: 'transfer_created|' + transCallUuid + '|INBOUND|' + origCaller + '|' + digits
+                                    + '|' + digits + '|' + tempSkill + '|inbound|call|' + caller + '|' + uniqueId + '|TRANSFER'
+                                };
+
+                                extApiAccess.SendNotificationInitiate(reqId, 'transfer_create', uniqueId, nsObjAgent, obj.CompanyId, obj.TenantId);
+                            });
 
                         }
 
@@ -1451,7 +1483,8 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                 Direction: 'STATELESS',
                                 From: 'CALLSERVER',
                                 Callback: '',
-                                Message: 'transfer_ended|' + reqId + '|OUTBOUND|' + evtObj['variable_dvp_trans_caller'] + '|' + evtObj['variable_dvp_trans_party'] + '|OUTBOUND|outbound|call|undefined|' + reqId + '|' + evtObj['Hangup-Cause']
+                                Message: 'transfer_ended|' + uniqueId + '|OUTBOUND|' + evtObj['variable_dvp_trans_caller'] +
+                                '|' + evtObj['variable_dvp_trans_party'] + '|OUTBOUND|outbound|call|undefined|' + uniqueId + '|' + evtObj['Hangup-Cause']
                             };
 
                             extApiAccess.SendNotificationInitiate(reqId, 'transfer_ended', reqId, nsObj, ardsCompany, ardsTenant);
