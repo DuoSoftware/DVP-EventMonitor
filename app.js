@@ -1424,6 +1424,7 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 {
                     redisClient.get('SIPUSER_RESOURCE_MAP:' + ardsTenant + ':' + ardsCompany + ':' + evtObj['variable_dvp_trans_caller'], function(err, objString)
                     {
+
                         var obj = JSON.parse(objString);
 
                         if(obj && obj.Context)
@@ -1432,11 +1433,10 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                                 Ref: reqId,
                                 To: obj.Issuer,
                                 Timeout: 1000,
-                                SessionId: evtObj['SessionId'],
                                 Direction: 'STATELESS',
                                 From: 'CALLSERVER',
                                 Callback: '',
-                                Message: 'transfer_ended|' + reqId + '|OUTBOUND|' + evtObj['variable_dvp_trans_caller'] + '|' + evtObj['variable_dvp_trans_party'] + '|OUTBOUND|outbound|call|undefined|' + reqId + '|' + evtObj['Hangup-Cause']
+                                Message: 'transfer_ended|' + reqId + '|OUTBOUND|' + evtObj['variable_dvp_trans_caller'] + '|' + evtObj['variable_dvp_trans_party'] + '|OUTBOUND|outbound|call|undefined|' + ardsClientUuid + '|' + evtObj['Hangup-Cause']
                             };
 
                             extApiAccess.SendNotificationInitiate(reqId, 'transfer_ended', reqId, nsObj, ardsCompany, ardsTenant);
