@@ -856,7 +856,6 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                             }
 
                             //for agent dialed outbound calls
-                            dashboardEvtHandler.PublishDashboardMessage(obj.TenantId, obj.CompanyId, bUnit, "CALLSERVER", "CALL", "DIALED", obj.ResourceId, obj.ResourceId, 'outbound', eventTime);
                             ardsHandler.SendResourceStatus(reqId, tempUuid, obj.CompanyId, obj.TenantId, 'CALLSERVER', 'CALL', obj.ResourceId, 'Reserved', '', '', 'outbound', bUnit);
 
                         }
