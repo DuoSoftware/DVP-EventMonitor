@@ -634,6 +634,53 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 //</editor-fold>
 
+                if(actionCat === 'LISTEN')
+                {
+                    if(opCat === 'PRIVATE_USER')
+                    {
+                        //<editor-fold desc="Listen call">
+
+
+
+                        redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerDestNum, function(err, objString)
+                        {
+                            var objTmp = JSON.parse(objString);
+var tempSkill=null;
+                            if(transCallSkill)
+                            {
+                                tempSkill = transCallSkill;
+                            }
+
+                            if (objTmp && objTmp.Context)
+                            {
+                                //<editor-fold desc="SEND NOTIFICATION TO CALLING PARTY - AGENT_AGENT CALL">
+                                extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'Test', callerOrigIdName, callerDestNum, objTmp.CompanyId, objTmp.TenantId);
+
+                                var nsObj = {
+                                    Ref: uniqueId,
+                                    To: objTmp.Issuer,
+                                    Timeout: 1000,
+                                    Direction: 'STATELESS',
+                                    From: 'CALLSERVER',
+                                    Callback: '',
+                                    Message: 'agent_found|' + evtObj['variable_origination_caller_id_number'] + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer + '|' + objTmp.Issuer + '|'+tempSkill+'|outbound|call|undefined|' + uniqueId
+                                };
+
+                                extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, objTmp.CompanyId, objTmp.TenantId);
+
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+
+
+
+                            }
+                        });
+
+                        //</editor-fold>
+
+
+                    }
+                }
+
 
                 //<editor-fold desc="HANDLING IVR AGENT TRANSFER FOR DIALER">
 
@@ -1153,6 +1200,53 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
 
                 }
 
+                if(actionCat === 'LISTEN')
+                {
+                    if(opCat === 'PRIVATE_USER')
+                    {
+                        //<editor-fold desc="Listen call">
+
+
+
+                        redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerDestNum, function(err, objString)
+                        {
+                            var objTmp = JSON.parse(objString);
+                            var tempSkill=null;
+                            if(transCallSkill)
+                            {
+                                tempSkill = transCallSkill;
+                            }
+
+                            if (objTmp && objTmp.Context)
+                            {
+                                //<editor-fold desc="SEND NOTIFICATION TO CALLING PARTY - AGENT_AGENT CALL">
+                                extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'Test', callerOrigIdName, callerDestNum, objTmp.CompanyId, objTmp.TenantId);
+
+                                var nsObj = {
+                                    Ref: uniqueId,
+                                    To: objTmp.Issuer,
+                                    Timeout: 1000,
+                                    Direction: 'STATELESS',
+                                    From: 'CALLSERVER',
+                                    Callback: '',
+                                    Message: 'listen_connected|' + evtObj['variable_origination_caller_id_number'] + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer + '|' + objTmp.Issuer + '|'+tempSkill+'|outbound|call|undefined|' + uniqueId
+                                };
+
+                                extApiAccess.SendNotificationInitiate(reqId, 'listen_connected', uniqueId, nsObj, objTmp.CompanyId, objTmp.TenantId);
+
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+
+
+
+                            }
+                        });
+
+                        //</editor-fold>
+
+
+                    }
+                }
+
 
                 if(opCat === 'ATT_XFER_USER')
                 {
@@ -1550,6 +1644,53 @@ var sendMailSMS = function(reqId, companyId, tenantId, email, message, smsnumber
                 if(!varOrigLegUuid)
                 {
                     varOrigLegUuid = uniqueId;
+                }
+
+                if(actionCat === 'LISTEN')
+                {
+                    if(opCat === 'PRIVATE_USER')
+                    {
+                        //<editor-fold desc="Listen call">
+
+
+
+                        redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerDestNum, function(err, objString)
+                        {
+                            var objTmp = JSON.parse(objString);
+                            var tempSkill=null;
+                            if(transCallSkill)
+                            {
+                                tempSkill = transCallSkill;
+                            }
+
+                            if (objTmp && objTmp.Context)
+                            {
+                                //<editor-fold desc="SEND NOTIFICATION TO CALLING PARTY - AGENT_AGENT CALL">
+                                extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'Test', callerOrigIdName, callerDestNum, objTmp.CompanyId, objTmp.TenantId);
+
+                                var nsObj = {
+                                    Ref: uniqueId,
+                                    To: objTmp.Issuer,
+                                    Timeout: 1000,
+                                    Direction: 'STATELESS',
+                                    From: 'CALLSERVER',
+                                    Callback: '',
+                                    Message: 'listen_disconnected|' + evtObj['variable_origination_caller_id_number'] + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer + '|' + objTmp.Issuer + '|'+tempSkill+'|outbound|call|undefined|' + uniqueId
+                                };
+
+                                extApiAccess.SendNotificationInitiate(reqId, 'listen_disconnected', uniqueId, nsObj, objTmp.CompanyId, objTmp.TenantId);
+
+                                logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
+
+
+
+                            }
+                        });
+
+                        //</editor-fold>
+
+
+                    }
                 }
 
                 if(opCat === 'ATT_XFER_GATEWAY' && direction === 'outbound' && callerContext === 'PBXFeatures' && dvpCallDirection === 'outbound')
