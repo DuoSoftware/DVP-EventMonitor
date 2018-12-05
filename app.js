@@ -283,7 +283,7 @@ var eventHandler = function(reqId, evtObj)
     var calleeNumber = evtObj['Caller-Callee-ID-Number'];
     var isDialerIVR = evtObj['variable_is_dialer_ivr'];
     var transCallSkill = evtObj['variable_transfer_call_skill'];
-    var listenCallSkill = evtObj['listen_skill_data'];
+    var listenCallSkill = evtObj['variable_listen_skill_data'];
 
 
     if(!callerOrigIdName)
