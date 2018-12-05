@@ -663,7 +663,7 @@ var tempSkill=null;
                                     Direction: 'STATELESS',
                                     From: 'CALLSERVER',
                                     Callback: '',
-                                    Message: 'agent_found|' + evtObj['variable_origination_caller_id_number'] + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer + '|' + objTmp.Issuer + '|'+tempSkill+'|outbound|call|undefined|' + uniqueId
+                                    Message: 'agent_found|' + evtObj['variable_origination_caller_id_number'] + '|OUTBOUND|' + objTmp.Issuer + '|' + evtObj['Caller-ANI'] + '|' + objTmp.Issuer + '|'+tempSkill+'|outbound|call|undefined|' + uniqueId
                                 };
 
                                 extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, objTmp.CompanyId, objTmp.TenantId);
