@@ -410,9 +410,9 @@ var eventHandler = function(reqId, evtObj)
     {
         if(dialerAgentEvtPub)
         {
-            if(!ardsClientUuid && evtObj['ards_client_uuid'])
+            if(!ardsClientUuid && evtObj['variable_ards_client_uuid'])
             {
-                evtData.SessionId = evtObj['ards_client_uuid'];
+                evtData.SessionId = evtObj['variable_ards_client_uuid'];
             }
 
             jsonStr = JSON.stringify(evtData);
