@@ -245,6 +245,7 @@ var eventHandler = function(reqId, evtObj)
     var uniqueId = evtObj['Unique-ID'];
     var customCompanyStr = evtObj['variable_CustomCompanyStr'];
     var dvpCustPubId = evtObj['variable_DVP_CUSTOM_PUBID'];
+    var dialerAgentEvtPub = evtObj['variable_DIALER_AGENT_EVENT'];
     var campaignId = evtObj['variable_CampaignId'];
     var companyId = evtObj['variable_companyid'];
     var tenantId = evtObj['variable_tenantid'];
@@ -404,6 +405,23 @@ var eventHandler = function(reqId, evtObj)
             TenantId: tenantId,
             BusinessUnit: bUnit
         };
+
+    if(evtType === 'CHANNEL_BRIDGE' || evtType === 'CHANNEL_CREATE' || evtType === 'CHANNEL_ANSWER' || evtType === 'CHANNEL_DESTROY' || evtType === 'CHANNEL_HANGUP')
+    {
+        if(dialerAgentEvtPub)
+        {
+            if(!ardsClientUuid && evtObj['ards_client_uuid'])
+            {
+                evtData.SessionId = evtObj['ards_client_uuid'];
+            }
+
+            jsonStr = JSON.stringify(evtData);
+
+            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DIALER AGENT: %s', reqId, jsonStr);
+
+            redisClient.publish(dvpCustPubId, jsonStr);
+        }
+    }
 
     switch (evtType)
     {
