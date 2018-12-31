@@ -419,7 +419,7 @@ var eventHandler = function(reqId, evtObj)
 
             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DIALER AGENT: %s', reqId, jsonStr);
 
-            redisClient.publish(dvpCustPubId, jsonStr);
+            redisClient.publish(dialerAgentEvtPub, jsonStr);
         }
     }
 
