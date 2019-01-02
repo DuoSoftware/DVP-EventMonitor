@@ -417,7 +417,7 @@ var eventHandler = function(reqId, evtObj)
 
             jsonStr = JSON.stringify(evtData);
 
-            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DIALER AGENT: %s', reqId, jsonStr);
+            logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DIALER AGENT CHANNEL : %s, DATA: %s', reqId, dialerAgentEvtPub, jsonStr);
 
             redisClient.publish(dialerAgentEvtPub, jsonStr);
         }
