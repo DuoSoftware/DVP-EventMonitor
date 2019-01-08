@@ -415,6 +415,8 @@ var eventHandler = function(reqId, evtObj)
                 evtData.SessionId = evtObj['variable_ards_client_uuid'];
             }
 
+            evtData.DisconnectReason = evtObj['Hangup-Cause'];
+
             jsonStr = JSON.stringify(evtData);
 
             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DIALER AGENT CHANNEL : %s, DATA: %s', reqId, dialerAgentEvtPub, jsonStr);
