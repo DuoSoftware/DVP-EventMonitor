@@ -285,16 +285,12 @@ var eventHandler = function(reqId, evtObj)
     var isDialerIVR = evtObj['variable_is_dialer_ivr'];
     var transCallSkill = evtObj['variable_transfer_call_skill'];
     var listenCallSkill = evtObj['variable_listen_skill_data'];
+    var callLegType = evtObj['variable_CALL_LEG_TYPE'];
 
 
     if(!callerOrigIdName)
     {
         callerOrigIdName = evtObj['Other-Leg-Caller-ID-Number'];
-    }
-
-    if(actionCat === 'DIALER')
-    {
-        callerOrigIdName = callerDestNum;
     }
 
     //loggerCust.debug('EVENT RECEIVED - [UUID : %s , TYPE : %s, CompanyId : %s', uniqueId, evtType, companyId);
@@ -704,56 +700,11 @@ var eventHandler = function(reqId, evtObj)
             }
 
 
-            //<editor-fold desc="HANDLING IVR AGENT TRANSFER FOR DIALER">
-
-            /*if(isDialerIVR)
-            {
-                redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + evtObj['Caller-Callee-ID-Number'], function(err, objString)
-                {
-                    var obj = JSON.parse(objString);
-
-                    if(obj && obj.Context)
-                    {
-                        logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - SENDING', reqId);
-
-                        //<editor-fold desc="HANDLING AGENT DIALED CALLS">
-
-                        extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', evtObj['Caller-Orig-Caller-ID-Number'], evtObj['Caller-Callee-ID-Number'], companyId, tenantId);
-
-                        var nsObj = {
-                            Ref: uniqueId,
-                            To: obj.Issuer,
-                            Timeout: 1000,
-                            Direction: 'STATELESS',
-                            From: 'CALLSERVER',
-                            Callback: ''
-                        };
-
-                        nsObj.Message = 'agent_found|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined' + otherLegUniqueId + '|DIALER';
-
-                        extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
-
-                        logger.debug('[DVP-EventMonitor.handler] - [%s] - SEND NOTIFICATION - AGENT FOUND - Message : ', reqId, nsObj.Message);
-
-                        //</editor-fold>
-
-                    }
-                    else
-                    {
-                        logger.debug('[DVP-EventMonitor.handler] - [%s] - OUTBOUND CHANNEL - CONTEXT NOT FOUND', reqId);
-                    }
-
-                });
-            }*/
-
-            //</editor-fold>
-
-
             if(direction === 'outbound' && dvpCallDirection === 'outbound' && companyId && tenantId)
             {
-                if(actionCat === 'DIALER')
+                if(actionCat === 'DIALER' && callLegType === 'AGENT')
                 {
-                    redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                    redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + evtObj['Caller-Destination-Number'], function(err, objString)
                     {
                         var obj = JSON.parse(objString);
 
@@ -763,7 +714,7 @@ var eventHandler = function(reqId, evtObj)
 
                             //<editor-fold desc="HANDLING AGENT DIALED CALLS">
 
-                            extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', evtObj['Caller-Orig-Caller-ID-Number'], evtObj['Caller-Caller-ID-Number'], companyId, tenantId);
+                            extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', evtObj['Caller-Destination-Number'], evtObj['Caller-Caller-ID-Number'], companyId, tenantId);
 
                             var nsObj = {
                                 Ref: uniqueId,
@@ -774,7 +725,7 @@ var eventHandler = function(reqId, evtObj)
                                 Callback: ''
                             };
 
-                            nsObj.Message = 'agent_found|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined' + otherLegUniqueId + '|DIALER';
+                            nsObj.Message = 'agent_found|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined' + otherLegUniqueId + '|DIALER';
 
                             extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
@@ -1188,9 +1139,9 @@ var eventHandler = function(reqId, evtObj)
 
             logger.debug('[DVP-EventMonitor.handler] - [%s] - CHANNEL ANSWER ARDS DATA - EVENT_TYPE : ' + evtType + ', SESSION_ID : ' + uniqueId + 'SWITCH NAME : ' + switchName + 'ards_client_uuid : %s, companyid : %s, tenantid : %s, ards_resource_id : %s, ards_servertype : %s, ards_requesttype : %s', reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsResourceId, ardsServerType, ardsReqType);
 
-            if (actionCat === 'DIALER')
+            if (actionCat === 'DIALER' && callLegType === 'AGENT')
             {
-                redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + evtObj['Caller-Destination-Number'], function(err, objString)
                 {
                     var obj = JSON.parse(objString);
 
@@ -1205,7 +1156,7 @@ var eventHandler = function(reqId, evtObj)
                             Callback: ''
                         };
 
-                        nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined|' + otherLegUniqueId;
+                        nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined|' + otherLegUniqueId;
 
                         extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
@@ -1570,7 +1521,7 @@ var eventHandler = function(reqId, evtObj)
             {
                 if (actionCat === 'DIALER')
                 {
-                    redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + callerOrigIdName, function(err, objString)
+                    redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + evtObj['Caller-Destination-Number'], function(err, objString)
                     {
                         var obj = JSON.parse(objString);
                         if(obj && obj.Context)
@@ -1582,7 +1533,7 @@ var eventHandler = function(reqId, evtObj)
                                 Direction: 'STATELESS',
                                 From: 'CALLSERVER',
                                 Callback: '',
-                                Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + evtObj['Caller-Orig-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined|' + otherLegUniqueId
+                                Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined|' + otherLegUniqueId
                             };
 
                             extApiAccess.SendNotificationInitiate(reqId, 'agent_disconnected', uniqueId, nsObj, companyId, tenantId);
@@ -1773,23 +1724,6 @@ var eventHandler = function(reqId, evtObj)
         case 'CHANNEL_DESTROY':
 
             //Adding call discon record to redis set for cdr summary
-
-            if(config.UseCDRGen && config.UseCDRGen == 'true')
-            {
-                if(direction === 'inbound' || (direction === 'outbound' && actionCat === 'DIALER')){
-
-                    var utcMoment = moment(eventTime).utc();
-                    var year = utcMoment.year();
-                    var month = utcMoment.month() + 1;
-                    var day = utcMoment.date();
-                    var hr = utcMoment.hour();
-
-                    var setName = 'CDRDISCON:' + year + ':' + month + ':' + day + ':' + hr;
-
-                    redisHandler.addToSet(setName, uniqueId, redisMessageHandler);
-                }
-            }
-
 
             redisClient.del(uniqueId + '_data', redisMessageHandler);
             redisClient.del(uniqueId + '_dev', redisMessageHandler);
