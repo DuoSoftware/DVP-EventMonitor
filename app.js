@@ -406,14 +406,32 @@ var eventHandler = function(reqId, evtObj)
     {
         if(dialerAgentEvtPub)
         {
+            var agentEvt = {
+                SessionId: uniqueId,
+                EventClass: "CALL",
+                EventType: "CHANNEL",
+                EventTime: eventTime,
+                EventName: evtType,
+                EventData: uniqueId,
+                AuthData: customCompanyStr,
+                SwitchName: switchName,
+                FSHostName: freeswitchHostname,
+                CampaignId: campaignId,
+                CallerDestNum: callerDestNum,
+                EventParams: "",
+                CompanyId: companyId,
+                TenantId: tenantId,
+                BusinessUnit: bUnit
+            };
+
             if(!ardsClientUuid && evtObj['variable_ards_client_uuid'])
             {
-                evtData.SessionId = evtObj['variable_ards_client_uuid'];
+                agentEvt.SessionId = evtObj['variable_ards_client_uuid'];
             }
 
-            evtData.DisconnectReason = evtObj['Hangup-Cause'];
+            agentEvt.DisconnectReason = evtObj['Hangup-Cause'];
 
-            jsonStr = JSON.stringify(evtData);
+            jsonStr = JSON.stringify(agentEvt);
 
             logger.debug('[DVP-EventMonitor.handler] - [%s] - REDIS PUBLISH DIALER AGENT CHANNEL : %s, DATA: %s', reqId, dialerAgentEvtPub, jsonStr);
 
