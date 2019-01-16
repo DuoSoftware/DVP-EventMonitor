@@ -1795,10 +1795,10 @@ var eventHandler = function(reqId, evtObj)
             //Send Resource Status on Outbound Call
 
 
-            /*if(ardsClientUuid)
+            if(ardsClientUuid)
              {
              ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '', 'inbound');
-             }*/
+             }
 
 
 
