@@ -1470,7 +1470,7 @@ var eventHandler = function(reqId, evtObj)
 
             //Handle Resource Status Change
 
-            if(ardsClientUuid && ardsServerType && ardsReqType && ardsResourceId)
+            if(ardsClientUuid && ardsServerType && ardsReqType && ardsResourceId && actionCat != 'DIALER')
             {
                 ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '', 'inbound', bUnit);
             }
