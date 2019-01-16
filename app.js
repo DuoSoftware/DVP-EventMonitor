@@ -1470,11 +1470,11 @@ var eventHandler = function(reqId, evtObj)
 
             //Handle Resource Status Change
 
-            if(ardsClientUuid && ardsServerType && ardsReqType && ardsResourceId)
+            if(ardsClientUuid && ardsServerType && ardsReqType && ardsResourceId && actionCat != 'DIALER')
             {
                 ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Completed', '', '', 'inbound', bUnit);
             }
-            else if(ardsCompany && ardsTenant && opCat && (evtObj['variable_user_id'] || evtObj['variable_dialed_user']))
+            else if(ardsCompany && ardsTenant && opCat && (evtObj['variable_user_id'] || evtObj['variable_dialed_user']) && actionCat != 'DIALER')
             {
                 var tempUser = evtObj['variable_user_id'];
                 if(!evtObj['variable_user_id'])
