@@ -1273,8 +1273,11 @@ var eventHandler = function(reqId, evtObj)
                 {
                     //IF ARDSCLIIENTUUID IS SET NO NEED TO SEND NOTIFICATIONS
                     redisClient.hset(ardsClientUuid, 'ARDS-Client-Uuid', ardsClientUuid, redisMessageHandler);
-                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound', bUnit);
-
+                    if(eventObj["variable_OriginalUuidARDS"]){
+                        ardsHandler.SendResourceStatus(reqId, eventObj["variable_OriginalUuidARDS"], ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound', bUnit);
+                    }else{
+                        ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound', bUnit);
+                    }
 
                 }
                 //Direction is outbound - This is for processing LEG B of an outbound call
