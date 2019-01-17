@@ -732,7 +732,7 @@ var eventHandler = function(reqId, evtObj)
 
                             //<editor-fold desc="HANDLING AGENT DIALED CALLS">
 
-                            extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', evtObj['Caller-Destination-Number'], evtObj['Caller-Caller-ID-Number'], companyId, tenantId);
+                            extApiAccess.CreateEngagement(reqId, uniqueId, 'call', 'outbound', evtObj['Caller-Destination-Number'], evtObj['Other-Leg-Caller-ID-Number'], companyId, tenantId);
 
                             var nsObj = {
                                 Ref: uniqueId,
@@ -743,7 +743,7 @@ var eventHandler = function(reqId, evtObj)
                                 Callback: ''
                             };
 
-                            nsObj.Message = 'agent_found|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined' + otherLegUniqueId + '|DIALER';
+                            nsObj.Message = 'agent_found|' + uniqueId + '|OUTBOUND|' + evtObj['Other-Leg-Caller-ID-Number'] + '|' + evtObj['Other-Leg-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined' + otherLegUniqueId + '|DIALER';
 
                             extApiAccess.SendNotificationInitiate(reqId, 'agent_found', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
@@ -1174,7 +1174,7 @@ var eventHandler = function(reqId, evtObj)
                             Callback: ''
                         };
 
-                        nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined|' + otherLegUniqueId;
+                        nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + evtObj['Other-Leg-Caller-ID-Number'] + '|' + evtObj['Other-Leg-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined|' + otherLegUniqueId;
 
                         extApiAccess.SendNotificationInitiate(reqId, 'agent_connected', uniqueId, nsObj, obj.CompanyId, obj.TenantId);
 
@@ -1273,11 +1273,12 @@ var eventHandler = function(reqId, evtObj)
                 {
                     //IF ARDSCLIIENTUUID IS SET NO NEED TO SEND NOTIFICATIONS
                     redisClient.hset(ardsClientUuid, 'ARDS-Client-Uuid', ardsClientUuid, redisMessageHandler);
-                    if(eventObj["variable_OriginalUuidARDS"]){
-                        ardsHandler.SendResourceStatus(reqId, eventObj["variable_OriginalUuidARDS"], ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound', bUnit);
+                    if(evtObj["variable_OriginalUuidARDS"]){
+                        ardsHandler.SendResourceStatus(reqId, evtObj["variable_OriginalUuidARDS"], ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound', bUnit);
                     }else{
                         ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound', bUnit);
                     }
+
 
                 }
                 //Direction is outbound - This is for processing LEG B of an outbound call
