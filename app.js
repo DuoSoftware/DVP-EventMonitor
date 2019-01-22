@@ -870,7 +870,7 @@ var eventHandler = function(reqId, evtObj)
 
             //Setting Resource Status Reserved for Receiving Agent
 
-            if(direction === 'outbound' && companyId && tenantId && ((opCat === 'PRIVATE_USER' && dvpCallDirection === 'outbound') || opCat === 'ATT_XFER_USER'))
+            if(actionCat !== 'DIALER' && direction === 'outbound' && companyId && tenantId && ((opCat === 'PRIVATE_USER' && dvpCallDirection === 'outbound') || opCat === 'ATT_XFER_USER'))
             {
                 redisClient.get('SIPUSER_RESOURCE_MAP:' + tenantId + ':' + companyId + ':' + evtObj['variable_dialed_user'], function(err, objString)
                 {
