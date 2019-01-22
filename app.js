@@ -1269,7 +1269,7 @@ var eventHandler = function(reqId, evtObj)
             else
             {
                 //SET RESOURCE STATUS FOR CALL RECEIVING PARTY ARDS SET CALLS
-                if(ardsClientUuid)
+                if(ardsClientUuid && actionCat === 'DIALER' && callLegType === 'AGENT')
                 {
                     //IF ARDSCLIIENTUUID IS SET NO NEED TO SEND NOTIFICATIONS
                     redisClient.hset(ardsClientUuid, 'ARDS-Client-Uuid', ardsClientUuid, redisMessageHandler);
@@ -1280,6 +1280,10 @@ var eventHandler = function(reqId, evtObj)
                     }
 
 
+                }
+                else if(ardsClientUuid && actionCat !== 'DIALER')
+                {
+                    ardsHandler.SendResourceStatus(reqId, ardsClientUuid, ardsCompany, ardsTenant, ardsServerType, ardsReqType, ardsResourceId, 'Connected', '', '', 'inbound', bUnit);
                 }
                 //Direction is outbound - This is for processing LEG B of an outbound call
                 else if(direction === 'outbound' && companyId && tenantId && dvpCallDirection === 'outbound')
