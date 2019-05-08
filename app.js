@@ -550,6 +550,16 @@ var eventHandler = function(reqId, evtObj)
             }
             else
             {
+                evtData.EventSpecificData = {
+                    EventType: "ANSWERED",
+                    Direction: dvpCallDirection,
+                    SessionId: evtData.SessionId,
+                    Timestamp: channelBridgeTimeStamp,
+                    From: "",
+                    To: "",
+                    Skill: skillAgent,
+                    BusinessUnit: bUnit
+                };
                 dvpEventHandler.PublishDVPEventsMessage(evtData);
                 /*jsonStr = JSON.stringify(evtData);
                 redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
@@ -1830,6 +1840,20 @@ var eventHandler = function(reqId, evtObj)
             }
             else
             {
+                if(direction === 'inbound' && companyId && tenantId)
+                {
+                    evtData.EventSpecificData = {
+                        EventType: "DISCONNECTED",
+                        Direction: dvpCallDirection,
+                        SessionId: evtData.SessionId,
+                        Timestamp: evtObj['Event-Date-Timestamp'],
+                        From: evtObj['Caller-ANI'],
+                        To: evtObj['Caller-Destination-Number'],
+                        Skill: evtObj['variable_ards_skill_display'],
+                        BusinessUnit: evtObj['variable_business_unit']
+                    };
+                }
+
                 dvpEventHandler.PublishDVPEventsMessage(evtData);
                 /*jsonStr = JSON.stringify(evtData);
                 redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
@@ -2335,6 +2359,7 @@ var eventHandler = function(reqId, evtObj)
                     var ardsResourceId = evtObj['ARDS-Resource-Id'];
                     var reason = evtObj['ARDS-Reason'];
                     var skill = evtObj['ARDS-Call-Skill'];
+                    var timestamp = evtObj['Event-Date-Timestamp'];
 
                     var obj = {
                         ServerType : ardsServerType,
@@ -2393,6 +2418,17 @@ var eventHandler = function(reqId, evtObj)
                         var evResource =  evtObj['ARDS-Call-Skill'];
                         var eventParam = util.format("The call is added to %s queue", evResource);
                         evtData.EventParams = eventParam;
+
+                        evtData.EventSpecificData = {
+                            EventType: "QUEUED",
+                            Direction: "inbound",
+                            SessionId: ardsClientUuid,
+                            Timestamp: timestamp,
+                            From: "",
+                            To: "",
+                            Skill: skill,
+                            BusinessUnit: ""
+                        };
                         /*var jsonStr = JSON.stringify(evtData);
                         redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
                         dvpEventHandler.PublishDVPEventsMessage(evtData);
