@@ -1053,6 +1053,18 @@ var eventHandler = function(reqId, evtObj)
                     {
                         if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
                         {
+                            evtData.EventSpecificData = {
+                                EventType: "HOLD",
+                                Direction: dvpCallDirection,
+                                SessionId: hashArdsClientUuid,
+                                Timestamp: variableEvtTime,
+                                From: "",
+                                To: "",
+                                Skill: skillAgent,
+                                BusinessUnit: bUnit
+                            };
+
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
                             dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "HOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
 
                             /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
@@ -1095,6 +1107,7 @@ var eventHandler = function(reqId, evtObj)
         case 'CHANNEL_UNHOLD':
 
             var channelUuid = evtObj['Channel-Call-UUID'];
+            var ardsUuid = evtObj['variable_ards_client_uuid'];
 
             redisClient.hgetall(channelUuid, function(err, channelHash)
             {
@@ -1108,11 +1121,24 @@ var eventHandler = function(reqId, evtObj)
                     var hashTenant = channelHash['DVP-TenantId'];
                     var hashBUnit = channelHash['DVP-Business-Unit'];
 
-                    if(hashArdsClientUuid && hashResId)
+                    if(ardsUuid && hashResId)
                     {
-                        if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                        if(hashCompany && hashTenant && hashResId && ardsUuid && hashCallDirection)
                         {
-                            dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
+                            evtData.EventSpecificData = {
+                                EventType: "HOLD",
+                                Direction: dvpCallDirection,
+                                SessionId: hashArdsClientUuid,
+                                Timestamp: variableEvtTime,
+                                From: "",
+                                To: "",
+                                Skill: skillAgent,
+                                BusinessUnit: bUnit
+                            };
+
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
+                            
+                            dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", ardsUuid, hashResId, hashCallDirection, eventTime);
 
                             /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
 
@@ -1134,7 +1160,7 @@ var eventHandler = function(reqId, evtObj)
 
                                 if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
                                 {
-                                    dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
+                                    dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", ardsUuid, hashResId, hashCallDirection, eventTime);
 
                                     /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
 
