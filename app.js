@@ -1126,7 +1126,7 @@ var eventHandler = function(reqId, evtObj)
                         if(hashCompany && hashTenant && hashResId && ardsUuid && hashCallDirection)
                         {
                             evtData.EventSpecificData = {
-                                EventType: "HOLD",
+                                EventType: "UNHOLD",
                                 Direction: dvpCallDirection,
                                 SessionId: ardsUuid,
                                 Timestamp: variableEvtTime,
