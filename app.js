@@ -1055,12 +1055,12 @@ var eventHandler = function(reqId, evtObj)
                         {
                             evtData.EventSpecificData = {
                                 EventType: "HOLD",
-                                Direction: dvpCallDirection,
+                                Direction: channelHash['DVP-Call-Direction'],
                                 SessionId: ardsUuid,
                                 Timestamp: variableEvtTime,
-                                From: "",
-                                To: "",
-                                Skill: skillAgent,
+                                From: channelHash['Caller-Caller-ID-Number'],
+                                To: channelHash['Caller-Destination-Number'],
+                                Skill: channelHash['ARDS-Skill-Display'],
                                 BusinessUnit: bUnit
                             };
 
@@ -1126,13 +1126,13 @@ var eventHandler = function(reqId, evtObj)
                         if(hashCompany && hashTenant && hashResId && ardsUuid && hashCallDirection)
                         {
                             evtData.EventSpecificData = {
-                                EventType: "UNHOLD",
-                                Direction: dvpCallDirection,
+                                EventType: "HOLD",
+                                Direction: channelHash['DVP-Call-Direction'],
                                 SessionId: ardsUuid,
                                 Timestamp: variableEvtTime,
-                                From: "",
-                                To: "",
-                                Skill: skillAgent,
+                                From: channelHash['Caller-Caller-ID-Number'],
+                                To: channelHash['Caller-Destination-Number'],
+                                Skill: channelHash['ARDS-Skill-Display'],
                                 BusinessUnit: bUnit
                             };
 
