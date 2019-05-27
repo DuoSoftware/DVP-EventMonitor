@@ -557,8 +557,8 @@ var eventHandler = function(reqId, evtObj)
                         Direction: dvpCallDirection,
                         SessionId: evtData.SessionId,
                         Timestamp: channelBridgeTimeStamp,
-                        From: evtObj['Caller-Caller-ID-Number'],
-                        To: evtObj['Caller-Destination-Number'],
+                        From: channelHash['Caller-Caller-ID-Number'],
+                        To: channelHash['Caller-Destination-Number'],
                         Skill: skillAgent,
                         BusinessUnit: bUnit
                     };
@@ -2459,10 +2459,10 @@ var eventHandler = function(reqId, evtObj)
                                 Direction: "inbound",
                                 SessionId: ardsClientUuid,
                                 Timestamp: timestamp,
-                                From: evtObj['Caller-Caller-ID-Number'],
-                                To: evtObj['Caller-Destination-Number'],
+                                From: channelHash['Caller-Caller-ID-Number'],
+                                To: channelHash['Caller-Destination-Number'],
                                 Skill: skill,
-                                BusinessUnit: evtObj['DVP-Business-Unit']
+                                BusinessUnit: channelHash['DVP-Business-Unit']
                             };
                             /*var jsonStr = JSON.stringify(evtData);
                             redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
