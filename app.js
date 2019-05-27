@@ -550,17 +550,23 @@ var eventHandler = function(reqId, evtObj)
             }
             else
             {
-                evtData.EventSpecificData = {
-                    EventType: "ANSWERED",
-                    Direction: dvpCallDirection,
-                    SessionId: evtData.SessionId,
-                    Timestamp: channelBridgeTimeStamp,
-                    From: "",
-                    To: "",
-                    Skill: skillAgent,
-                    BusinessUnit: bUnit
-                };
-                dvpEventHandler.PublishDVPEventsMessage(evtData);
+                redisClient.hgetall(varArdsClientUuid, function(err, channelHash){
+
+                    evtData.EventSpecificData = {
+                        EventType: "ANSWERED",
+                        Direction: dvpCallDirection,
+                        SessionId: evtData.SessionId,
+                        Timestamp: channelBridgeTimeStamp,
+                        From: evtObj['Caller-Caller-ID-Number'],
+                        To: evtObj['Caller-Destination-Number'],
+                        Skill: skillAgent,
+                        BusinessUnit: bUnit
+                    };
+                    /*var jsonStr = JSON.stringify(evtData);
+                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                    dvpEventHandler.PublishDVPEventsMessage(evtData);
+
+                });
                 /*jsonStr = JSON.stringify(evtData);
                 redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
             }
@@ -1041,6 +1047,7 @@ var eventHandler = function(reqId, evtObj)
 
                 if(channelHash)
                 {
+                    var ardsUuid = evtObj['variable_ards_client_uuid'];
 
                     var hashResId = channelHash['Agent-Resource-Id'];
                     var hashArdsClientUuid = channelHash['ARDS-Client-Uuid'];
@@ -1051,7 +1058,7 @@ var eventHandler = function(reqId, evtObj)
 
                     if(ardsUuid && hashResId)
                     {
-                        if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                        if(hashCompany && hashTenant && hashResId && ardsUuid && hashCallDirection)
                         {
                             evtData.EventSpecificData = {
                                 EventType: "HOLD",
@@ -2445,19 +2452,25 @@ var eventHandler = function(reqId, evtObj)
                         var eventParam = util.format("The call is added to %s queue", evResource);
                         evtData.EventParams = eventParam;
 
-                        evtData.EventSpecificData = {
-                            EventType: "QUEUED",
-                            Direction: "inbound",
-                            SessionId: ardsClientUuid,
-                            Timestamp: timestamp,
-                            From: "",
-                            To: "",
-                            Skill: skill,
-                            BusinessUnit: ""
-                        };
-                        /*var jsonStr = JSON.stringify(evtData);
-                        redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
-                        dvpEventHandler.PublishDVPEventsMessage(evtData);
+                        redisClient.hgetall(ardsClientUuid, function(err, channelHash){
+
+                            evtData.EventSpecificData = {
+                                EventType: "QUEUED",
+                                Direction: "inbound",
+                                SessionId: ardsClientUuid,
+                                Timestamp: timestamp,
+                                From: evtObj['Caller-Caller-ID-Number'],
+                                To: evtObj['Caller-Destination-Number'],
+                                Skill: skill,
+                                BusinessUnit: evtObj['DVP-Business-Unit']
+                            };
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
+
+                        });
+
+
 
                     }
                     else if(action === 'client-left')
