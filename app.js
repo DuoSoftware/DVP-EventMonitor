@@ -550,7 +550,7 @@ var eventHandler = function(reqId, evtObj)
             }
             else
             {
-                redisClient.hgetall(varArdsClientUuid, function(err, channelHash){
+                redisClient.hgetall(evtData.SessionId, function(err, channelHash){
 
                     evtData.EventSpecificData = {
                         EventType: "ANSWERED",
