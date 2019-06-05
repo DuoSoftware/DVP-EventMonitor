@@ -550,7 +550,23 @@ var eventHandler = function(reqId, evtObj)
             }
             else
             {
-                dvpEventHandler.PublishDVPEventsMessage(evtData);
+                redisClient.hgetall(evtData.SessionId, function(err, channelHash){
+
+                    evtData.EventSpecificData = {
+                        EventType: "ANSWERED",
+                        Direction: dvpCallDirection,
+                        SessionId: evtData.SessionId,
+                        Timestamp: channelBridgeTimeStamp,
+                        From: channelHash['Caller-Caller-ID-Number'],
+                        To: channelHash['Caller-Destination-Number'],
+                        Skill: skillAgent,
+                        BusinessUnit: bUnit
+                    };
+                    /*var jsonStr = JSON.stringify(evtData);
+                    redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                    dvpEventHandler.PublishDVPEventsMessage(evtData);
+
+                });
                 /*jsonStr = JSON.stringify(evtData);
                 redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
             }
@@ -1031,6 +1047,7 @@ var eventHandler = function(reqId, evtObj)
 
                 if(channelHash)
                 {
+                    var ardsUuid = evtObj['variable_ards_client_uuid'];
 
                     var hashResId = channelHash['Agent-Resource-Id'];
                     var hashArdsClientUuid = channelHash['ARDS-Client-Uuid'];
@@ -1039,10 +1056,22 @@ var eventHandler = function(reqId, evtObj)
                     var hashTenant = channelHash['DVP-TenantId'];
                     var hashBUnit = channelHash['DVP-Business-Unit'];
 
-                    if(hashArdsClientUuid && hashResId)
+                    if(ardsUuid && hashResId)
                     {
-                        if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                        if(hashCompany && hashTenant && hashResId && ardsUuid && hashCallDirection)
                         {
+                            evtData.EventSpecificData = {
+                                EventType: "HOLD",
+                                Direction: channelHash['DVP-Call-Direction'],
+                                SessionId: ardsUuid,
+                                Timestamp: variableEvtTime,
+                                From: channelHash['Caller-Caller-ID-Number'],
+                                To: channelHash['Caller-Destination-Number'],
+                                Skill: channelHash['ARDS-Skill-Display'],
+                                BusinessUnit: bUnit
+                            };
+
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
                             dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "HOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
 
                             /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "HOLD", hashResId, hashCallDirection, hashArdsClientUuid);
@@ -1085,6 +1114,7 @@ var eventHandler = function(reqId, evtObj)
         case 'CHANNEL_UNHOLD':
 
             var channelUuid = evtObj['Channel-Call-UUID'];
+            var ardsUuid = evtObj['variable_ards_client_uuid'];
 
             redisClient.hgetall(channelUuid, function(err, channelHash)
             {
@@ -1098,11 +1128,24 @@ var eventHandler = function(reqId, evtObj)
                     var hashTenant = channelHash['DVP-TenantId'];
                     var hashBUnit = channelHash['DVP-Business-Unit'];
 
-                    if(hashArdsClientUuid && hashResId)
+                    if(ardsUuid && hashResId)
                     {
-                        if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
+                        if(hashCompany && hashTenant && hashResId && ardsUuid && hashCallDirection)
                         {
-                            dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
+                            evtData.EventSpecificData = {
+                                EventType: "UNHOLD",
+                                Direction: channelHash['DVP-Call-Direction'],
+                                SessionId: ardsUuid,
+                                Timestamp: variableEvtTime,
+                                From: channelHash['Caller-Caller-ID-Number'],
+                                To: channelHash['Caller-Destination-Number'],
+                                Skill: channelHash['ARDS-Skill-Display'],
+                                BusinessUnit: bUnit
+                            };
+
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
+
+                            dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", ardsUuid, hashResId, hashCallDirection, eventTime);
 
                             /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
 
@@ -1124,7 +1167,7 @@ var eventHandler = function(reqId, evtObj)
 
                                 if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
                                 {
-                                    dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
+                                    dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", ardsUuid, hashResId, hashCallDirection, eventTime);
 
                                     /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
 
@@ -1830,6 +1873,20 @@ var eventHandler = function(reqId, evtObj)
             }
             else
             {
+                if(direction === 'inbound' && companyId && tenantId)
+                {
+                    evtData.EventSpecificData = {
+                        EventType: "DISCONNECTED",
+                        Direction: dvpCallDirection,
+                        SessionId: evtData.SessionId,
+                        Timestamp: evtObj['Event-Date-Timestamp'],
+                        From: evtObj['Caller-ANI'],
+                        To: evtObj['Caller-Destination-Number'],
+                        Skill: evtObj['variable_ards_skill_display'],
+                        BusinessUnit: evtObj['variable_business_unit']
+                    };
+                }
+
                 dvpEventHandler.PublishDVPEventsMessage(evtData);
                 /*jsonStr = JSON.stringify(evtData);
                 redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
@@ -2335,6 +2392,7 @@ var eventHandler = function(reqId, evtObj)
                     var ardsResourceId = evtObj['ARDS-Resource-Id'];
                     var reason = evtObj['ARDS-Reason'];
                     var skill = evtObj['ARDS-Call-Skill'];
+                    var timestamp = evtObj['Event-Date-Timestamp'];
 
                     var obj = {
                         ServerType : ardsServerType,
@@ -2393,9 +2451,26 @@ var eventHandler = function(reqId, evtObj)
                         var evResource =  evtObj['ARDS-Call-Skill'];
                         var eventParam = util.format("The call is added to %s queue", evResource);
                         evtData.EventParams = eventParam;
-                        /*var jsonStr = JSON.stringify(evtData);
-                        redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
-                        dvpEventHandler.PublishDVPEventsMessage(evtData);
+
+                        redisClient.hgetall(ardsClientUuid, function(err, channelHash){
+
+                            evtData.EventSpecificData = {
+                                EventType: "QUEUED",
+                                Direction: "inbound",
+                                SessionId: ardsClientUuid,
+                                Timestamp: timestamp,
+                                From: channelHash['Caller-Caller-ID-Number'],
+                                To: channelHash['Caller-Destination-Number'],
+                                Skill: skill,
+                                BusinessUnit: channelHash['DVP-Business-Unit']
+                            };
+                            /*var jsonStr = JSON.stringify(evtData);
+                            redisClient.publish('SYS:MONITORING:DVPEVENTS', jsonStr);*/
+                            dvpEventHandler.PublishDVPEventsMessage(evtData);
+
+                        });
+
+
 
                     }
                     else if(action === 'client-left')
