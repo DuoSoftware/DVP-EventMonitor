@@ -666,6 +666,7 @@ var eventHandler = function(reqId, evtObj)
                                 Direction: 'STATELESS',
                                 From: 'CALLSERVER',
                                 Callback: '',
+                                BusinessUnit: bUnit,
                                 Message: 'agent_found|' + transCallUuid + '|INBOUND|' + origCaller + '|' + obj.Issuer + '|' + obj.Issuer + '|' + tempSkill + '|inbound|call|' + caller + '|' + uniqueId + '|TRANSFER'
                             };
 
@@ -715,6 +716,7 @@ var eventHandler = function(reqId, evtObj)
                                 Direction: 'STATELESS',
                                 From: 'CALLSERVER',
                                 Callback: '',
+                                BusinessUnit: bUnit,
                                 Message: 'agent_found|' + evtObj['variable_origination_caller_id_number'] + '|OUTBOUND|' + objTmp.Issuer + '|' + evtObj['Caller-ANI'] + '|' + objTmp.Issuer + '|'+listenCallSkill+'|outbound|call|undefined|' + uniqueId
                             };
 
@@ -756,6 +758,7 @@ var eventHandler = function(reqId, evtObj)
                                 Timeout: 1000,
                                 Direction: 'STATELESS',
                                 From: 'CALLSERVER',
+                                BusinessUnit: bUnit,
                                 Callback: ''
                             };
 
@@ -807,6 +810,7 @@ var eventHandler = function(reqId, evtObj)
                                             Direction: 'STATELESS',
                                             From: 'CALLSERVER',
                                             Callback: '',
+                                            BusinessUnit: bUnit,
                                             Message: 'agent_found|' + otherLegUniqueId + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + uniqueId
                                         };
 
@@ -854,6 +858,7 @@ var eventHandler = function(reqId, evtObj)
                                     Direction: 'STATELESS',
                                     From: 'CALLSERVER',
                                     Callback: '',
+                                    BusinessUnit: bUnit,
                                     Message: 'agent_found|' + otherLegUniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + obj.Issuer + '|OUTBOUND|outbound|call|undefined|' + uniqueId
                                 };
 
@@ -1214,6 +1219,7 @@ var eventHandler = function(reqId, evtObj)
                             Timeout: 1000,
                             Direction: 'STATELESS',
                             From: 'CALLSERVER',
+                            BusinessUnit: bUnit,
                             Callback: ''
                         };
 
@@ -1263,6 +1269,7 @@ var eventHandler = function(reqId, evtObj)
                                 Direction: 'STATELESS',
                                 From: 'CALLSERVER',
                                 Callback: '',
+                                BusinessUnit: bUnit,
                                 Message: 'listen_connected|' + evtObj['variable_origination_caller_id_number'] + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer + '|' + objTmp.Issuer + '|'+listenCallSkill+'|outbound|call|undefined|' + uniqueId
                             };
 
@@ -1375,7 +1382,8 @@ var eventHandler = function(reqId, evtObj)
                                     Timeout: 1000,
                                     Direction: 'STATELESS',
                                     From: 'CALLSERVER',
-                                    Callback: ''
+                                    Callback: '',
+                                    BusinessUnit: bUnit,
                                 };
 
                                 nsObj.Message = 'agent_connected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId;
@@ -1573,6 +1581,7 @@ var eventHandler = function(reqId, evtObj)
                             Direction: 'STATELESS',
                             From: 'CALLSERVER',
                             Callback: '',
+                            BusinessUnit: bUnit,
                             Message: 'transfer_ended|' + reqId + '|OUTBOUND|' + evtObj['variable_dvp_trans_caller'] + '|' + evtObj['variable_dvp_trans_party'] + '|OUTBOUND|outbound|call|undefined|' + ardsClientUuid + '|' + evtObj['Hangup-Cause']
                         };
 
@@ -1602,6 +1611,7 @@ var eventHandler = function(reqId, evtObj)
                                 Direction: 'STATELESS',
                                 From: 'CALLSERVER',
                                 Callback: '',
+                                BusinessUnit: bUnit,
                                 Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + evtObj['Caller-Caller-ID-Number'] + '|' + evtObj['Caller-Caller-ID-Number'] + '|' + obj.Issuer + '|' + evtObj['variable_ards_skill_display'] + '|outbound|call|undefined|' + otherLegUniqueId
                             };
 
@@ -1634,6 +1644,7 @@ var eventHandler = function(reqId, evtObj)
                                 Direction: 'STATELESS',
                                 From: 'CALLSERVER',
                                 Callback: '',
+                                BusinessUnit: bUnit,
                                 Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|undefined|' + otherLegUniqueId
                             };
 
@@ -1666,6 +1677,7 @@ var eventHandler = function(reqId, evtObj)
                                 Direction: 'STATELESS',
                                 From: 'CALLSERVER',
                                 Callback: '',
+                                BusinessUnit: bUnit,
                                 Message: 'agent_disconnected|' + uniqueId + '|OUTBOUND|' + callerDestNum + '|' + callerDestNum + '|' + callerOrigIdName + '|OUTBOUND|outbound|call|' + hangupCause + '|' + otherLegUniqueId
                             };
 
@@ -1717,6 +1729,7 @@ var eventHandler = function(reqId, evtObj)
                                 Direction: 'STATELESS',
                                 From: 'CALLSERVER',
                                 Callback: '',
+                                BusinessUnit: bUnit,
                                 Message: 'listen_disconnected|' + evtObj['variable_origination_caller_id_number'] + '|OUTBOUND|' + objTmp.Issuer + '|' + objTmp.Issuer + '|' + objTmp.Issuer + '|'+listenCallSkill+'|outbound|call|undefined|' + uniqueId
                             };
 
@@ -1976,6 +1989,7 @@ var eventHandler = function(reqId, evtObj)
                         Direction: 'STATELESS',
                         From: 'CALLSERVER',
                         Callback: '',
+                        BusinessUnit: bUnit,
                         Message: 'transfer_trying|' + reqId + '|OUTBOUND|' + caller + '|' + digits + '|OUTBOUND|outbound|call|' + origCaller + '|' + reqId
                     };
 
