@@ -1150,7 +1150,7 @@ var eventHandler = function(reqId, evtObj)
 
                             dvpEventHandler.PublishDVPEventsMessage(evtData);
 
-                            dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", ardsUuid, hashResId, hashCallDirection, eventTime);
+                            dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
 
                             /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
 
@@ -1172,7 +1172,7 @@ var eventHandler = function(reqId, evtObj)
 
                                 if(hashCompany && hashTenant && hashResId && hashArdsClientUuid && hashCallDirection)
                                 {
-                                    dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", ardsUuid, hashResId, hashCallDirection, eventTime);
+                                    dashboardEvtHandler.PublishDashboardMessage(hashTenant, hashCompany, hashBUnit, "CALLSERVER", "CALL", "UNHOLD", hashArdsClientUuid, hashResId, hashCallDirection, eventTime);
 
                                     /*var pubMessage = util.format("EVENT:%s:%s:%s:%s:%s:%s:%s:%s:YYYY", hashTenant, hashCompany, "CALLSERVER", "CALL", "UNHOLD", hashResId, hashCallDirection, hashArdsClientUuid);
 
