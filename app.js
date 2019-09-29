@@ -430,6 +430,11 @@ var eventHandler = function(reqId, evtObj)
             }
 
             agentEvt.DisconnectReason = evtObj['Hangup-Cause'];
+            agentEvt.DisconnectionCode = evtObj['variable_sip_invite_failure_status'];
+
+            if(!agentEvt.DisconnectionCode){
+                agentEvt.DisconnectionCode = agentEvt.DisconnectReason;
+            }
 
             jsonStr = JSON.stringify(agentEvt);
 
@@ -1870,6 +1875,13 @@ var eventHandler = function(reqId, evtObj)
 
             evtData.EventCategory = "CHANNEL_DESTROY";
             evtData.DisconnectReason = evtObj['Hangup-Cause'];
+
+
+            evtData.DisconnectionCode = evtObj['variable_sip_invite_failure_status'];
+
+            if(!evtData.DisconnectionCode){
+                evtData.DisconnectionCode = evtData.DisconnectReason;
+            }
 
             var jsonStr = '';
             if(dvpCustPubId)
