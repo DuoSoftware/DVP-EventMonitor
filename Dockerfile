@@ -17,9 +17,9 @@
 # CMD [ "node", "/usr/local/src/eventmonitor/app.js" ]
 
 FROM node:10-alpine
-WORKDIR /usr/local/src/sipuserendpointservice
+WORKDIR /usr/local/src/eventmonitor
 COPY package*.json ./
 RUN npm install
 COPY . .
-EXPOSE 8814
+EXPOSE 8806
 CMD [ "node", "app.js" ]
