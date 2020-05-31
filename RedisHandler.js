@@ -1,6 +1,6 @@
 var redis = require("ioredis");
 var Config = require('config');
-var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
+var logger = require('dvp-common-lite/LogHandler/CommonLogHandler.js').logger;
 
 //var redisIp = Config.Redis.ip;
 //var redisPort = Config.Redis.port;

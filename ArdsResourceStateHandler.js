@@ -2,7 +2,7 @@ var config = require('config');
 var httpReq = require('request');
 var util = require('util');
 var validator = require('validator');
-var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
+var logger = require('dvp-common-lite/LogHandler/CommonLogHandler.js').logger;
 var winston = require('winston');
 
 var loggerCust = new winston.Logger();

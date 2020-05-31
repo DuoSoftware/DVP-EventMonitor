@@ -8,6 +8,7 @@
     "colors": "^0.6.2",
     "config": "^1.13.0",
     "dvp-common": "1.1.0",
+    "dvp-common-lite": "^1.1.0",
     "dvp-dbmodels": "2.1.0",
     "dvp-mongomodels": "^6.1.0",
     "esl": "^5.2.1",
