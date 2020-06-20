@@ -21,19 +21,19 @@ module.exports = {
   },
 
   ARDS: {
-    ip: "ardsliteservice.app.veery.cloud",
+    ip: "",
     port: 2225,
     version: "1.0.0.0",
   },
 
   NS: {
-    ip: "notificationservice.app.veery.cloud",
+    ip: "",
     port: 8089,
     version: "1.0.0.0",
   },
 
   Services: {
-    interactionServiceHost: "interactions.app.veery.cloud",
+    interactionServiceHost: "",
     interactionServicePort: "3637",
     interactionServiceVersion: "1.0.0.0",
     dccaclientHost: "127.0.0.1",
@@ -42,7 +42,7 @@ module.exports = {
   },
 
   WebAPI: {
-    domain: "192.168.1.58",
+    domain: "",
     port: 80,
     path: "/CSReqWebApi/api/",
   },
@@ -56,20 +56,20 @@ module.exports = {
 
   Redis: {
     mode: "instance", //instance, cluster, sentinel
-    ip: "138.197.90.92",
-    port: 6389,
-    user: "duo",
-    password: "DuoS123",
+    ip: "",
+    port: 6379,
+    user: "",
+    password: "",
     db: 4,
     sentinels: {
-      hosts: "138.197.90.92,45.55.205.92,162.243.81.39",
-      port: 16389,
+      hosts: "",
+      port: 6379,
       name: "redis-cluster",
     },
   },
 
   RabbitMQ: {
-    ip: "45.55.142.207",
+    ip: "",
     port: "5672",
     user: "admin",
     password: "admin",
