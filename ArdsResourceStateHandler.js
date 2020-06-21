@@ -94,10 +94,7 @@ var SendResourceStatus = function (
         };
 
         logger.debug(
-          "[DVP-EventMonitor.SendResourceStatus] - [%s] - Creating Api Url : %s, Body : %s",
-          reqId,
-          httpUrl,
-          jsonStr
+          `[DVP-EventMonitor.SendResourceStatus] - [${reqId}] - Creating Api Url : ${httpUrl}, Body : ${jsonStr}`
         );
 
         httpReq.put(options, function (error, response, body) {
@@ -107,9 +104,9 @@ var SendResourceStatus = function (
             response.statusCode <= 299
           ) {
             logger.debug(
-              "[DVP-EventMonitor.SendResourceStatus] - [%s] - Set Resource Status Success : %s",
-              reqId,
-              body
+              `[DVP-EventMonitor.SendResourceStatus] - [${reqId}] - Set Resource Status Success : ${JSON.stringify(
+                body
+              )}`
             );
           } else {
             //loggerCust.error('SendResourceStatus - FAIL - [UUID : %s , State : %s' , ardsClientUuid, state, error);
