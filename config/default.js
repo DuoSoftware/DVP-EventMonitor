@@ -92,5 +92,5 @@ module.exports = {
   UseDashboardAMQP: "true",
   EventPublishMethod: "amqp",
   UseCDRGen: false,
-  dynamicPort: true,
+  dynamicPort: false,
 };
