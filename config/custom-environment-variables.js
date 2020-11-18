@@ -2,6 +2,8 @@
  * Created by dinusha on 4/22/2015.
  */
 module.exports = {
+  EmailSendMethod: "SYS_EMAIL_SEND_METHOD",
+
   Freeswitch: {
     ip: "SYS_FREESWITCH_HOST",
     port: "SYS_EVENTSOCKET_PORT",
@@ -36,12 +38,29 @@ module.exports = {
   },
 
   Services: {
+    accessToken : "HOST_TOKEN",
+    resourceServiceHost : "SYS_RESOURCESERVICE_HOST",
+    resourceServicePort : "SYS_RESOURCESERVICE_PORT",
+    resourceServiceVersion : "SYS_RESOURCESERVICE_VERSION",
+    uploadurl : "SYS_FILESERVICE_HOST",
+    uploadport :"SYS_FILESERVICE_PORT",
+    uploadurlVersion: "SYS_FILESERVICE_VERSION",
+
     interactionServiceHost: "SYS_INTERACTIONS_HOST",
     interactionServicePort: "SYS_INTERACTIONS_PORT",
     interactionServiceVersion: "SYS_INTERACTIONS_VERSION",
     dccaclientHost: "SYS_DIAMETERCLIENT_HOST",
     dccaclientPort: "SYS_DIAMETERCLIENT_PORT",
     dccaclientVersion: "SYS_DIAMETERCLIENT_VERSION",
+
+    cronurl : "SYS_SCHEDULEWORKER_HOST",
+    cronport : "SYS_SCHEDULEWORKER_PORT",
+    cronversion :"SYS_SCHEDULEWORKER_VERSION",
+
+
+    ticketServiceHost : "SYS_LITETICKET_HOST",
+    ticketServicePort :  "SYS_LITETICKET_PORT",
+    ticketServiceVersion :  "SYS_LITETICKET_VERSION",
   },
 
   WebAPI: {
@@ -79,6 +98,22 @@ module.exports = {
     password: "SYS_MONGO_PASSWORD",
     user: "SYS_MONGO_USER",
     replicaset: "SYS_MONGO_REPLICASETNAME",
+    type: "SYS_MONGO_TYPE",
+
+  },
+
+  SMSServer: {
+    ip: "SYS_SMSSERVER_HOST",
+    port: "SYS_SMSSERVER_PORT",
+    password: "SYS_SMSSERVER_PASSWORD",
+    user: "SYS_SMSSERVER_USER",
+  },
+
+  SMTP: {
+    ip: "SYS_SMTP_HOST",
+    port: "SYS_SMTP_PORT",
+    user: "SYS_SMTP_USER",
+    password: "SYS_SMTP_PASSWORD"
   },
 
   Token: "HOST_TOKEN",
