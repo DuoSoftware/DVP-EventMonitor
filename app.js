@@ -29,6 +29,8 @@ var loggerCust = new winston.Logger();
 
 var level = "debug";
 
+let readyCount = 0;
+
 loggerCust.add(winston.transports.File, {
   filename: "logs/common_logger.log",
   level: level,
@@ -329,57 +331,69 @@ var eventHandler = function (reqId, evtObj) {
     }
 
     if (companyId && tenantId) {
-      redisClient.hset(uniqueId, "DVP-CompanyId", companyId, function (
-        err,
-        reply
-      ) {
-        redisClient.expire(uniqueId, 86400, redisMessageHandler);
-      });
+      redisClient.hset(
+        uniqueId,
+        "DVP-CompanyId",
+        companyId,
+        function (err, reply) {
+          redisClient.expire(uniqueId, 86400, redisMessageHandler);
+        }
+      );
 
-      redisClient.hset(uniqueId, "DVP-TenantId", tenantId, function (
-        err,
-        reply
-      ) {
-        redisClient.expire(uniqueId, 86400, redisMessageHandler);
-      });
+      redisClient.hset(
+        uniqueId,
+        "DVP-TenantId",
+        tenantId,
+        function (err, reply) {
+          redisClient.expire(uniqueId, 86400, redisMessageHandler);
+        }
+      );
     }
 
     if (evtType === "CHANNEL_ANSWER") {
       if (bUnit) {
-        redisClient.hset(uniqueId, "DVP-Business-Unit", bUnit, function (
-          err,
-          reply
-        ) {
-          redisClient.expire(uniqueId, 86400, redisMessageHandler);
-        });
+        redisClient.hset(
+          uniqueId,
+          "DVP-Business-Unit",
+          bUnit,
+          function (err, reply) {
+            redisClient.expire(uniqueId, 86400, redisMessageHandler);
+          }
+        );
       }
     }
 
     if (resourceId) {
-      redisClient.hset(uniqueId, "Agent-Resource-Id", resourceId, function (
-        err,
-        reply
-      ) {
-        redisClient.expire(uniqueId, 86400, redisMessageHandler);
-      });
+      redisClient.hset(
+        uniqueId,
+        "Agent-Resource-Id",
+        resourceId,
+        function (err, reply) {
+          redisClient.expire(uniqueId, 86400, redisMessageHandler);
+        }
+      );
     }
 
     if (appType) {
-      redisClient.hset(uniqueId, "Application-Type", appType, function (
-        err,
-        reply
-      ) {
-        redisClient.expire(uniqueId, 86400, redisMessageHandler);
-      });
+      redisClient.hset(
+        uniqueId,
+        "Application-Type",
+        appType,
+        function (err, reply) {
+          redisClient.expire(uniqueId, 86400, redisMessageHandler);
+        }
+      );
     }
 
     if (appPosition) {
-      redisClient.hset(uniqueId, "Application-Position", appPosition, function (
-        err,
-        reply
-      ) {
-        redisClient.expire(uniqueId, 86400, redisMessageHandler);
-      });
+      redisClient.hset(
+        uniqueId,
+        "Application-Position",
+        appPosition,
+        function (err, reply) {
+          redisClient.expire(uniqueId, 86400, redisMessageHandler);
+        }
+      );
     }
   }
 
@@ -1378,12 +1392,14 @@ var eventHandler = function (reqId, evtObj) {
       }
 
       if (!variableLoopbackApp) {
-        redisClient.hset(uniqueId, "Unique-ID", uniqueId, function (
-          err,
-          redisRes
-        ) {
-          redisClient.expire(uniqueId, 86400, redisMessageHandler);
-        });
+        redisClient.hset(
+          uniqueId,
+          "Unique-ID",
+          uniqueId,
+          function (err, redisRes) {
+            redisClient.expire(uniqueId, 86400, redisMessageHandler);
+          }
+        );
         redisClient.hset(
           uniqueId,
           "Channel-State",
@@ -2743,15 +2759,16 @@ var eventHandler = function (reqId, evtObj) {
 
                 redisClient.publish('events', pubMessage);*/
 
-        redisClient.sismember(channelSetName, uniqueId, function (
-          err,
-          setContains
-        ) {
-          if (setContains) {
-            redisClient.decr(chanCountCompany, redisMessageHandler);
-            redisClient.srem(channelSetName, uniqueId, redisMessageHandler);
+        redisClient.sismember(
+          channelSetName,
+          uniqueId,
+          function (err, setContains) {
+            if (setContains) {
+              redisClient.decr(chanCountCompany, redisMessageHandler);
+              redisClient.srem(channelSetName, uniqueId, redisMessageHandler);
+            }
           }
-        });
+        );
 
         logger.debug(
           "=========================== REMOVE FROM SET : [%s] - [%s] ==========================",
@@ -3997,20 +4014,22 @@ if (evtConsumeType) {
 
       logger.debug("[DVP-EventMonitor.handler] - [%s] - AMQP Connection READY");
 
-      connection.queue(
-        "FS_EVENTS",
-        { durable: true, autoDelete: false },
-        function (q) {
-          q.bind("#");
+      readyCount += 1;
+      if (readyCount === 1)
+        connection.queue(
+          "FS_EVENTS",
+          { durable: true, autoDelete: false },
+          function (q) {
+            q.bind("#");
 
-          // Receive messages
-          q.subscribe(function (message) {
-            // Print messages to stdout
-            var reqId = nodeUuid.v1();
-            eventHandler(reqId, message);
-          });
-        }
-      );
+            // Receive messages
+            q.subscribe(function (message) {
+              // Print messages to stdout
+              var reqId = nodeUuid.v1();
+              eventHandler(reqId, message);
+            });
+          }
+        );
     });
 
     connection.on("error", function (e) {
